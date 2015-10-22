@@ -17,7 +17,13 @@
 
 #include "typedef.hpp"
 #include "grid.hpp"
-#include "SDL2/SDL.h"
+
+#ifdef __APPLE__
+	#include "SDL.h"
+#else
+	#include "SDL2/SDL.h"
+#endif
+
 //------------------------------------------------------------------------------
 #ifndef __VISU_HPP
 #define __VISU_HPP
