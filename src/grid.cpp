@@ -3,33 +3,44 @@
 /* public methods */
 
 /* constructor */
-Grid::Grid(const Geometry *geom)
+Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 {
-	// TODO
+	_geom = geom;
+	multi_index_t size = _geom->Size();
+	_data = (real_t*) malloc(size * size * sizeof(real_t));
+	if (_data==NULL) exit(-1);
+	// TODO: what about the offset?
+	_offset = offset; // is this right?
 }
 
-Grid::Grid(const Geometry *geom, const multi_real_t& offset)
+Grid::Grid(const Geometry* geom)
 {
-	// TODO
+	Grid(geom, 0.0); // does this make sense (offset=0)?
 }
 
 /* destructor */
 Grid::~Grid()
 {
+	free(_data);
 	// TODO
 }
 
 void Grid::Initialize(const real_t& value)
 {
-	// TODO
+	// TODO: test this method
+	for(int i=0; i<_geom->Size()*_geom->Size(); i++)
+	{
+		_data[i] = value;
+	}
 }
 
-real_t& Grid::Cell(const Iterator &it)
+real_t& Grid::Cell(const Iterator& it)
 {
-	// TODO
+	// TODO: test
+	
 }
 
-const real_t& Grid::Cell(const Iterator &it) const
+const real_t& Grid::Cell(const Iterator& it) const
 {
 	// TODO
 }

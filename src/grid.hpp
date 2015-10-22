@@ -28,13 +28,13 @@ public:
   /// Constructs a grid based on a geometry with an offset
   // @param geom   Geometry information
   // @param offset distance of staggered grid point to cell's anchor point;
-  //               (anchor point = lower left corner)
+  // (anchor point = lower left corner)
   Grid(const Geometry *geom, const multi_real_t &offset);
 
   /// Deletes the grid
   ~Grid();
 
-  ///     Initializes the grid with a value
+  /// Initializes the grid with a value
   void Initialize(const real_t &value);
 
   /// Write access to the grid cell at position [it]
@@ -45,17 +45,17 @@ public:
   /// Interpolate the value at a arbitrary position
   real_t Interpolate(const multi_real_t &pos) const;
 
-  /// Computes the left-sided difference quatient in x-dim at [it]
+  /// Computes the left-sided difference quotient in x-dim at [it]
   real_t dx_l(const Iterator &it) const;
-  /// Computes the right-sided difference quatient in x-dim at [it]
+  /// Computes the right-sided difference quotient in x-dim at [it]
   real_t dx_r(const Iterator &it) const;
-  /// Computes the left-sided difference quatient in y-dim at [it]
+  /// Computes the left-sided difference quotient in y-dim at [it]
   real_t dy_l(const Iterator &it) const;
-  /// Computes the right-sided difference quatient in x-dim at [it]
+  /// Computes the right-sided difference quotient in x-dim at [it]
   real_t dy_r(const Iterator &it) const;
-  /// Computes the central difference quatient of 2nd order in x-dim at [it]
+  /// Computes the central difference quotient of 2nd order in x-dim at [it]
   real_t dxx(const Iterator &it) const;
-  /// Computes the central difference quatient of 2nd order in y-dim at [it]
+  /// Computes the central difference quotient of 2nd order in y-dim at [it]
   real_t dyy(const Iterator &it) const;
 
   /// Computes u*du/dx with the donor cell method
