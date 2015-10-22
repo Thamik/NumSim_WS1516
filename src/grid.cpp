@@ -4,12 +4,14 @@
 
 #include <stdio.h>      /* NULL */
 #include <stdlib.h>     /* malloc, free */
+#include <cmath>        // std::abs
 
 /* public methods */
 
 /* constructor */
 Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 {
+	// TODO: kein malloc/free mehr, benutze new und delete
 	_geom = geom;
 	_data = (real_t*) malloc(_geom->Size()[0] * _geom->Size()[1] * sizeof(real_t));
 	if (_data==NULL) exit(-1);
@@ -53,37 +55,42 @@ const real_t& Grid::Cell(const Iterator& it) const
 real_t Grid::Interpolate(const multi_real_t& pos) const
 {
 	// TODO
-	
 }
 
 real_t Grid::dx_l(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Value()] - _data[it.Left().Value()])/((_geom->Mesh())[0]);
 }
 
 real_t Grid::dx_r(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Right().Value()] - _data[it.Value()])/((_geom->Mesh())[0]);
 }
 
 real_t Grid::dy_l(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Value()] - _data[it.Down().Value()])/((_geom->Mesh())[1]);
 }
 
 real_t Grid::dy_r(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Top().Value()] - _data[it.Value()])/((_geom->Mesh())[1]);
 }
 
 real_t Grid::dxx(const Iterator &it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/( (_geom->Mesh())[0] * (_geom->Mesh())[0] );
 }
 
 real_t Grid::dyy(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/( (_geom->Mesh())[1] * (_geom->Mesh())[1] );
 }
 
 real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
@@ -108,20 +115,40 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 
 real_t Grid::Max() const
 {
-	// TODO
+	// TODO: test
+	real_t res = _data[0];
+	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	{
+		if (_data[i]>res) res = _data[i];
+	}
+	return res;
 }
 
 real_t Grid::Min() const
 {
-	// TODO
+	// TODO: test
+	real_t res = _data[0];
+	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	{
+		if (_data[i]<res) res = _data[i];
+	}
+	return res;
 }
 
 real_t Grid::AbsMax() const
 {
-	// TODO
+	// TODO: test
+	real_t res = std::abs(_data[0]);
+	real_t temp;
+	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	{
+		temp = std::abs(_data[i]);
+		if (temp>res) res = temp;
+	}
+	return res;
 }
 
 real_t* Grid::Data()
 {
-	// TODO
+	return _data;
 }

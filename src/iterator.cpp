@@ -1,40 +1,198 @@
 #include "iterator.hpp"
+#include "geometry.hpp"
+
+// Iterate through the grid like this:
+/*
+
+y
+^
+|...
+|-------------------------->
+|-------------------------->
+|-------------------------->
+|___________________________> x
+
+from left to right, and then from the bottom to the top
+
+*/
 
 /* Iterator */
 
-/* constructor */
-/*Iterator::Iterator(const Geometry* geom)
+/* Constructor */
+Iterator::Iterator(const Geometry* geom, const index_t& value)
+: _geom(geom), _value(value), _valid(true)
+{
+	// TODO: is this correct?
+}
+
+Iterator::Iterator(const Geometry* geom)
+{
+	Iterator(geom, 0); // Setting the default initial value (position) to zero
+}
+
+const index_t& Iterator::Value() const
+{
+	return _value;
+}
+
+Iterator::operator const index_t&() const
+{
+	return _value;
+}
+
+multi_index_t Iterator::Pos() const
+{
+	// TODO: test
+	index_t x, y;
+	x = _value / _geom->Size()[0];
+	y = _value % _geom->Size()[0];
+	return multi_index_t(x,y);
+}
+
+void Iterator::First()
+{
+	_value = 0;
+	//_valid = true; // maybe do this?
+}
+
+void Iterator::Next()
+{
+	_value++;
+	if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false; // maybe one step earlier?
+}
+
+bool Iterator::Valid() const
+{
+	return _valid;
+}
+
+Iterator Iterator::Left() const
+{
+	// TODO: test
+	if (Pos()[0] == 0){
+		// at the left boundary, return a copy of self
+		return Iterator(_geom, _value);
+	}else{
+		// somewhere else, return the cell to the left
+		return Iterator(_geom, _value - 1);
+	}
+}
+
+Iterator Iterator::Right() const
+{
+	// TODO: test
+	if (Pos()[0] == _geom->Size()[0]-1){
+		// at the right boundary, return a copy of self
+		return Iterator(_geom, _value);
+	}else{
+		// somewhere else, return the cell to the right
+		return Iterator(_geom, _value + 1);
+	}
+}
+
+Iterator Iterator::Top() const
+{
+	// TODO: test
+	if (Pos()[1] == _geom->Size()[1]-1){
+		// at the upper boundary, return a copy of self
+		return Iterator(_geom, _value);
+	}else{
+		// somewhere else, return the cell above
+		return Iterator(_geom, _value + _geom->Size()[0]);
+	}
+}
+
+Iterator Iterator::Down() const
+{
+	// TODO: test
+	if (Pos()[1] == 0){
+		// at the lower boundary, return a copy of self
+		return Iterator(_geom, _value);
+	}else{
+		// somewhere else, return the cell below
+		return Iterator(_geom, _value - _geom->Size()[0]);
+	}
+}
+
+/* not needed
+// Protected Help Functions
+index_t Iterator::Pos_To_Value(multi_index_t pos) const
 {
 	// TODO
 }
+*/
 
-Iterator::Iterator(const Geometry* geom, const index_t& value)
+// InteriorIterator
+
+// Constructor
+InteriorIterator::InteriorIterator(const Geometry* geom)
+: Iterator(geom)
 {
-	// TODO
-}*/
-
-/* InteriorIterator */
-
-/* constructor */
-/*InteriorIterator::InteriorIterator(const Geometry* geom)
-{
-	// TODO
+	// TODO: constructor complete?
 }
 
 void InteriorIterator::First()
 {
-	// TODO
+	// TODO: right?
+	_value = _geom->Size()[0] + 1; // the second cell from below and the second from left
+	// maybe set _valid as true?
 }
 
 void InteriorIterator::Next()
 {
-	// TODO
-}*/
+	// TODO: test
+	if (Pos()[0] >= _geom->Size()[0]-1){
+		_value += 3; // jump over the right and then the left boundary cells
+	} else {
+		_value++;
+	}
+	if (Pos()[1] >= _geom->Size()[1]-1) _valid = false; // maybe do this earlier?
+}
 
-/* BoundaryIterator */
+// BoundaryIterator
 
-/* Constructor */
-/*BoundaryIterator::BoundaryIterator(const Geometry *geom)
+// Constructor
+BoundaryIterator::BoundaryIterator(const Geometry *geom)
+: Iterator(geom), _boundary(0) // is this right?
 {
-	// TODO
-}*/
+	// TODO: constructor complete?
+}
+
+void BoundaryIterator::SetBoundary(const index_t& boundary)
+{
+	// TODO: test!
+	_boundary = boundary;
+	// handling boundary as counter only for boundary cells
+
+	// setting _value
+	if (_boundary <= _geom->Size()[0]-1){
+		// at the lower boundary
+		_value = _boundary;
+	} else if (_boundary >= _geom->Size()[0] + 2*(_geom->Size()[1]-2)){
+		// at the upper boundary
+		_value = _geom->Size()[0]*(_geom->Size()[1]-1) + _boundary - _geom->Size()[0] + 2*(_geom->Size()[1]-2);
+	} else {
+		// at the left or right boundary, not at the lower, not at the upper
+		if ( (_boundary-_geom->Size()[0])%2 == 0){
+			_value = _geom->Size()[0] * ((_boundary-_geom->Size()[0])/2 + 1);
+		} else {
+			_value = _geom->Size()[0] * ((_boundary-_geom->Size()[0])/2 + 1) + _geom->Size()[0] - 1;
+		}
+	}
+	// maybe set _valid as true?
+}
+
+void BoundaryIterator::First()
+{
+	// TODO: is this right?
+	_value = 0;
+	_boundary = 0;
+	// maybe set _valid as true?
+}
+
+void BoundaryIterator::Next()
+{
+	// TODO: is this right?
+	SetBoundary(_boundary+1);
+	if (_boundary >= 2*_geom->Size()[0] + 2*_geom->Size()[1] - 4) _valid = false; // maybe do this earlier?
+}

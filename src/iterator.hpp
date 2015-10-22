@@ -64,6 +64,8 @@ protected:
   const Geometry *_geom;
   index_t _value;
   bool _valid;
+
+  //virtual index_t Pos_To_Value(multi_index_t pos) const; // not needed
 };
 
 //------------------------------------------------------------------------------
