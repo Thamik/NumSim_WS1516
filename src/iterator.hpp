@@ -29,7 +29,7 @@ public:
   /// Constructs a new Iterator on a geometry with a defined starting value
   Iterator(const Geometry *geom, const index_t &value);
 
-  ///     Returns the current position value
+  /// Returns the current position value
   virtual const index_t &Value() const;
   /// Cast operator to convert Iterators to integers
   virtual operator const index_t &() const;

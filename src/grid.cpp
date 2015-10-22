@@ -108,4 +108,3 @@ real_t* Grid::Data()
 {
 	// TODO
 }
-
