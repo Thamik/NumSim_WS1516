@@ -34,7 +34,7 @@ const real_t& Grid::Cell(const Iterator &it) const
 	// TODO
 }
 
-real_t Grid::Interpolate(cosnt multi_real_t& pos) const
+real_t Grid::Interpolate(const multi_real_t& pos) const
 {
 	// TODO
 }
