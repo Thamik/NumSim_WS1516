@@ -1,7 +1,7 @@
 #include "parameter.hpp"
 #include "typedef.hpp"
 
-//#include <iostream>
+#include <iostream>
 #include <fstream>
 #include <string>
 #include <stdlib.h>     /* atof */
@@ -19,7 +19,7 @@ void Parameter::Load(const char* file)
 {
 	// TODO: Test this method
 	std::string temp_string;
-	ifstream infile;
+	std::ifstream infile;
 	infile.open(file);
 	for(int i=1;i<=8;i++)
 	{

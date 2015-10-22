@@ -1,4 +1,9 @@
 #include "grid.hpp"
+#include "geometry.hpp"
+#include "iterator.hpp"
+
+#include <stdio.h>      /* NULL */
+#include <stdlib.h>     /* malloc, free */
 
 /* public methods */
 
@@ -6,8 +11,7 @@
 Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 {
 	_geom = geom;
-	multi_index_t size = _geom->Size();
-	_data = (real_t*) malloc(size * size * sizeof(real_t));
+	_data = (real_t*) malloc(_geom->Size()[0] * _geom->Size()[1] * sizeof(real_t));
 	if (_data==NULL) exit(-1);
 	// TODO: what about the offset?
 	_offset = offset; // is this right?
@@ -28,7 +32,7 @@ Grid::~Grid()
 void Grid::Initialize(const real_t& value)
 {
 	// TODO: test this method
-	for(int i=0; i<_geom->Size()*_geom->Size(); i++)
+	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;
 	}
@@ -37,17 +41,19 @@ void Grid::Initialize(const real_t& value)
 real_t& Grid::Cell(const Iterator& it)
 {
 	// TODO: test
-	
+	return _data[it.Value()];
 }
 
 const real_t& Grid::Cell(const Iterator& it) const
 {
-	// TODO
+	// TODO: test
+	return _data[it.Value()];
 }
 
 real_t Grid::Interpolate(const multi_real_t& pos) const
 {
 	// TODO
+	
 }
 
 real_t Grid::dx_l(const Iterator& it) const
