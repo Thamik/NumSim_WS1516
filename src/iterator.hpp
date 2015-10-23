@@ -20,7 +20,18 @@
 #ifndef __ITERATOR_HPP
 #define __ITERATOR_HPP
 //------------------------------------------------------------------------------
-/** Iterator base class
+/// Iterator base class
+/** Iterate through the grid like this:<br>
+<code>
+y<br>
+^<br>
+|...<br>
+|--------------------------><br>
+|--------------------------><br>
+|--------------------------><br>
+|___________________________> x<br>
+</code>
+Hence, from left to right, and then from the bottom to the top.
 */
 class Iterator {
 public:

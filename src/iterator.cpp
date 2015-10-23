@@ -3,7 +3,6 @@
 
 // Iterate through the grid like this:
 /*
-
 y
 ^
 |...
@@ -12,8 +11,7 @@ y
 |-------------------------->
 |___________________________> x
 
-from left to right, and then from the bottom to the top
-
+Hence, from left to right, and then from the bottom to the top.
 */
 
 /* Iterator */
@@ -40,6 +38,11 @@ Iterator::operator const index_t&() const
 	return _value;
 }
 
+/** This method calculates the current position
+of the Iterator in the cartesian x-y-coordinate
+system.
+\return The x and y coordinates
+*/
 multi_index_t Iterator::Pos() const
 {
 	// TODO: test
@@ -49,23 +52,41 @@ multi_index_t Iterator::Pos() const
 	return multi_index_t(x,y);
 }
 
+/** The Iterator is set to the first element.
+Here, the first element is the element located
+in the bottom left corner
+*/
 void Iterator::First()
 {
 	_value = 0;
 	//_valid = true; // maybe do this?
 }
 
+/**
+The Iterator is set to the next element.
+Here, the next element is the element to the right or the
+most left element of the above line, respectively (cf. Iterationpath).
+If the Iterator exits the field, it is disabled!
+*/
 void Iterator::Next()
 {
 	_value++;
 	if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false; // maybe one step earlier?
 }
 
+/**
+\return status of the Iterator
+*/
 bool Iterator::Valid() const
 {
 	return _valid;
 }
 
+/**
+If the Iterator is currently at the left boundary,
+it returns itself
+\return Iterator to the Left
+*/
 Iterator Iterator::Left() const
 {
 	// TODO: test
@@ -78,6 +99,11 @@ Iterator Iterator::Left() const
 	}
 }
 
+/**
+If the Iterator is currently at the right boundary,
+it returns itself.
+\return Iterator to the right
+*/
 Iterator Iterator::Right() const
 {
 	// TODO: test
@@ -90,6 +116,11 @@ Iterator Iterator::Right() const
 	}
 }
 
+/**
+If the Iterator is currently at the top boundary,
+it returns itself.
+\return above Iterator
+*/
 Iterator Iterator::Top() const
 {
 	// TODO: test
@@ -102,6 +133,11 @@ Iterator Iterator::Top() const
 	}
 }
 
+/**
+If the Iterator is currently at the bottom boundary,
+it returns itself.
+\return lower Iterator
+*/
 Iterator Iterator::Down() const
 {
 	// TODO: test
