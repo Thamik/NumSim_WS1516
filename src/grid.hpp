@@ -67,6 +67,14 @@ public:
   /// Computes v*dv/dy with the donor cell method
   real_t DC_vdv_y(const Iterator &it, const real_t &alpha) const;
 
+	// Own methods
+	// Compute d(u^2)/dx and d(v^2)/dy
+	real_t DC_duu_x(const Iterator &it, const real_t &alpha) const;
+	real_t DC_dvv_y(const Iterator &it, const real_t &alpha) const;
+	// Compute d(uv)/dx and d(uv)/dy
+	real_t DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const;
+	real_t DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const;
+
   /// Returns the maximal value of the grid
   real_t Max() const;
   /// Returns the minimal value of the grid
@@ -76,6 +84,9 @@ public:
 
   /// Returns a pointer to the raw data
   real_t *Data();
+
+	// own method, needed for call for const Grid* v (see above)
+	const real_t* Data() const;
 
 private:
   real_t *_data;

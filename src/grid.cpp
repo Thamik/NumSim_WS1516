@@ -4,7 +4,7 @@
 
 #include <stdio.h>      /* NULL */
 #include <stdlib.h>     /* malloc, free */
-#include <cmath>        // std::abs
+#include <cmath>        // std::abs, pow
 
 /* public methods */
 
@@ -95,7 +95,15 @@ real_t Grid::dyy(const Iterator& it) const
 
 real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
 {
-	// TODO
+	// TODO: test
+	// we use here that u*du/dx = 0.5 * d(u^2)/dx
+	real_t res;
+	real_t uij = _data[it.Value()];
+	real_t uip1j = _data[it.Right().Value()];
+	real_t uim1j = _data[it.Left().Value()];
+	res = (1.0/(_geom->Mesh()[0])) * ( pow((uij + uip1j)/2.0, 2.0) - pow((uim1j + uij)/2.0, 2.0)) + (alpha/(_geom->Mesh()[0])) * ( std::abs(uij + uip1j)/2.0 * (uij - uip1j)/2.0 - std::abs(uim1j + uij)/2.0 * (uim1j - uij)/2.0 );
+	res *= 0.5;
+	return res;
 }
 
 real_t Grid::DC_vdu_y(const Iterator& it, const real_t& alpha, const Grid* v) const
@@ -110,7 +118,57 @@ real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) co
 
 real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 {
-	// TODO
+	// TODO: test
+	// we use here that v*dv/dx = 0.5 * d(v^2)/dx
+	real_t res;
+	real_t vij = _data[it.Value()];
+	real_t vijp1 = _data[it.Top().Value()];
+	real_t vijm1 = _data[it.Down().Value()];
+	res = (1.0/(_geom->Mesh()[1])) * ( pow((vij + vijp1)/2.0, 2.0) - pow((vijm1 + vij)/2.0, 2.0)) + (alpha/(_geom->Mesh()[1])) * ( std::abs(vij + vijp1)/2.0 * (vij - vijp1)/2.0 - std::abs(vijm1 + vij)/2.0 * (vijm1 - vij)/2.0 );
+	res *= 0.5;
+	return res;
+}
+
+// die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
+
+real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
+{
+	return 2.0 * DC_udu_x(it,alpha);
+}
+
+real_t Grid::DC_dvv_y(const Iterator &it, const real_t &alpha) const
+{
+	return 2.0 * DC_vdv_y(it,alpha);
+}
+
+real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const
+{
+	// TODO: test
+	real_t res;
+	real_t vij = _data[it.Value()];
+	real_t uij = u->Data()[it.Value()];
+	real_t uijp1 = u->Data()[it.Top().Value()];
+	real_t vip1j = _data[it.Right().Value()];
+	real_t uim1j = u->Data()[it.Left().Value()];
+	real_t uim1jp1 = u->Data()[it.Left().Top().Value()];
+	real_t vim1j = _data[it.Left().Value()];
+	res = (1.0/_geom->Mesh()[0]) * ( (uij+uijp1)/2.0 * (vij+vip1j)/2.0 - (uim1j+uim1jp1)/2.0 * (vim1j+vij)/2.0 ) + (alpha/_geom->Mesh()[0]) * ( std::abs(uij+uijp1)/2.0 * (vij-vip1j)/2.0 - std::abs(uim1j+uim1jp1)/2.0 * (vim1j-vij)/2.0 );
+	return res;
+}
+
+real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const
+{
+	// TODO: test
+	real_t res;
+	real_t uij = _data[it.Value()];
+	real_t vij = v->Data()[it.Value()];
+	real_t vip1j = v->Data()[it.Right().Value()];
+	real_t uijp1 = _data[it.Top().Value()];
+	real_t vijm1 = v->Data()[it.Down().Value()];
+	real_t vip1jm1 = v->Data()[it.Right().Down().Value()];
+	real_t uijm1 = _data[it.Down().Value()];
+	res = (1.0/_geom->Mesh()[1]) * ( (vij+vip1j)/2.0 * (uij+uijp1)/2.0 - (vijm1+vip1jm1)/2.0 * (uijm1+uij)/2.0 ) + (alpha/_geom->Mesh()[1]) * ( std::abs(vij+vip1j)/2.0 * (uij-uijp1)/2.0 - std::abs(vijm1+vip1jm1)/2.0 * (uijm1-uij)/2.0 );
+	return res;
 }
 
 real_t Grid::Max() const
@@ -149,6 +207,12 @@ real_t Grid::AbsMax() const
 }
 
 real_t* Grid::Data()
+{
+	return _data;
+}
+
+// own method
+const real_t* Grid::Data() const
 {
 	return _data;
 }
