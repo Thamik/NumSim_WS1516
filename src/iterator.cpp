@@ -194,7 +194,7 @@ BoundaryIterator::BoundaryIterator(const Geometry *geom)
 	// TODO: constructor complete?
 }
 
-void BoundaryIterator::SetBoundary(const index_t& boundary)
+/*void BoundaryIterator::SetBoundary(const index_t& boundary)
 {
 	// TODO: test!
 	_boundary = boundary;
@@ -216,19 +216,74 @@ void BoundaryIterator::SetBoundary(const index_t& boundary)
 		}
 	}
 	// maybe set _valid as true?
+}*/
+
+void BoundaryIterator::SetBoundary(const index_t& boundary)
+{
+	_boundary = boundary;
 }
 
 void BoundaryIterator::First()
 {
 	// TODO: is this right?
-	_value = 0;
-	_boundary = 0;
+	// _value = 0;
+	//_boundary = 0; // do not set this here
+
+	if (_boundary == 0){
+		// _boundary is unset, dont know what to do here
+	} else if (_boundary == 1){
+		// the left boundary, set to the lower left corner cell
+		_value = 0;
+	} else if (_boundary == 2){
+		// the right boundary, set to the lower right corner cell
+		_value = _geom->Size()[0] - 1;
+	} else if (_boundary == 3){
+		// the lower boundary, set to the lower left corner cell
+		_value = 0;
+	} else if (_boundary == 4){
+		// the upper boundary, set to the upper left corner cell
+		_value = _geom->Size()[0] * (_geom->Size()[1] - 1);
+	} else {
+		// this should not happen, invalid value in _boundary
+	}
+
 	// maybe set _valid as true?
 }
 
-void BoundaryIterator::Next()
+/*void BoundaryIterator::Next()
 {
 	// TODO: is this right?
 	SetBoundary(_boundary+1);
 	if (_boundary >= 2*_geom->Size()[0] + 2*_geom->Size()[1] - 4) _valid = false; // maybe do this earlier?
+}*/
+
+void BoundaryIterator::Next()
+{
+	// TODO: test
+	index_t temp(0);
+
+	if (_boundary == 0){
+		// _boundary is unset, dont know what to do here
+	} else if (_boundary == 1){
+		// the left boundary
+		temp = Top().Value();
+	} else if (_boundary == 2){
+		// the right boundary
+		temp = Top().Value();
+	} else if (_boundary == 3){
+		// the lower boundary	
+		temp = Right().Value();
+	} else if (_boundary == 4){
+		// the upper boundary
+		temp = Right().Value();
+	} else {
+		// this should not happen, invalid value in _boundary
+	}
+
+	if (temp == _value){
+		// we were and are at the end (we stayed there)
+		_valid = false;
+	} else {
+		_value = temp;
+	}
 }

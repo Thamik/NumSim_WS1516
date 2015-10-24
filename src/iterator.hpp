@@ -111,6 +111,9 @@ public:
 
 private:
   index_t _boundary;
+	// _boundary enumerates the side of the area:
+	// left = 1, right = 2, bottom = 3, top = 4
+	// 0 = unset
 };
 //------------------------------------------------------------------------------
 #endif // __ITERATOR_HPP

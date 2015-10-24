@@ -61,6 +61,10 @@ private:
 
   multi_real_t _velocity;
   real_t _pressure;
+
+	// own method
+	// sets the meshwidth
+	void set_meshwidth();
 };
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP
