@@ -1,4 +1,6 @@
 #include "geometry.hpp"
+#include "grid.hpp"
+#include "iterator.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -68,16 +70,57 @@ const multi_real_t& Geometry::Mesh() const
 	return _h;
 }
 
+// update the boundary values (have to be done every timestep)
 void Geometry::Update_U(Grid *u) const
 {
-	// TODO
+	// TODO: test
+	// see lecture, 3.1.2
+	for (int i=1; i<=4; i++){
+		BoundaryIterator it(this);
+		it.SetBoundary(i);
+		it.First();
+		while (it.Valid()){
+			if (i==4){
+				// upper boundary
+				u->Cell(it) = 2*1.0 - u->Cell(it.Down());
+			} else if (i==1 || i==2){
+				// left or right boundary
+				u->Cell(it) = 0.0;
+			} else {
+				// lower boundary
+				u->Cell(it) = - u->Cell(it.Top());
+			}
+			it.Next();
+		}
+	}
 }
 
+// update the boundary values (have to be done every timestep)
 void Geometry::Update_V(Grid *v) const
 {
-	// TODO
+	// TODO: test
+	// see lecture, 3.1.2
+	for (int i=1; i<=4; i++){
+		BoundaryIterator it(this);
+		it.SetBoundary(i);
+		it.First();
+		while (it.Valid()){
+			if (i==4){
+				// upper boundary
+				v->Cell(it) = - v->Cell(it.Down());
+			} else if (i==1 || i==2){
+				// left or right boundary
+				v->Cell(it) = 0.0;
+			} else {
+				// lower boundary
+				v->Cell(it) = - v->Cell(it.Top());
+			}
+			it.Next();
+		}
+	}
 }
 
+// update the boundary values for p
 void Geometry::Update_P(Grid *p) const
 {
 	// TODO
