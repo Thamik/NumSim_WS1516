@@ -1,2 +1,11 @@
 bin/
 obj/
+Makefile
+My_Makefile
+numsim
+cmake_install.cmake
+CMakeFiles/
+CMakeCache.txt
+*~
+VTK/
+.project
