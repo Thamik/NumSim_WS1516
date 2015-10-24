@@ -1,5 +1,11 @@
 #include "compute.hpp"
 #include "grid.hpp"
+#include "iterator.hpp"
+#include "geometry.hpp"
+#include "parameter.hpp"
+
+#include <cmath>
+#include <algorithm>    // std::min
 
 /* Public methods */
 
@@ -38,6 +44,21 @@ Compute::~Compute()
 void Compute::TimeStep(bool printInfo)
 {
 	// TODO
+	
+	// compute dt
+	real_t dt = compute_dt();
+	
+	// boundary values
+	
+	// compute F, G
+	MomentumEqu(dt);
+	
+	// compute rhs
+	
+	// solve Poisson equation
+	
+	// compute u, v
+	
 }
 
 const real_t& Compute::GetTime() const
@@ -67,12 +88,29 @@ const Grid* Compute::GetRHS() const
 
 const Grid* Compute::GetVelocity()
 {
-	// TODO
+	// TODO: test
+	Grid* res = new Grid(_geom);
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		res->Cell(it) = sqrt(pow(_u->Cell(it),2.0)+pow(_v->Cell(it),2.0));
+		it.Next();
+	}
+	return res;
 }
 
 const Grid* Compute::GetVorticity()
 {
-	// TODO
+	// TODO: test
+	Grid* res = new Grid(_geom);
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		// here, we use central difference quotients
+		res->Cell(it) = 0.5*(_v->dx_l(it)+_v->dx_r(it)) - 0.5*(_u->dy_l(it)+_u->dy_r(it));
+		it.Next();
+	}
+	return res;
 }
 
 const Grid* Compute::GetStream()
@@ -95,4 +133,13 @@ void Compute::MomentumEqu(const real_t& dt)
 void Compute::RHS(const real_t& dt)
 {
 	// TODO
+}
+
+// own methods
+real_t Compute::compute_dt() const
+{
+	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
+	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
+	res /= 2.0; // just to be sure (because it is a strict inequality)
+	return res;
 }
