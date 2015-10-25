@@ -5,7 +5,7 @@
 #include "parameter.hpp"
 #include "solver.hpp"
 
-#include <cmath>
+#include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
 
 /* Public methods */
@@ -27,7 +27,9 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	_tmp = new Grid(_geom);
 	
 	// TODO: is this right, anything else to initialize?
-	_solver = new SOR(_geom, 1.0); // TODO: set omega to the right value
+	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
+	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	_solver = new SOR(_geom, omega);
 }
 
 /* Destructor */
