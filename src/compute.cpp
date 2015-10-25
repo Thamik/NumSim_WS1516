@@ -3,6 +3,7 @@
 #include "iterator.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
+#include "solver.hpp"
 
 #include <cmath>
 #include <algorithm>    // std::min
@@ -25,7 +26,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	_rhs = new Grid(_geom);
 	_tmp = new Grid(_geom);
 	
-	// TODO: initialize solver etc.
+	// TODO: is this right, anything else to initialize?
+	_solver = new SOR(_geom, 1.0); // TODO: set omega to the right value
 }
 
 /* Destructor */
@@ -39,6 +41,8 @@ Compute::~Compute()
 	delete _G;
 	delete _rhs;
 	delete _tmp;
+	
+	delete _solver;
 }
 
 void Compute::TimeStep(bool printInfo)
@@ -56,6 +60,12 @@ void Compute::TimeStep(bool printInfo)
 	// compute rhs
 	
 	// solve Poisson equation
+	real_t residual(_epslimit + 1.0);
+	index_t iteration(0);
+	while (iteration <= _param->IterMax() && residual > _epslimit){
+		// do one solver cycle here
+		residual = _solver->Cycle(_p, _rhs);
+	}
 	
 	// compute u, v
 	
@@ -132,7 +142,13 @@ void Compute::MomentumEqu(const real_t& dt)
 
 void Compute::RHS(const real_t& dt)
 {
-	// TODO
+	// TODO: test
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		_rhs->Cell(it) = 1.0/dt * (_F->dx_r(it) + _G->dy_r(it));
+		it.Next();
+	}
 }
 
 // own methods
