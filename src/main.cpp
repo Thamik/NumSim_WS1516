@@ -22,19 +22,29 @@
 #include "visu.hpp"
 #include "vtk.hpp"
 
+#include <iostream>
+
+#define VERBOSE true
+
 int main(int argc, char **argv) {
   // Create parameter and geometry instances with default values
   Parameter param;
   Geometry geom;
   // Create the fluid solver
+	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;
   Compute comp(&geom, &param);
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
   // Create and initialize the visualization
+	if (VERBOSE) std::cout << "Initializing the visualization..." << std::flush;
   Renderer visu(geom.Length(), geom.Mesh());
   visu.Init(800, 800);
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
   // Create a VTK generator
+	if (VERBOSE) std::cout << "Creating the VTK generator..." << std::flush;
   VTK vtk(geom.Mesh(), geom.Size());
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
   const Grid *visugrid;
   bool run = true;
@@ -65,15 +75,20 @@ int main(int argc, char **argv) {
     };
 
     // Create a VTK File in the folder VTK (must exist)
+	if (VERBOSE) std::cout << "Creating a VTK file...";
     vtk.Init("VTK/field");
     vtk.AddField("Velocity", comp.GetU(), comp.GetV());
     vtk.AddScalar("Pressure", comp.GetP());
     vtk.Finish();
+	if (VERBOSE) std::cout << "Done.\n";
 
     // Run a few steps
-    for (uint32_t i = 0; i < 9; ++i)
-      comp.TimeStep(false);
-    comp.TimeStep(true);
+	if (VERBOSE) std::cout << "Running a few timesteps..." << std::flush;
+    for (uint32_t i = 0; i < 9; ++i){
+      comp.TimeStep(false,VERBOSE);
+    }
+	if (VERBOSE) std::cout << "Done.\n";
+    comp.TimeStep(true,VERBOSE);
   }
   return 0;
 }

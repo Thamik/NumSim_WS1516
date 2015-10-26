@@ -26,6 +26,18 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
 	_tmp = new Grid(_geom);
+
+	/*Grid u(_geom);
+	u.Initialize(0.0);*/ // just for debugging issues
+
+	// initialize grids
+	std::cout << "Compute: Initializing the grids..." << std::flush;
+	std::cout << "\n_u at adress " << _u  << "\n" << std::flush;
+	_u->Initialize(0.0);
+	std::cout << "Done.\n" << std::flush;
+
+	// write boundary values
+	update_boundary_values();
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
@@ -37,28 +49,28 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 Compute::~Compute()
 {
 	// TODO: something more to delete?
-	delete _u;
-	delete _v;
-	delete _p;
-	delete _F;
-	delete _G;
-	delete _rhs;
-	delete _tmp;
+	delete[] _u;
+	delete[] _v;
+	delete[] _p;
+	delete[] _F;
+	delete[] _G;
+	delete[] _rhs;
+	delete[] _tmp;
 	
 	delete _solver;
 }
 
-void Compute::TimeStep(bool printInfo)
+void Compute::TimeStep(bool printInfo, bool verbose=false)
 {
 	// TODO: test
 	
 	// compute dt
+	if (verbose) std::cout << "Computing the timestep width..." << std::flush;
 	real_t dt = compute_dt();
+	if (verbose) std::cout << "Done.\n" << std::flush;
 	
 	// boundary values
-	_geom->Update_U(_u);
-	_geom->Update_V(_v);
-	_geom->Update_P(_p); // is this the correct place for this update?
+	update_boundary_values();
 	
 	// compute F, G
 	MomentumEqu(dt);
@@ -187,4 +199,11 @@ real_t Compute::compute_dt() const
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res /= 2.0; // just to be sure (because it is a strict inequality)
 	return res;
+}
+
+void Compute::update_boundary_values()
+{
+	_geom->Update_U(_u);
+	_geom->Update_V(_v);
+	_geom->Update_P(_p); // is this the correct place for this update?
 }

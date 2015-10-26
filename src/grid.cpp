@@ -5,16 +5,25 @@
 #include <stdio.h>      /* NULL */
 #include <stdlib.h>     /* malloc, free */
 #include <cmath>        // std::abs, pow
+#include <iostream>
 
 /* public methods */
 
 /* constructor */
 Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 {
-	// TODO: kein malloc/free mehr, benutze new und delete
 	_geom = geom;
+
+	/*
+	// TODO: kein malloc/free mehr, benutze new und delete
 	_data = (real_t*) malloc(_geom->Size()[0] * _geom->Size()[1] * sizeof(real_t));
 	if (_data==NULL) exit(-1);
+	*/
+	
+	std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush;
+	_data = new real_t[_geom->Size()[0] * _geom->Size()[1]];
+	std::cout << "Done.\n" << std::flush;
+
 	// TODO: what about the offset?
 	_offset = offset; // is this right?
 }
@@ -27,13 +36,19 @@ Grid::Grid(const Geometry* geom)
 /* destructor */
 Grid::~Grid()
 {
+	// TODO: somethings more to do here?
+
+	/*
 	free(_data);
-	// TODO
+	*/
+
+	delete _data;
 }
 
 void Grid::Initialize(const real_t& value)
 {
 	// TODO: test this method
+	std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;

@@ -30,7 +30,7 @@ public:
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  void TimeStep(bool printInfo);
+  void TimeStep(bool printInfo, bool verbose);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;
@@ -92,6 +92,7 @@ private:
 
 	// own methods
 	real_t compute_dt() const;
+	void update_boundary_values();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP
