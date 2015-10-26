@@ -20,17 +20,18 @@ Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 	if (_data==NULL) exit(-1);
 	*/
 	
-	std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush;
+	//std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush; // only for debugging issues
 	_data = new real_t[_geom->Size()[0] * _geom->Size()[1]];
-	std::cout << "Done.\n" << std::flush;
+	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 
 	// TODO: what about the offset?
 	_offset = offset; // is this right?
 }
 
 Grid::Grid(const Geometry* geom)
+: Grid(geom, 0.0)
 {
-	Grid(geom, 0.0); // does this make sense (offset=0)?
+	// does this make sense (offset=0)?
 }
 
 /* destructor */

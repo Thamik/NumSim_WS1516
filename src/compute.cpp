@@ -31,13 +31,15 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	u.Initialize(0.0);*/ // just for debugging issues
 
 	// initialize grids
-	std::cout << "Compute: Initializing the grids..." << std::flush;
-	std::cout << "\n_u at adress " << _u  << "\n" << std::flush;
+	//std::cout << "Compute: Initializing the grids..." << std::flush; // only for debugging issues
+	//std::cout << "\n_u at adress " << _u  << "\n" << std::flush; // only for debugging issues
 	_u->Initialize(0.0);
-	std::cout << "Done.\n" << std::flush;
+	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 
 	// write boundary values
+	//std::cout << "Compute: Updating the boundary values..." << std::flush; // only for debugging issues
 	update_boundary_values();
+	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
@@ -65,9 +67,9 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// TODO: test
 	
 	// compute dt
-	if (verbose) std::cout << "Computing the timestep width..." << std::flush;
+	//if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt();
-	if (verbose) std::cout << "Done.\n" << std::flush;
+	//if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// boundary values
 	update_boundary_values();
@@ -91,6 +93,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 
 	// print information
 	if (printInfo){
+		std::cout << "==================================================\n";
 		// timestep
 		std::cout << "Timestep: dt = " << dt << "\n";
 		// total simulated time
@@ -195,6 +198,7 @@ void Compute::RHS(const real_t& dt)
 // own methods
 real_t Compute::compute_dt() const
 {
+	std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n";
 	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res /= 2.0; // just to be sure (because it is a strict inequality)

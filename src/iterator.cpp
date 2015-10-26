@@ -1,6 +1,8 @@
 #include "iterator.hpp"
 #include "geometry.hpp"
 
+#include <iostream>
+
 // Iterate through the grid like this:
 /*
 y
@@ -24,8 +26,9 @@ Iterator::Iterator(const Geometry* geom, const index_t& value)
 }
 
 Iterator::Iterator(const Geometry* geom)
+: Iterator(geom, 0)
 {
-	Iterator(geom, 0); // Setting the default initial value (position) to zero
+	//Iterator(geom, 0); // Setting the default initial value (position) to zero
 }
 
 const index_t& Iterator::Value() const
@@ -47,8 +50,8 @@ multi_index_t Iterator::Pos() const
 {
 	// TODO: test
 	index_t x, y;
-	x = _value / _geom->Size()[0];
-	y = _value % _geom->Size()[0];
+	x = _value % _geom->Size()[0];
+	y = _value / _geom->Size()[0];
 	return multi_index_t(x,y);
 }
 
@@ -124,6 +127,7 @@ it returns itself.
 Iterator Iterator::Top() const
 {
 	// TODO: test
+	//std::cout << Pos()[1] << ", " << _geom->Size()[1]-1 << "\n" << std::flush; // only for debugging issues
 	if (Pos()[1] == _geom->Size()[1]-1){
 		// at the upper boundary, return a copy of self
 		return Iterator(_geom, _value);

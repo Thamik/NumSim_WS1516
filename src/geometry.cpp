@@ -73,13 +73,16 @@ const multi_real_t& Geometry::Mesh() const
 // update the boundary values (have to be done every timestep)
 void Geometry::Update_U(Grid *u) const
 {
+	//std::cout << "Geometry: Update_U\n" << std::flush; // only for debugging issues
 	// TODO: test
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
+		//std::cout << "!!!!!!!!!!!\n" << std::flush; // only for debugging issues
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
 		while (it.Valid()){
+			//std::cout << "i = " << i << ", it = " << it.Value() << "\n" << std::flush; // only for debugging issues
 			if (i==4){
 				// upper boundary
 				u->Cell(it) = 2*1.0 - u->Cell(it.Down());

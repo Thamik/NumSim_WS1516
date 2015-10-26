@@ -24,7 +24,7 @@
 
 #include <iostream>
 
-#define VERBOSE true
+#define VERBOSE false
 
 int main(int argc, char **argv) {
   // Create parameter and geometry instances with default values
