@@ -7,6 +7,7 @@
 
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
+#include <iostream>	// std::cout
 
 /* Public methods */
 
@@ -49,17 +50,21 @@ Compute::~Compute()
 
 void Compute::TimeStep(bool printInfo)
 {
-	// TODO
+	// TODO: test
 	
 	// compute dt
 	real_t dt = compute_dt();
 	
 	// boundary values
+	_geom->Update_U(_u);
+	_geom->Update_V(_v);
+	_geom->Update_P(_p); // is this the correct place for this update?
 	
 	// compute F, G
 	MomentumEqu(dt);
 	
 	// compute rhs
+	RHS(dt);
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -70,7 +75,15 @@ void Compute::TimeStep(bool printInfo)
 	}
 	
 	// compute u, v
-	
+	NewVelocities(dt);
+
+	// print information
+	if (printInfo){
+		// timestep
+		std::cout << "Timestep: dt = " << dt << "\n";
+		// total simulated time
+		std::cout << "Total simulated time: t = " << _t << "\n";
+	}
 }
 
 const real_t& Compute::GetTime() const
@@ -119,7 +132,7 @@ const Grid* Compute::GetVorticity()
 	it.First();
 	while (it.Valid()){
 		// here, we use central difference quotients
-		res->Cell(it) = 0.5*(_v->dx_l(it)+_v->dx_r(it)) - 0.5*(_u->dy_l(it)+_u->dy_r(it));
+		res->Cell(it) = _v->dx_c(it) - _u->dy_c(it);
 		it.Next();
 	}
 	return res;
@@ -134,12 +147,26 @@ const Grid* Compute::GetStream()
 
 void Compute::NewVelocities(const real_t& dt)
 {
-	// TODO
+	// TODO: test
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_c(it);
+		_v->Cell(it) = _G->Cell(it) - dt * _p->dy_c(it);
+		it.Next();
+	}
 }
 
 void Compute::MomentumEqu(const real_t& dt)
 {
-	// TODO
+	// TODO: test
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
+		_G->Cell(it) = _v->Cell(it) + dt * ( 1.0/_param->Re() * (_v->dxx(it) + _v->dyy(it)) - _v->DC_dvv_y(it,_param->Alpha()) - _v->DC_duv_x(it,_param->Alpha(),_u) );
+		it.Next();
+	}
 }
 
 void Compute::RHS(const real_t& dt)

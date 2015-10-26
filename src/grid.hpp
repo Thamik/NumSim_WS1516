@@ -58,6 +58,11 @@ public:
   /// Computes the central difference quotient of 2nd order in y-dim at [it]
   real_t dyy(const Iterator &it) const;
 
+	// Own methods
+	// central difference quotients at [it]
+	real_t dx_c(const Iterator& it) const;
+	real_t dy_c(const Iterator& it) const;
+
   /// Computes u*du/dx with the donor cell method
   real_t DC_udu_x(const Iterator &it, const real_t &alpha) const;
   /// Computes v*du/dy with the donor cell method

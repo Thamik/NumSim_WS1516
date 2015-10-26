@@ -81,6 +81,17 @@ real_t Grid::dy_r(const Iterator& it) const
 	return (_data[it.Top().Value()] - _data[it.Value()])/((_geom->Mesh())[1]);
 }
 
+// own methods, central difference quotients
+real_t Grid::dx_c(const Iterator& it) const
+{
+	return 0.5 * (dx_r(it)+dx_l(it));
+}
+
+real_t Grid::dy_c(const Iterator& it) const
+{
+	return 0.5 * (dy_r(it)+dy_l(it));
+}
+
 real_t Grid::dxx(const Iterator &it) const
 {
 	// TODO: test

@@ -123,7 +123,29 @@ void Geometry::Update_V(Grid *v) const
 // update the boundary values for p
 void Geometry::Update_P(Grid *p) const
 {
-	// TODO
+	// TODO: test
+	// see lecture, 3.2.3
+	for (int i=1; i<=4; i++){
+		BoundaryIterator it(this);
+		it.SetBoundary(i);
+		it.First();
+		while (it.Valid()){
+			if (i==4){
+				// upper boundary
+				p->Cell(it) = p->Cell(it.Down());
+			} else if (i==1){
+				// left boundary
+				p->Cell(it) = p->Cell(it.Right());
+			} else if (i==2){
+				// right boundary
+				p->Cell(it) = p->Cell(it.Left());
+			} else {
+				// lower boundary
+				p->Cell(it) = p->Cell(it.Top());
+			}
+			it.Next();
+		}
+	}
 }
 
 // own method
