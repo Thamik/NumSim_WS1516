@@ -41,6 +41,10 @@ protected:
 
   /// Returns the residual at [it] for the pressure-Poisson equation
   real_t localRes(const Iterator &it, const Grid *grid, const Grid *rhs) const;
+
+	// own method
+	// return the total residual for the pressure-Poisson equation
+	real_t totalRes(const Grid* grid, const Grid* rhs) const;
 };
 
 //------------------------------------------------------------------------------

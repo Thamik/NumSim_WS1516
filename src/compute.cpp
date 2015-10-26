@@ -16,6 +16,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
+	_epslimit = 1e-10;
+	//_dtlimit = 
 
 	_geom = geom;
 	_param = param;
@@ -43,7 +45,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	//real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	real_t omega = 1.0;
 	_solver = new SOR(_geom, omega);
 }
 
@@ -83,9 +86,18 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
-	while (iteration <= _param->IterMax() && residual > _epslimit){
+	//while (iteration <= _param->IterMax() && residual > _epslimit){
+	while (true){
 		// do one solver cycle here
 		residual = _solver->Cycle(_p, _rhs);
+		iteration++;
+		if (iteration <= _param->IterMax()){
+			std::cout << "Warning: Solver did not converge!\n";
+			break;
+		} else if (residual > _epslimit){
+			std::cout << "Solver converged.\n";
+			break;
+		}
 	}
 	
 	// compute u, v
@@ -93,11 +105,14 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 
 	// print information
 	if (printInfo){
-		std::cout << "==================================================\n";
-		// timestep
-		std::cout << "Timestep: dt = " << dt << "\n";
+		std::cout << "============================================================\n";
 		// total simulated time
 		std::cout << "Total simulated time: t = " << _t << "\n";
+		// timestep
+		std::cout << "Last timestep: dt = " << dt << "\n";
+		// magnitudes of the fields
+		std::cout << "max(F) = " << _F->AbsMax() << ", max(G) = " << _G->AbsMax() << ", max(rhs) = " << _rhs->AbsMax() << "\n";
+		std::cout << "max(u) = " << _u->AbsMax() << ", max(v) = " << _v->AbsMax() << ", max(p) = " << _p->AbsMax() << "\n";
 	}
 }
 
@@ -198,10 +213,11 @@ void Compute::RHS(const real_t& dt)
 // own methods
 real_t Compute::compute_dt() const
 {
-	std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n";
+	//std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n"; // for debugging issues
 	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res /= 2.0; // just to be sure (because it is a strict inequality)
+	//res /= 10.0; // for debugging issues (not really)
 	return res;
 }
 

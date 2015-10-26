@@ -3,7 +3,8 @@
 #include "iterator.hpp"
 #include "grid.hpp"
 
-#include <cmath>
+#include <cmath>	// std::abs
+#include <algorithm>	// std::max
 
 // Solver
 
@@ -20,7 +21,22 @@ Solver::~Solver()
 
 real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
 {
-	// TODO
+	// TODO: test
+	return std::abs(rhs->Cell(it) - grid->dxx(it) - grid->dyy(it));
+}
+
+// own method
+real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
+{
+	// TODO: test
+	real_t totalRes(0.0);
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		totalRes = std::max(totalRes, localRes(it,grid,rhs));
+		it.Next();
+	}
+	return totalRes;
 }
 
 // Concrete SOR solver
@@ -44,7 +60,11 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	it.First();
 	while (it.Valid()){
 		corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * grid->Cell(it) / (pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0)) - rhs->Cell(it) );
+		
 		grid->Cell(it) += _omega * corr;
+		//grid->Cell(it) = (1.0-_omega) * grid->Cell(it) + _omega * corr;
+
 		it.Next();
 	}
+	return totalRes(grid,rhs);
 }
