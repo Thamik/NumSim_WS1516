@@ -93,6 +93,8 @@ public:
 	// own method, needed for call for const Grid* v (see above)
 	const real_t* Data() const;
 
+	Grid* copy() const;
+
 private:
   real_t *_data;
   multi_real_t _offset;

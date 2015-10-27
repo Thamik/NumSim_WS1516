@@ -48,7 +48,6 @@ system.
 */
 multi_index_t Iterator::Pos() const
 {
-	// TODO: test
 	index_t x, y;
 	x = _value % _geom->Size()[0];
 	y = _value / _geom->Size()[0];
@@ -75,6 +74,8 @@ void Iterator::Next()
 {
 	_value++;
 	if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false; // maybe one step earlier?
+	
+	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }
 
 /**
@@ -180,13 +181,14 @@ void InteriorIterator::First()
 
 void InteriorIterator::Next()
 {
-	// TODO: test
-	if (Pos()[0] >= _geom->Size()[0]-1){
+	if (Pos()[0] >= _geom->Size()[0]-2){
 		_value += 3; // jump over the right and then the left boundary cells
 	} else {
 		_value++;
 	}
 	if (Pos()[1] >= _geom->Size()[1]-1) _valid = false; // maybe do this earlier?
+
+	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }
 
 // BoundaryIterator
@@ -263,7 +265,6 @@ void BoundaryIterator::First()
 
 void BoundaryIterator::Next()
 {
-	// TODO: test
 	index_t temp(0);
 
 	if (_boundary == 0){
@@ -290,4 +291,6 @@ void BoundaryIterator::Next()
 	} else {
 		_value = temp;
 	}
+
+	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }

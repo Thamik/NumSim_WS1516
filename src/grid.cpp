@@ -49,7 +49,7 @@ Grid::~Grid()
 void Grid::Initialize(const real_t& value)
 {
 	// TODO: test this method
-	std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
+	//std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;
@@ -288,4 +288,16 @@ real_t* Grid::Data()
 const real_t* Grid::Data() const
 {
 	return _data;
+}
+
+Grid* Grid::copy() const
+{
+	Grid* res = new Grid(_geom, _offset);
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		res->Cell(it) = Cell(it);
+		it.Next();
+	}
+	return res;
 }

@@ -47,7 +47,9 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
 	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
 	// real_t omega = 1.0;
-	_solver = new SOR(_geom, omega);
+	
+	//_solver = new SOR(_geom, omega);
+	_solver = new JacobiSolver(_geom);
 }
 
 /* Destructor */
@@ -82,7 +84,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute rhs
 	RHS(dt);
-	_rhs->Initialize(1.0);
+	_rhs->Initialize(2.0);
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -93,6 +95,9 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		
 		// boundary values
 		update_boundary_values();
+
+		// delete average
+		_solver->delete_average(_p);
 
 		residual = _solver->Cycle(_p, _rhs);
 		iteration++;
@@ -186,7 +191,7 @@ const Grid* Compute::GetStream()
 void Compute::NewVelocities(const real_t& dt)
 {
 	// TODO: test
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_c(it);
@@ -198,7 +203,7 @@ void Compute::NewVelocities(const real_t& dt)
 void Compute::MomentumEqu(const real_t& dt)
 {
 	// TODO: test
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
@@ -210,7 +215,7 @@ void Compute::MomentumEqu(const real_t& dt)
 void Compute::RHS(const real_t& dt)
 {
 	// TODO: test
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		_rhs->Cell(it) = 1.0/dt * (_F->dx_r(it) + _G->dy_r(it));
@@ -232,5 +237,9 @@ void Compute::update_boundary_values()
 {
 	_geom->Update_U(_u);
 	_geom->Update_V(_v);
+
+	_geom->Update_U(_F);
+	_geom->Update_V(_G);
+
 	_geom->Update_P(_p); // is this the correct place for this update?
 }

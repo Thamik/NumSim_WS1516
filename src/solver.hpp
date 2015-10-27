@@ -36,6 +36,10 @@ public:
   // @returns accumulated residual
   virtual real_t Cycle(Grid *grid, const Grid *rhs) const = 0;
 
+	// own method
+	// deletes the average value
+	virtual void delete_average(Grid* grid) const;
+
 protected:
   const Geometry *_geom;
 
@@ -67,4 +71,14 @@ protected:
   real_t _omega;
 };
 //------------------------------------------------------------------------------
+
+class JacobiSolver : public Solver {
+public:
+	JacobiSolver(const Geometry* geom);
+	~JacobiSolver();
+
+	real_t Cycle(Grid* grid, const Grid* rhs) const;
+};
+
+
 #endif // __SOLVER_HPP
