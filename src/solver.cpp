@@ -30,7 +30,7 @@ real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
 	real_t totalRes(0.0);
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		totalRes = std::max(totalRes, localRes(it,grid,rhs));
@@ -56,13 +56,14 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
 	real_t corr(0.0);
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		//corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * grid->Cell(it) / (pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0)) - rhs->Cell(it) );
 		//correct correction term (note, that dxx(it) and dyy(it) calculate wrong fractions (they include the middle term!))
 		corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
-		
+		//corr = localRes(it, grid, rhs);
+
 		grid->Cell(it) += _omega * corr;
 		//grid->Cell(it) = (1.0-_omega) * grid->Cell(it) + _omega * corr;
 

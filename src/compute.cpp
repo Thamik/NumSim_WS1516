@@ -16,7 +16,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
-	_epslimit = 1e-10;
+	_epslimit = param->Eps();
 	//_dtlimit = 
 
 	_geom = geom;
@@ -45,8 +45,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	//real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
-	real_t omega = 1.0;
+	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	// real_t omega = 1.0;
 	_solver = new SOR(_geom, omega);
 }
 
@@ -82,6 +82,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute rhs
 	RHS(dt);
+	_rhs->Initialize(1.0);
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -89,13 +90,17 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	//while (iteration <= _param->IterMax() && residual > _epslimit){
 	while (true){
 		// do one solver cycle here
+		
+		// boundary values
+		update_boundary_values();
+
 		residual = _solver->Cycle(_p, _rhs);
 		iteration++;
-		if (iteration <= _param->IterMax()){
-			std::cout << "Warning: Solver did not converge!\n";
+		if (iteration > _param->IterMax()){
+			std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 			break;
-		} else if (residual > _epslimit){
-			std::cout << "Solver converged.\n";
+		} else if (residual < _epslimit){
+			std::cout << "Solver converged. Residual: " << residual << "\n";
 			break;
 		}
 	}
@@ -148,7 +153,7 @@ const Grid* Compute::GetVelocity()
 {
 	// TODO: test
 	Grid* res = new Grid(_geom);
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		res->Cell(it) = sqrt(pow(_u->Cell(it),2.0)+pow(_v->Cell(it),2.0));
@@ -161,7 +166,7 @@ const Grid* Compute::GetVorticity()
 {
 	// TODO: test
 	Grid* res = new Grid(_geom);
-	Iterator it(_geom);
+	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		// here, we use central difference quotients
@@ -219,8 +224,7 @@ real_t Compute::compute_dt() const
 	//std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n"; // for debugging issues
 	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
-	res /= 2.0; // just to be sure (because it is a strict inequality)
-	//res /= 10.0; // for debugging issues (not really)
+	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
 	return res;
 }
 

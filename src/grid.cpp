@@ -198,6 +198,52 @@ real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) co
 	return res;
 }
 
+
+//discretization of the convective terms without Donor Cell Method (just for testing purporse)
+/*
+real_t Grid::duu_x(const Iterator &it) const
+{
+	real_t res;
+	real_t uij = _data[it.Value()];
+	real_t uip1j = _data[it.Right().Value()];
+	real_t uim1j = _data[it.Left().Value()];
+	real_t uphalf = 0.5*(uip1j + uij);
+	real_t umhalf = 0.5*(uij + uim1j);
+
+	res = (1.0/_geom->Mesh()[0]) * (pow(uphalf,2.0) - pow(umhalf,2.0));
+	return res;
+}
+
+real_t Grid::dvv_y(const Iterator &it) const
+{
+	real_t res;
+	real_t vij = _data[it.Value()];
+	real_t vijp1 = _data[it.Top().Value()];
+	real_t vijm1 = _data[it.Down().Value()];
+	real_t vphalf = 0.5*(vijp1 + vij);
+	real_t vmhalf = 0.5*(vij + vijm1);
+
+	res = (1.0/_geom->Mesh()[1]) * (pow(vphalf,2.0) - pow(vmhalf,2.0));
+	return res;
+}
+
+real_t Grid::duv_y(const Iterator &it, const Grid* v)
+{
+	real_t res;
+	real_t viphj = 0.5*(v->Data()[it.Right().Value()] + v->Data()[it.Value()]);
+	real_t viphjm1 = 0.5*(v->Data()[it.Right().Down().Value()] + v->Data()[it.Down().Value()]);
+	real_t uijph = 0.5*(_data[it.Top().Value()] + _data[it.Value()]);
+	real_t uijmh = 0.5*(_data[it.Value()] + _data[it.Down().Value()]);
+
+	res = (1.0/_geom->Mesh()[1]) * (viphj * uijph - viphjm1 * uijmh);
+	return res;
+}
+
+real_t Grid::duv_x(const Iterator &it, const Grid* u)
+{
+	real_t res;
+*/
+
 real_t Grid::Max() const
 {
 	// TODO: test
