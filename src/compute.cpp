@@ -103,6 +103,9 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// compute u, v
 	NewVelocities(dt);
 
+	//update total time
+	_t += dt;
+
 	// print information
 	if (printInfo){
 		std::cout << "============================================================\n";
