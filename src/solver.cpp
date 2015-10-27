@@ -59,7 +59,9 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * grid->Cell(it) / (pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0)) - rhs->Cell(it) );
+		//corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * grid->Cell(it) / (pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0)) - rhs->Cell(it) );
+		//correct correction term (note, that dxx(it) and dyy(it) calculate wrong fractions (they include the middle term!))
+		corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
 		
 		grid->Cell(it) += _omega * corr;
 		//grid->Cell(it) = (1.0-_omega) * grid->Cell(it) + _omega * corr;
