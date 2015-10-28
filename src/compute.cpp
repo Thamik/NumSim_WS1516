@@ -40,7 +40,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	_p->Initialize(0.0);
 
-	Iterator it(_geom);
+	/*Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		if (it.Pos()[1]>=64){
@@ -48,7 +48,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 		}
 		//std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 		it.Next();
-	}
+	}*/
 
 	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 
@@ -63,9 +63,9 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	real_t omega = 1.0;
 	
 	//_solver = new SOR(_geom, omega);
-	//_solver = new JacobiSolver(_geom);
+	_solver = new JacobiSolver(_geom);
 
-	_solver = new HeatConductionSolver(_geom);
+	//_solver = new HeatConductionSolver(_geom);
 }
 
 /* Destructor */
@@ -100,9 +100,9 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute rhs
 	RHS(dt);
-	_rhs->Initialize(12.0);
+	//_rhs->Initialize(12.0);
 
-	_geom->Update_V(_p); // TODO: remove
+	//_geom->Update_V(_p); // TODO: remove
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -112,12 +112,12 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		// do one solver cycle here
 		
 		// boundary values
-		//update_boundary_values();
+		update_boundary_values();
 
 		residual = _solver->Cycle(_p, _rhs);
 
 		// delete average
-		//_solver->delete_average(_p);
+		_solver->delete_average(_p);
 
 		iteration++;
 		if (iteration > _param->IterMax()){
@@ -249,6 +249,7 @@ real_t Compute::compute_dt() const
 	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
+	res /= 25.0;
 	return res;
 }
 

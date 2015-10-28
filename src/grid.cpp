@@ -11,8 +11,9 @@
 
 /* constructor */
 Grid::Grid(const Geometry* geom, const multi_real_t& offset)
+: _geom(geom), _offset(offset)
 {
-	_geom = geom;
+	//_geom = geom;
 
 	/*
 	// TODO: kein malloc/free mehr, benutze new und delete
@@ -25,11 +26,11 @@ Grid::Grid(const Geometry* geom, const multi_real_t& offset)
 	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 
 	// TODO: what about the offset?
-	_offset = offset; // is this right?
+	//_offset = offset; // is this right?
 }
 
 Grid::Grid(const Geometry* geom)
-: Grid(geom, 0.0)
+: Grid(geom, multi_real_t(0.0,0.0))
 {
 	// does this make sense (offset=0)?
 }
@@ -70,7 +71,44 @@ const real_t& Grid::Cell(const Iterator& it) const
 
 real_t Grid::Interpolate(const multi_real_t& pos) const
 {
-	// TODO
+	//std::cout << "Interpolate!\n" << std::flush;
+
+	if(pos[0] > _offset[0] + 1 || pos[0] < _offset[0] || pos[1] > _offset[1] + 1 || pos[1] < _offset[1])
+	{
+		std::cout << "Warning: Interpolation - physical coordinates out of range! (" << pos[0] << ", " << pos[1] << ")\n";
+		return 0.0;
+	}
+	real_t ix = (_geom->Size()[0] - 1.0) * (pos[0] - _offset[0]);
+	real_t iy = (_geom->Size()[1] - 1.0) * (pos[1] - _offset[1]);
+	
+	//std::cout << "ix: " << ix << std::flush;
+	//std::cout << "iy: " << iy << std::flush;
+
+	index_t x1 = floor(ix);
+	index_t x2 = ceil(ix);
+	index_t y1 = floor(iy);
+	index_t y2 = ceil(iy);
+
+	//calculate values
+	index_t vallu = x1 + y1*_geom->Size()[0];
+	index_t valru = x2 + y1*_geom->Size()[0];
+	index_t vallo = x1 + y2*_geom->Size()[0];	
+	index_t valro = x2 + y2*_geom->Size()[0];
+	
+	if(vallu < 0)
+		std::cout << "Warnung: " << vallu << std::flush;
+	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
+		std::cout << "Warnung: " << valro << std::flush;
+
+	real_t alpha = ix - x1;
+	real_t beta = iy - y1;
+
+	//interpolation
+	real_t xinter1 = (1.0 - alpha) * _data[vallu] + alpha * _data[valru];
+	real_t xinter2 = (1.0 - alpha) * _data[vallo] + alpha * _data[valro];
+
+	//std::cout << "Interpolate finished!\n" << std::flush;
+	return (1.0 - beta) * xinter1 + beta * xinter2;
 }
 
 real_t Grid::dx_l(const Iterator& it) const
