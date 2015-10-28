@@ -94,6 +94,8 @@ public:
 	const real_t* Data() const;
 
 	Grid* copy() const;
+	// Output to terminal
+	void Out() const;
 
 private:
   real_t *_data;

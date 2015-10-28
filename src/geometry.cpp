@@ -11,7 +11,7 @@
 
 /* constructor */
 Geometry::Geometry()
-: _size(50,50), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
+: _size(5,5), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
 //: _size(128,128), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standart values
 {
 	set_meshwidth(); // set _h to the right values

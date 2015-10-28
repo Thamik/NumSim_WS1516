@@ -354,3 +354,17 @@ Grid* Grid::copy() const
 	}
 	return res;
 }
+
+void Grid::Out() const
+{
+	fprintf(stderr,"====================Output of Grid====================\n");
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()) {
+		fprintf(stderr,"%.5f   ",Cell(it));
+		if(it.Right().Value() == it.Value())
+			fprintf(stderr,"\n");
+		it.Next();
+	}
+	fprintf(stderr,"====================End of Output!====================\n\n");
+}
