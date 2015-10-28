@@ -8,7 +8,8 @@
 
 /* Constructor */
 Parameter::Parameter()
-: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100)
+: _re(100.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100000)
+//: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100) // standart parameter
 {
 	// Erste Zeit-Parameter-Werte (siehe Blatt 1, Seite 7 unten)
 	_dt = 0.2;

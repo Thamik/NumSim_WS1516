@@ -40,6 +40,11 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	_p->Initialize(0.0);
 
+	_F->Initialize(0.0);
+	_G->Initialize(0.0);
+	_rhs->Initialize(0.0);
+	//_temp->Initialize(0.0);
+
 	/*Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -249,7 +254,7 @@ real_t Compute::compute_dt() const
 	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
-	res /= 25.0;
+	//res /= 25.0;
 	return res;
 }
 

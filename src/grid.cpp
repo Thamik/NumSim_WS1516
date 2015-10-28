@@ -94,6 +94,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t valru = x2 + y1*_geom->Size()[0];
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
+
+	//return _data[valro];
 	
 	if(vallu < 0)
 		std::cout << "Warnung: " << vallu << std::flush;
@@ -109,6 +111,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 
 	//std::cout << "Interpolate finished!\n" << std::flush;
 	return (1.0 - beta) * xinter1 + beta * xinter2;
+
 }
 
 real_t Grid::dx_l(const Iterator& it) const
@@ -198,6 +201,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 
 // die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
 
+/*
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
 	return 2.0 * DC_udu_x(it,alpha);
@@ -237,11 +241,12 @@ real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) co
 	res = (1.0/_geom->Mesh()[1]) * ( (vij+vip1j)/2.0 * (uij+uijp1)/2.0 - (vijm1+vip1jm1)/2.0 * (uijm1+uij)/2.0 ) + (alpha/_geom->Mesh()[1]) * ( std::abs(vij+vip1j)/2.0 * (uij-uijp1)/2.0 - std::abs(vijm1+vip1jm1)/2.0 * (uijm1-uij)/2.0 );
 	return res;
 }
+*/
 
-
+//============================================================================================
 //discretization of the convective terms without Donor Cell Method (just for testing purporse)
-/*
-real_t Grid::duu_x(const Iterator &it) const
+
+real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
 	real_t res;
 	real_t uij = _data[it.Value()];
@@ -254,7 +259,7 @@ real_t Grid::duu_x(const Iterator &it) const
 	return res;
 }
 
-real_t Grid::dvv_y(const Iterator &it) const
+real_t Grid::DC_dvv_y(const Iterator &it, const real_t &alpha) const
 {
 	real_t res;
 	real_t vij = _data[it.Value()];
@@ -267,7 +272,7 @@ real_t Grid::dvv_y(const Iterator &it) const
 	return res;
 }
 
-real_t Grid::duv_y(const Iterator &it, const Grid* v)
+real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const
 {
 	real_t res;
 	real_t viphj = 0.5*(v->Data()[it.Right().Value()] + v->Data()[it.Value()]);
@@ -279,10 +284,18 @@ real_t Grid::duv_y(const Iterator &it, const Grid* v)
 	return res;
 }
 
-real_t Grid::duv_x(const Iterator &it, const Grid* u)
+real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const
 {
 	real_t res;
-*/
+	real_t vip1jph = 0.5 * (_data[it.Right().Top().Value()] + _data[it.Right().Value()]);
+	real_t vijph = 0.5 * (_data[it.Top().Value()] + _data[it.Value()]);
+	real_t uiphj = 0.5 * (u->_data[it.Value()] + u->_data[it.Right().Value()]);
+	real_t uimhj = 0.5 * (u->_data[it.Value()] + u->_data[it.Left().Value()]);
+
+	res = (1.0/_geom->Mesh()[0]) * (vip1jph*uiphj - vijph*uiphj);
+	return res;
+}
+//====================================================================================
 
 real_t Grid::Max() const
 {
