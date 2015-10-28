@@ -111,13 +111,15 @@ real_t Grid::dy_c(const Iterator& it) const
 real_t Grid::dxx(const Iterator &it) const
 {
 	// TODO: test
-	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/( (_geom->Mesh())[0] * (_geom->Mesh())[0] );
+	//return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/( (_geom->Mesh())[0] * (_geom->Mesh())[0] );
+	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/pow(_geom->Mesh()[0],2.0);
 }
 
 real_t Grid::dyy(const Iterator& it) const
 {
 	// TODO: test
-	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/( (_geom->Mesh())[1] * (_geom->Mesh())[1] );
+	//return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/( (_geom->Mesh())[1] * (_geom->Mesh())[1] );
+	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/pow(_geom->Mesh()[1],2.0);
 }
 
 real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
