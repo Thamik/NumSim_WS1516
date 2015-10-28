@@ -81,4 +81,14 @@ public:
 };
 
 
+class HeatConductionSolver : public Solver {
+public:
+	HeatConductionSolver(const Geometry* geom);
+	~HeatConductionSolver();
+
+	real_t Cycle(Grid* grid, const Grid* rhs) const;
+
+};
+
+
 #endif // __SOLVER_HPP

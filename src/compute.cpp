@@ -36,6 +36,20 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	//std::cout << "Compute: Initializing the grids..." << std::flush; // only for debugging issues
 	//std::cout << "\n_u at adress " << _u  << "\n" << std::flush; // only for debugging issues
 	_u->Initialize(0.0);
+	_v->Initialize(0.0);
+
+	_p->Initialize(0.0);
+
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		if (it.Pos()[1]>=64){
+			_p->Cell(it) = 10.01;
+		}
+		//std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
+		it.Next();
+	}
+
 	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 
 	// write boundary values
@@ -45,11 +59,13 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
-	// real_t omega = 1.0;
+	//real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	real_t omega = 1.0;
 	
 	//_solver = new SOR(_geom, omega);
-	_solver = new JacobiSolver(_geom);
+	//_solver = new JacobiSolver(_geom);
+
+	_solver = new HeatConductionSolver(_geom);
 }
 
 /* Destructor */
@@ -84,7 +100,9 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute rhs
 	RHS(dt);
-	_rhs->Initialize(2.0);
+	_rhs->Initialize(12.0);
+
+	_geom->Update_V(_p); // TODO: remove
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -94,18 +112,19 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		// do one solver cycle here
 		
 		// boundary values
-		update_boundary_values();
-
-		// delete average
-		_solver->delete_average(_p);
+		//update_boundary_values();
 
 		residual = _solver->Cycle(_p, _rhs);
+
+		// delete average
+		//_solver->delete_average(_p);
+
 		iteration++;
 		if (iteration > _param->IterMax()){
 			std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 			break;
 		} else if (residual < _epslimit){
-			std::cout << "Solver converged. Residual: " << residual << "\n";
+			std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
 			break;
 		}
 	}

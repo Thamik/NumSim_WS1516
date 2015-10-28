@@ -135,6 +135,7 @@ void Geometry::Update_P(Grid *p) const
 		while (it.Valid()){
 			if (i==4){
 				// upper boundary
+				//std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 				p->Cell(it) = p->Cell(it.Down());
 			} else if (i==1){
 				// left boundary
@@ -142,7 +143,7 @@ void Geometry::Update_P(Grid *p) const
 			} else if (i==2){
 				// right boundary
 				p->Cell(it) = p->Cell(it.Left());
-			} else {
+			} else if (i==3){
 				// lower boundary
 				p->Cell(it) = p->Cell(it.Top());
 			}

@@ -24,6 +24,10 @@ real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) c
 {
 	// TODO: test
 	return std::abs(rhs->Cell(it) - grid->dxx(it) - grid->dyy(it));
+
+	//std::cout << "rhs in localRes: " << rhs->Cell(it) << "\n";
+	
+	//return std::abs(- grid->dxx(it) - grid->dyy(it));
 }
 
 // own method
@@ -34,6 +38,7 @@ real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
+		//std::cout << "localRes " << it.Pos()[0] << ", " << it.Pos()[1] << ": " << localRes(it,grid,rhs) << "\n";
 		totalRes = std::max(totalRes, localRes(it,grid,rhs));
 		it.Next();
 		//if (localRes(it,grid,rhs) < 1.99) std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
@@ -52,6 +57,7 @@ void Solver::delete_average(Grid* grid) const
 		it.Next();
 	}
 	avg /= real_t(_geom->Size()[0] * _geom->Size()[1]);
+
 	Iterator it2(_geom);
 	it2.First();
 	while (it2.Valid()){
@@ -113,7 +119,8 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		grid->Cell(it) = 1.0/(-2.0/_geom->Mesh()[0] - 2.0/_geom->Mesh()[1]) * (rhs->Cell(it) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Left()) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Right()) - 1.0/_geom->Mesh()[1] * cpy->Cell(it.Top()) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Down()));
+		
+		grid->Cell(it) = 1.0/(-2.0/pow(_geom->Mesh()[0],2.0) - 2.0/pow(_geom->Mesh()[1],2.0)) * (rhs->Cell(it) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Left()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Right()) - 1.0/pow(_geom->Mesh()[1],2.0) * cpy->Cell(it.Top()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Down()));
 
 		/*if (std::abs(grid->Cell(it) - cpy->Cell(it))>1e-8){
 			std::cout << "hier hat sich was geändert: " << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
@@ -126,3 +133,30 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 	delete cpy;
 	return totalRes(grid,rhs);
 }
+
+
+HeatConductionSolver::HeatConductionSolver(const Geometry* geom)
+: Solver(geom)
+{
+}
+
+HeatConductionSolver::~HeatConductionSolver()
+{
+}
+
+real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
+{
+	real_t dt = 0.000001;
+	Grid* cpy = grid->copy();
+	for (int i=0; i<=10; i++){
+		InteriorIterator it(_geom);
+		it.First();
+		while (it.Valid()){
+			grid->Cell(it) += dt * (cpy->dxx(it)+cpy->dyy(it) - rhs->Cell(it));
+			it.Next();
+		}
+	}
+	delete cpy;
+	return totalRes(grid,rhs);
+}
+
