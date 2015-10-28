@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
   const Grid *visugrid;
   bool run = true;
 
-  visugrid = comp.GetVelocity();
+  visugrid = comp.GetP();
 
   // Run the time steps until the end is reached
   while (comp.GetTime() < param.Tend() && run) {

@@ -45,11 +45,11 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
-	// real_t omega = 1.0;
+	// real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	real_t omega = 1.0;
 	
-	//_solver = new SOR(_geom, omega);
-	_solver = new JacobiSolver(_geom);
+	_solver = new SOR(_geom, omega);
+	//_solver = new JacobiSolver(_geom);
 }
 
 /* Destructor */
