@@ -67,8 +67,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	//real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
 	real_t omega = 1.0;
 	
-	//_solver = new SOR(_geom, omega);
-	_solver = new JacobiSolver(_geom);
+	_solver = new SOR(_geom, omega);
+	//_solver = new JacobiSolver(_geom);
 
 	//_solver = new HeatConductionSolver(_geom);
 }
@@ -98,7 +98,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	//if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// boundary values
-	update_boundary_values();
+	//update_boundary_values();
 	
 	// compute F, G
 	MomentumEqu(dt);
@@ -117,7 +117,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		// do one solver cycle here
 		
 		// boundary values
-		update_boundary_values();
+		//update_boundary_values();
 
 		residual = _solver->Cycle(_p, _rhs);
 

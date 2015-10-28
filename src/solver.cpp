@@ -98,6 +98,17 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 		grid->Cell(it) += _omega * corr;
 		//grid->Cell(it) = (1.0-_omega) * grid->Cell(it) + _omega * corr;
 
+		//Neuman BC TODO
+		if (it.Right().Right().Value() == it.Right().Value())
+			grid->Cell(it.Right()) = grid->Cell(it);
+		else if (it.Left().Left().Value() == it.Left().Value())
+			grid->Cell(it.Left()) = grid->Cell(it);
+		else if (it.Down().Down().Value() == it.Down().Value())
+			grid->Cell(it.Down()) = grid->Cell(it);
+		else if (it.Top().Top().Value() == it.Top().Value())
+			grid->Cell(it.Top()) = grid->Cell(it);
+
+
 		it.Next();
 	}
 	return totalRes(grid,rhs);

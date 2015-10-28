@@ -95,8 +95,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
-	//return _data[valro];
-	
+	return _data[valro];
+	/*
 	if(vallu < 0)
 		std::cout << "Warnung: " << vallu << std::flush;
 	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
@@ -111,7 +111,7 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 
 	//std::cout << "Interpolate finished!\n" << std::flush;
 	return (1.0 - beta) * xinter1 + beta * xinter2;
-
+	*/
 }
 
 real_t Grid::dx_l(const Iterator& it) const

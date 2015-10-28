@@ -38,9 +38,9 @@ int main(int argc, char **argv)
 		// TODO: right order of: solve - BC Update - delete_av.??
 		res = solver.Cycle(&p, &rhs);
 		//Neumann RB
-		geom.Update_P(&p);
+		//geom.Update_P(&p);
 		//delete mean value
-		solver.delete_average(&p);
+		//solver.delete_average(&p);
 
 
 		visu.Render(&p);
