@@ -96,6 +96,8 @@ public:
 	Grid* copy() const;
 	// Output to terminal
 	void Out() const;
+	// Calculate Laplace
+	void Laplace(Grid* in);
 
 private:
   real_t *_data;

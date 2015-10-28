@@ -368,3 +368,13 @@ void Grid::Out() const
 	}
 	fprintf(stderr,"====================End of Output!====================\n\n");
 }
+
+void Grid::Laplace(Grid* in)
+{
+	InteriorIterator it(_geom);
+	it.First();
+	while(it.Valid()) {
+		_data[it.Value()] = in->dxx(it) + in->dyy(it);
+		it.Next();
+	}
+}
