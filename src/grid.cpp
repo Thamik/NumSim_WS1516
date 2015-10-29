@@ -73,13 +73,13 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 {
 	//std::cout << "Interpolate!\n" << std::flush;
 
-	if(pos[0] > _offset[0] + 1 || pos[0] < _offset[0] || pos[1] > _offset[1] + 1 || pos[1] < _offset[1])
+	/*if(pos[0] > _offset[0] + 1 || pos[0] < _offset[0] || pos[1] > _offset[1] + 1 || pos[1] < _offset[1])
 	{
 		std::cout << "Warning: Interpolation - physical coordinates out of range! (" << pos[0] << ", " << pos[1] << ")\n";
 		return 0.0;
-	}
-	real_t ix = (_geom->Size()[0] - 1.0) * (pos[0] - _offset[0]);
-	real_t iy = (_geom->Size()[1] - 1.0) * (pos[1] - _offset[1]);
+	}*/
+	real_t ix = (_geom->Size()[0] - 2.0) * (pos[0] - _offset[0]) + 1.0;
+	real_t iy = (_geom->Size()[1] - 1.0) * (pos[1] - _offset[1]) + 1.0;
 	
 	//std::cout << "ix: " << ix << std::flush;
 	//std::cout << "iy: " << iy << std::flush;
@@ -377,4 +377,22 @@ void Grid::Laplace(Grid* in)
 		_data[it.Value()] = in->dxx(it) + in->dyy(it);
 		it.Next();
 	}
+}
+
+bool Grid::CheckNaN()
+{
+	bool nan(false);
+
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()) {
+		if((_data[it.Value()] != _data[it.Value()]) || -_data[it.Value()] != -_data[it.Value()]){
+			nan = true;
+			std::cout << "NaN found: " << it.Pos()[0] << ", " << it.Pos()[1] << "\n" << std::flush;
+			std::cin.get(); // pause
+		}
+		it.Next();	
+	}
+
+	return nan;
 }

@@ -11,7 +11,7 @@
 
 /* constructor */
 Geometry::Geometry()
-: _size(32,32), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
+: _size(5,5), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
 //: _size(128,128), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standart values
 {
 	set_meshwidth(); // set _h to the right values
@@ -87,9 +87,13 @@ void Geometry::Update_U(Grid *u) const
 			if (i==4){
 				// upper boundary
 				u->Cell(it) = 2*1.0 - u->Cell(it.Down());
-			} else if (i==1 || i==2){
-				// left or right boundary
+			} else if (i==1){
+				// left boundary
 				u->Cell(it) = 0.0;
+			} else if (i==2) {
+				// right boundary
+				u->Cell(it) = 0.0;
+				u->Cell(it.Left()) = 0.0;
 			} else {
 				// lower boundary
 				u->Cell(it) = - u->Cell(it.Top());
@@ -109,13 +113,14 @@ void Geometry::Update_V(Grid *v) const
 		it.SetBoundary(i);
 		it.First();
 		while (it.Valid()){
-			if (i==4 || i==3){
+			if (i==4){
 				// upper boundary
 				//v->Cell(it) = - v->Cell(it.Down());
 				v->Cell(it) = 0.0;
-			/*} else if (i==1 || i==2){
-				// left or right boundary
-				v->Cell(it) = 0.0;*/
+				v->Cell(it.Down()) = 0.0;
+			} else if (i==3){
+				// lower boundary
+				v->Cell(it) = 0.0;
 			} else if (i == 1) {
 				v->Cell(it) = -v->Cell(it.Right());
 			} else if (i == 2) {

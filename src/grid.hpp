@@ -98,6 +98,8 @@ public:
 	void Out() const;
 	// Calculate Laplace
 	void Laplace(Grid* in);
+	// Check for NaNs in Grid
+	bool CheckNaN();
 
 private:
   real_t *_data;

@@ -89,6 +89,7 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	real_t corr(0.0);
 	InteriorIterator it(_geom);
 	it.First();
+	//grid->Cell(it.Down()) = 0.0;
 	while (it.Valid()){
 		//corr = pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * ( grid->dxx(it) + grid->dyy(it) - (2.0 * (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0))) * grid->Cell(it) / (pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0)) - rhs->Cell(it) );
 		//correct correction term (note, that dxx(it) and dyy(it) calculate wrong fractions (they include the middle term!))
@@ -101,16 +102,17 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 		//Neuman BC TODO
 		if (it.Right().Right().Value() == it.Right().Value())
 			grid->Cell(it.Right()) = grid->Cell(it);
-		else if (it.Left().Left().Value() == it.Left().Value())
+		if (it.Left().Left().Value() == it.Left().Value())
 			grid->Cell(it.Left()) = grid->Cell(it);
-		else if (it.Down().Down().Value() == it.Down().Value())
+		if (it.Down().Down().Value() == it.Down().Value())
 			grid->Cell(it.Down()) = grid->Cell(it);
-		else if (it.Top().Top().Value() == it.Top().Value())
+		if (it.Top().Top().Value() == it.Top().Value())
 			grid->Cell(it.Top()) = grid->Cell(it);
 
 
 		it.Next();
 	}
+	grid->CheckNaN();
 	return totalRes(grid,rhs);
 }
 

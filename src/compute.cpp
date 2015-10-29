@@ -21,13 +21,13 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	_geom = geom;
 	_param = param;
-	_u = new Grid(_geom); // offset here?
-	_v = new Grid(_geom);
-	_p = new Grid(_geom);
+	_u = new Grid(_geom, multi_real_t(0.0,(-1)*_geom->Mesh()[1]/2.0)); // offset here?
+	_v = new Grid(_geom, multi_real_t((-1)*_geom->Mesh()[0]/2.0,0.0));
+	_p = new Grid(_geom, multi_real_t((-1)*_geom->Mesh()[0]/2.0,(-1)*_geom->Mesh()[1]/2.0));
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
-	_tmp = new Grid(_geom);
+	//_tmp = new Grid(_geom);
 
 	/*Grid u(_geom);
 	u.Initialize(0.0);*/ // just for debugging issues
@@ -59,13 +59,13 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	// write boundary values
 	//std::cout << "Compute: Updating the boundary values..." << std::flush; // only for debugging issues
-	update_boundary_values();
+	//update_boundary_values();
 	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	//real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
-	real_t omega = 1.0;
+	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
+	//real_t omega = 1.0;
 	
 	_solver = new SOR(_geom, omega);
 	//_solver = new JacobiSolver(_geom);
@@ -98,7 +98,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	//if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// boundary values
-	//update_boundary_values();
+	// update_boundary_values();
 	
 	// compute F, G
 	MomentumEqu(dt);
@@ -122,7 +122,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		residual = _solver->Cycle(_p, _rhs);
 
 		// delete average
-		_solver->delete_average(_p);
+		//_solver->delete_average(_p);
 
 		iteration++;
 		if (iteration > _param->IterMax()){
@@ -136,6 +136,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute u, v
 	NewVelocities(dt);
+	update_boundary_values();
 
 	//update total time
 	_t += dt;
@@ -181,11 +182,11 @@ const Grid* Compute::GetRHS() const
 const Grid* Compute::GetVelocity()
 {
 	// TODO: test
-	Grid* res = new Grid(_geom);
+	Grid* res = new Grid(_geom,multi_real_t((-1)*_geom->Mesh()[0],(-1)*_geom->Mesh()[1]));
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		res->Cell(it) = sqrt(pow(_u->Cell(it),2.0)+pow(_v->Cell(it),2.0));
+		res->Cell(it) = sqrt(pow(0.5*(_u->Cell(it)+_u->Cell(it.Left())),2.0)+pow(0.5*(_v->Cell(it)+_v->Cell(it.Down())),2.0));
 		it.Next();
 	}
 	return res;
@@ -218,8 +219,8 @@ void Compute::NewVelocities(const real_t& dt)
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_c(it);
-		_v->Cell(it) = _G->Cell(it) - dt * _p->dy_c(it);
+		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_r(it);
+		_v->Cell(it) = _G->Cell(it) - dt * _p->dy_r(it);
 		it.Next();
 	}
 }
@@ -242,9 +243,10 @@ void Compute::RHS(const real_t& dt)
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		_rhs->Cell(it) = 1.0/dt * (_F->dx_r(it) + _G->dy_r(it));
+		_rhs->Cell(it) = 1.0/dt * (_F->dx_l(it) + _G->dy_l(it));
 		it.Next();
 	}
+	//_solver->delete_average(_rhs);
 }
 
 // own methods
@@ -266,5 +268,5 @@ void Compute::update_boundary_values()
 	_geom->Update_U(_F);
 	_geom->Update_V(_G);
 
-	_geom->Update_P(_p); // is this the correct place for this update?
+	//_geom->Update_P(_p); // is this the correct place for this update?
 }

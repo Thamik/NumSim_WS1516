@@ -2,6 +2,7 @@
 #include "compute.hpp"
 #include "geometry.hpp"
 #include "parameter.hpp"
+#include "iterator.hpp"
 #include "solver.hpp"
 #include "visu.hpp"
 #include "vtk.hpp"
@@ -18,11 +19,17 @@ int main(int argc, char **argv)
 	Grid p(&geom);
 	Grid laplace(&geom);
 	laplace.Initialize(0.0);
-	p.Initialize(0.0);
+	p.Initialize(2.0);
 
 	Grid rhs(&geom);
-	rhs.Initialize(2.0);
-	rhs.Out();
+	rhs.Initialize(0.0);
+	/*Iterator it(&geom, (geom.Size()[0]*geom.Size()[1]-1)/2);
+	while (it.Valid()) {
+		rhs.Cell(it) = -2.0;
+		it.Next();
+	}*/
+	solver.delete_average(&rhs);
+	//rhs.Out();
 
 	Renderer visu(geom.Length(), geom.Mesh());
 	visu.Init(800,800);
@@ -38,9 +45,9 @@ int main(int argc, char **argv)
 		// TODO: right order of: solve - BC Update - delete_av.??
 		res = solver.Cycle(&p, &rhs);
 		//Neumann RB
-		//geom.Update_P(&p);
+		geom.Update_P(&p);
 		//delete mean value
-		//solver.delete_average(&p);
+		solver.delete_average(&p);
 
 
 		visu.Render(&p);
