@@ -21,9 +21,12 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	_geom = geom;
 	_param = param;
-	_u = new Grid(_geom, multi_real_t(0.0,(-1)*_geom->Mesh()[1]/2.0)); // offset here?
-	_v = new Grid(_geom, multi_real_t((-1)*_geom->Mesh()[0]/2.0,0.0));
-	_p = new Grid(_geom, multi_real_t((-1)*_geom->Mesh()[0]/2.0,(-1)*_geom->Mesh()[1]/2.0));
+	//_u = new Grid(_geom, multi_real_t(_geom->Mesh()[0],_geom->Mesh()[1]/2.0)); // offset here?
+	//_v = new Grid(_geom, multi_real_t(_geom->Mesh()[0]/2.0,_geom->Mesh()[1]));
+	//_p = new Grid(_geom, multi_real_t(_geom->Mesh()[0]/2.0,_geom->Mesh()[1]/2.0));
+	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
+	_v = new Grid(_geom, multi_real_t(-0.5,-1.0));
+	_p = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
@@ -122,7 +125,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		residual = _solver->Cycle(_p, _rhs);
 
 		// delete average
-		//_solver->delete_average(_p);
+		_solver->delete_average(_p);
 
 		iteration++;
 		if (iteration > _param->IterMax()){
@@ -137,6 +140,8 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// compute u, v
 	NewVelocities(dt);
 	update_boundary_values();
+	_u->CheckNaN();
+	_v->CheckNaN();
 
 	//update total time
 	_t += dt;

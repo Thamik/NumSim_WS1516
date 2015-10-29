@@ -78,8 +78,12 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 		std::cout << "Warning: Interpolation - physical coordinates out of range! (" << pos[0] << ", " << pos[1] << ")\n";
 		return 0.0;
 	}*/
-	real_t ix = (_geom->Size()[0] - 2.0) * (pos[0] - _offset[0]) + 1.0;
-	real_t iy = (_geom->Size()[1] - 1.0) * (pos[1] - _offset[1]) + 1.0;
+	/*real_t ix = ( (_geom->Size()[0] - 2.0)*pos[0] + 1.0 ) - (_offset[0]/_geom->Mesh()[0]);
+	real_t iy = ( (_geom->Size()[1] - 2.0)*pos[1] + 1.0 ) - (_offset[1]/_geom->Mesh()[1]);*/
+	real_t ix = ( (_geom->Size()[0] - 2.0)*pos[0] ) - _offset[0];
+	real_t iy = ( (_geom->Size()[1] - 2.0)*pos[1] ) - _offset[1];
+	if (_offset[0] > 0 || _offset[1] > 0)
+		std::cout << "Warning: Positive Offset \n";
 	
 	//std::cout << "ix: " << ix << std::flush;
 	//std::cout << "iy: " << iy << std::flush;
@@ -95,12 +99,12 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
-	return _data[valro];
-	/*
+	//return _data[valro];
+
 	if(vallu < 0)
-		std::cout << "Warnung: " << vallu << std::flush;
+		std::cout << "Warnung: " << vallu << "\n" << std::flush;
 	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
-		std::cout << "Warnung: " << valro << std::flush;
+		std::cout << "Warnung: " << ix << ", " << iy << "\n" << std::flush;
 
 	real_t alpha = ix - x1;
 	real_t beta = iy - y1;
@@ -111,7 +115,6 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 
 	//std::cout << "Interpolate finished!\n" << std::flush;
 	return (1.0 - beta) * xinter1 + beta * xinter2;
-	*/
 }
 
 real_t Grid::dx_l(const Iterator& it) const
@@ -386,7 +389,7 @@ bool Grid::CheckNaN()
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()) {
-		if((_data[it.Value()] != _data[it.Value()]) || -_data[it.Value()] != -_data[it.Value()]){
+		if(std::abs(_data[it.Value()]) > 1e5){
 			nan = true;
 			std::cout << "NaN found: " << it.Pos()[0] << ", " << it.Pos()[1] << "\n" << std::flush;
 			std::cin.get(); // pause

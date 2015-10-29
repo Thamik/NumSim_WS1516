@@ -112,7 +112,6 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 
 		it.Next();
 	}
-	grid->CheckNaN();
 	return totalRes(grid,rhs);
 }
 
