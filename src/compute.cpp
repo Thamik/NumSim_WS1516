@@ -48,6 +48,9 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	_rhs->Initialize(0.0);
 	//_temp->Initialize(0.0);
 
+	//set boundary values
+	update_boundary_values();
+
 	/*Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
