@@ -204,7 +204,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 
 // die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
 
-/*
+// the original donor cell methods
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
 	return 2.0 * DC_udu_x(it,alpha);
@@ -244,11 +244,11 @@ real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) co
 	res = (1.0/_geom->Mesh()[1]) * ( (vij+vip1j)/2.0 * (uij+uijp1)/2.0 - (vijm1+vip1jm1)/2.0 * (uijm1+uij)/2.0 ) + (alpha/_geom->Mesh()[1]) * ( std::abs(vij+vip1j)/2.0 * (uij-uijp1)/2.0 - std::abs(vijm1+vip1jm1)/2.0 * (uijm1-uij)/2.0 );
 	return res;
 }
-*/
+
 
 //============================================================================================
 //discretization of the convective terms without Donor Cell Method (just for testing purporse)
-
+/*
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
 	real_t res;
@@ -298,6 +298,7 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 	res = (1.0/_geom->Mesh()[0]) * (vip1jph*uiphj - vijph*uiphj);
 	return res;
 }
+*/
 //====================================================================================
 
 real_t Grid::Max() const
