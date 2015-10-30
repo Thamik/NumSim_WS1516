@@ -84,13 +84,13 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 Compute::~Compute()
 {
 	// TODO: something more to delete?
-	delete[] _u;
-	delete[] _v;
-	delete[] _p;
-	delete[] _F;
-	delete[] _G;
-	delete[] _rhs;
-	delete[] _tmp;
+	delete _u;
+	delete _v;
+	delete _p;
+	delete _F;
+	delete _G;
+	delete _rhs;
+	//delete _tmp;
 	
 	delete _solver;
 }
