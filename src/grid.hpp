@@ -101,6 +101,8 @@ public:
 	// Check for NaNs in Grid
 	bool CheckNaN() const;
 
+	real_t average_value() const;
+
 private:
   real_t *_data;
   multi_real_t _offset;

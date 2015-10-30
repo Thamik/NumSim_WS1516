@@ -399,3 +399,16 @@ bool Grid::CheckNaN() const
 
 	return nan;
 }
+
+real_t Grid::average_value() const
+{
+	// compute the average value
+	real_t avg(0.0);
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		avg += _data[it.Value()];
+		it.Next();
+	}
+	return avg / real_t(_geom->Size()[0] * _geom->Size()[1]);
+}

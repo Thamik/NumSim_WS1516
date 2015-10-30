@@ -16,7 +16,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
-	_epslimit = param->Eps();
+	//_epslimit = param->Eps();
+	_epslimit = 1e-10;
 	//_dtlimit = 
 
 	_geom = geom;
@@ -70,8 +71,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
 	//real_t omega = 1.0;
 	
-	_solver = new SOR(_geom, omega);
-	//_solver = new JacobiSolver(_geom);
+	//_solver = new SOR(_geom, omega);
+	_solver = new JacobiSolver(_geom);
 
 	//_solver = new HeatConductionSolver(_geom);
 }
