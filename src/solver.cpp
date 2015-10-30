@@ -30,7 +30,7 @@ real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) c
 	//return std::abs(- grid->dxx(it) - grid->dyy(it));
 }
 
-// own method
+/*// own method
 real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
@@ -44,19 +44,33 @@ real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
 		//if (localRes(it,grid,rhs) < 1.99) std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 	}
 	return totalRes;
+}*/
+
+real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
+{
+	Grid localResGrid(_geom);
+	localResGrid.Initialize(0.0);
+	// TODO: test
+	real_t totalRes(0.0);
+	InteriorIterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		//std::cout << "localRes " << it.Pos()[0] << ", " << it.Pos()[1] << ": " << localRes(it,grid,rhs) << "\n";
+		
+		localResGrid.Cell(it) = localRes(it,grid,rhs);
+
+		totalRes += localRes(it,grid,rhs);
+		it.Next();
+		//if (localRes(it,grid,rhs) < 1.99) std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
+	}
+	//localResGrid.Out();
+	return totalRes/((_geom->Size()[0]-2) * (_geom->Size()[1]-2));
 }
 
 void Solver::delete_average(Grid* grid) const
 {
 	// compute the average value
-	real_t avg(0.0);
-	Iterator it(_geom);
-	it.First();
-	while (it.Valid()){
-		avg += grid->Cell(it);
-		it.Next();
-	}
-	avg /= real_t(_geom->Size()[0] * _geom->Size()[1]);
+	real_t avg = grid->average_value();
 
 	Iterator it2(_geom);
 	it2.First();
