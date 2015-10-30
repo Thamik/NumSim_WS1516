@@ -109,7 +109,7 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 		if (it.Top().Top().Value() == it.Top().Value())
 			grid->Cell(it.Top()) = grid->Cell(it);
 
-
+		
 		it.Next();
 	}
 	return totalRes(grid,rhs);
