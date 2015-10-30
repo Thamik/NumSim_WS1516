@@ -22,23 +22,14 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 
 	_geom = geom;
 	_param = param;
-	//_u = new Grid(_geom, multi_real_t(_geom->Mesh()[0],_geom->Mesh()[1]/2.0)); // offset here?
-	//_v = new Grid(_geom, multi_real_t(_geom->Mesh()[0]/2.0,_geom->Mesh()[1]));
-	//_p = new Grid(_geom, multi_real_t(_geom->Mesh()[0]/2.0,_geom->Mesh()[1]/2.0));
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
 	_v = new Grid(_geom, multi_real_t(-0.5,-1.0));
 	_p = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
-	//_tmp = new Grid(_geom);
 
-	/*Grid u(_geom);
-	u.Initialize(0.0);*/ // just for debugging issues
-
-	// initialize grids
-	//std::cout << "Compute: Initializing the grids..." << std::flush; // only for debugging issues
-	//std::cout << "\n_u at adress " << _u  << "\n" << std::flush; // only for debugging issues
+	// Initialize Grids
 	_u->Initialize(0.0);
 	_v->Initialize(0.0);
 
@@ -52,22 +43,6 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	//set boundary values
 	update_boundary_values();
 
-	/*Iterator it(_geom);
-	it.First();
-	while (it.Valid()){
-		if (it.Pos()[1]>=64){
-			_p->Cell(it) = 10.01;
-		}
-		//std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
-		it.Next();
-	}*/
-
-	//std::cout << "Done.\n" << std::flush; // only for debugging issues
-
-	// write boundary values
-	//std::cout << "Compute: Updating the boundary values..." << std::flush; // only for debugging issues
-	//update_boundary_values();
-	//std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
@@ -76,8 +51,6 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 	
 	_solver = new SOR(_geom, omega);
 	//_solver = new JacobiSolver(_geom);
-
-	//_solver = new HeatConductionSolver(_geom);
 }
 
 /* Destructor */
@@ -90,7 +63,6 @@ Compute::~Compute()
 	delete _F;
 	delete _G;
 	delete _rhs;
-	//delete _tmp;
 	
 	delete _solver;
 }
@@ -112,10 +84,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute rhs
 	RHS(dt);
-	//_rhs->Initialize(12.0);
 	//_solver->delete_average(_rhs);
-
-	//_geom->Update_V(_p); // TODO: remove
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -147,8 +116,6 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// compute u, v
 	NewVelocities(dt);
 	update_boundary_values();
-	_u->CheckNaN();
-	_v->CheckNaN();
 
 	//update total time
 	_t += dt;
