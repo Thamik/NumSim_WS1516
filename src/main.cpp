@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
     default:
       break;
     };
+	visugrid->CheckNaN();
 
     // Create a VTK File in the folder VTK (must exist)
 	if (VERBOSE) std::cout << "Creating a VTK file...";

@@ -187,13 +187,15 @@ const Grid* Compute::GetRHS() const
 const Grid* Compute::GetVelocity()
 {
 	// TODO: test
-	Grid* res = new Grid(_geom,multi_real_t((-1)*_geom->Mesh()[0],(-1)*_geom->Mesh()[1]));
-	InteriorIterator it(_geom);
+	//Grid* res = new Grid(_geom,multi_real_t((-1)*_geom->Mesh()[0],(-1)*_geom->Mesh()[1]));
+	Grid* res = new Grid(_geom,multi_real_t(-0.5,-0.5));	
+	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		res->Cell(it) = sqrt(pow(0.5*(_u->Cell(it)+_u->Cell(it.Left())),2.0)+pow(0.5*(_v->Cell(it)+_v->Cell(it.Down())),2.0));
 		it.Next();
 	}
+	res->CheckNaN();
 	return res;
 }
 

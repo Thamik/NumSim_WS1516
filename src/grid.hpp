@@ -99,7 +99,7 @@ public:
 	// Calculate Laplace
 	void Laplace(Grid* in);
 	// Check for NaNs in Grid
-	bool CheckNaN();
+	bool CheckNaN() const;
 
 private:
   real_t *_data;

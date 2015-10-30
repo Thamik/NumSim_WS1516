@@ -382,7 +382,7 @@ void Grid::Laplace(Grid* in)
 	}
 }
 
-bool Grid::CheckNaN()
+bool Grid::CheckNaN() const
 {
 	bool nan(false);
 
