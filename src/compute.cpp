@@ -113,6 +113,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	// compute rhs
 	RHS(dt);
 	//_rhs->Initialize(12.0);
+	//_solver->delete_average(_rhs);
 
 	//_geom->Update_V(_p); // TODO: remove
 	
@@ -125,13 +126,13 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		
 		// boundary values
 		//update_boundary_values();
+		
+		//_geom->Update_P(_p);
 
 		residual = _solver->Cycle(_p, _rhs);
 
 		// delete average
 		//_solver->delete_average(_p);
-		//Iterator i2(_geom, _geom->Size()[0]*_geom->Size()[1]/2);
-		//_p->Cell(i2) = 0.0;
 
 		iteration++;
 		if (iteration > _param->IterMax()){
