@@ -97,7 +97,7 @@ SOR::~SOR()
 {
 }
 
-real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
+/*real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
 	real_t corr(0.0);
@@ -127,6 +127,51 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 		
 		it.Next();
 	}
+	return totalRes(grid,rhs);
+}*/
+
+// SOR Cycle, Neumann boundary conditions included
+// see: Numerical Simulation in Fluid Dynamics, p.37
+real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
+{
+	// TODO: test
+
+	index_t eps_W(0);
+	index_t eps_E(0);
+	index_t eps_S(0);
+	index_t eps_N(0);
+
+	InteriorIterator it(_geom);
+	it.First();
+	//grid->Cell(it.Down()) = 0.0;
+	while (it.Valid()){
+
+		// ignore the lower and the left boundary
+		/*if (it.Pos()[0]==0 || it.Pos()[1]==0){
+			it.Next();
+			continue;
+		}*/
+
+		if (it.Pos()[0]==1) eps_W = 0; else eps_W = 1;
+		if (it.Pos()[0]==_geom->Size()[0]-2) eps_E = 0; else eps_E = 1;
+		if (it.Pos()[1]==1) eps_S = 0; else eps_S = 1;
+		if (it.Pos()[1]==_geom->Size()[1]-2) eps_N = 0; else eps_N = 1;
+
+		real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
+		real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
+
+		grid->Cell(it) = (1-_omega)*grid->Cell(it) + _omega / ( (eps_E+eps_W)/hx + (eps_N+eps_S)/hy ) * ( (eps_E * grid->Cell(it.Right()) + eps_W * grid->Cell(it.Left()))/hx + (eps_N * grid->Cell(it.Top()) + eps_S * grid->Cell(it.Down()))/hy - rhs->Cell(it) );
+
+		// set one cell to zero
+		if (it.Value()==(_geom->Size()[0]*_geom->Size()[1])/2){
+			grid->Cell(it) = 0.0;
+		}
+		
+		it.Next();
+	}
+
+	_geom->Update_P(grid);
+
 	return totalRes(grid,rhs);
 }
 
