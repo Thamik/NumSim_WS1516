@@ -17,7 +17,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	//_epslimit = param->Eps();
-	_epslimit = 1e-10;
+	_epslimit = 1e-4;
 	//_dtlimit = 
 
 	_geom = geom;
