@@ -81,6 +81,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	
 	// compute F, G
 	MomentumEqu(dt);
+	update_boundary_values();
 	
 	// compute rhs
 	RHS(dt);
