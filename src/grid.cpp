@@ -44,7 +44,7 @@ Grid::~Grid()
 	free(_data);
 	*/
 
-	delete _data;
+	delete[] _data;
 }
 
 void Grid::Initialize(const real_t& value)

@@ -20,7 +20,7 @@ Solver::~Solver()
 {
 }
 
-/*real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
+real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
 	return std::abs(rhs->Cell(it) - grid->dxx(it) - grid->dyy(it));
@@ -28,9 +28,9 @@ Solver::~Solver()
 	//std::cout << "rhs in localRes: " << rhs->Cell(it) << "\n";
 	
 	//return std::abs(- grid->dxx(it) - grid->dyy(it));
-}*/
+}
 
-real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
+/*real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
 {
 	// TODO: test
 	index_t eps_W(0);
@@ -47,7 +47,7 @@ real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) c
 	real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
 
 	return pow((eps_E*(grid->Cell(it.Right())-grid->Cell(it)) - eps_W*(grid->Cell(it)-grid->Cell(it.Left())))/hx + (eps_N*(grid->Cell(it.Top())-grid->Cell(it)) - eps_S*(grid->Cell(it)-grid->Cell(it.Down())))/hy - rhs->Cell(it),2.0);
-}
+}*/
 	
 
 /*// own method
