@@ -54,7 +54,8 @@ protected:
 
 //------------------------------------------------------------------------------
 
-/** concrete SOR solver
+/**
+Concrete SOR solver
 */
 class SOR : public Solver {
 public:
@@ -71,8 +72,12 @@ public:
 protected:
   real_t _omega;
 };
+
 //------------------------------------------------------------------------------
 
+/**
+Concrete Jacobi solver
+*/
 class JacobiSolver : public Solver {
 public:
 	JacobiSolver(const Geometry* geom);
@@ -81,15 +86,19 @@ public:
 	real_t Cycle(Grid* grid, const Grid* rhs) const;
 };
 
+//------------------------------------------------------------------------------
 
+/**
+Concrete solver exploiting the temporal convergence of solutions of the heat equation
+*/
 class HeatConductionSolver : public Solver {
 public:
 	HeatConductionSolver(const Geometry* geom);
 	~HeatConductionSolver();
 
 	real_t Cycle(Grid* grid, const Grid* rhs) const;
-
 };
 
+//------------------------------------------------------------------------------
 
 #endif // __SOLVER_HPP

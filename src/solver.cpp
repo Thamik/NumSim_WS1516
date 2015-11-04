@@ -136,15 +136,21 @@ SOR::SOR(const Geometry* geom, const real_t& omega)
 }
 
 /**
-the destructor of the SOR class.
+The destructor of the SOR class.
 */
 SOR::~SOR()
 {
 }
 
+/**
+This method executes a SOR solver cycle on the given grid and returns the total residual.
+\param[in][out]	grid	The current pressure values
+\param[in]	rhs	The right hand side of the pressure Poisson equation
+
+\return 	The total residual of the approximate solution in grid after the solver cycle
+*/
 real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
-	// TODO: test
 	real_t corr(0.0);
 	InteriorIterator it(_geom);
 	it.First();
@@ -155,25 +161,14 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 		corr = (hx*hy)/(2.0*(hx + hy)) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
 		grid->Cell(it) += _omega * corr;
 
-		//Neuman BC TODO
-		/*if (it.Right().Right().Value() == it.Right().Value())
-			grid->Cell(it.Right()) = grid->Cell(it);
-		if (it.Left().Left().Value() == it.Left().Value())
-			grid->Cell(it.Left()) = grid->Cell(it);
-		if (it.Down().Down().Value() == it.Down().Value())
-			grid->Cell(it.Down()) = grid->Cell(it);
-		if (it.Top().Top().Value() == it.Top().Value())
-			grid->Cell(it.Top()) = grid->Cell(it);*/
-
-		// set one cell to zero
+		// set one cell to zero (the alternative to deleting the pressure average)
 		if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
 			grid->Cell(it) = 0.0;
 		}
 
 		it.Next();
 	}
-
-
+	// update the pressure boundary values
 	_geom->Update_P(grid);
 	return totalRes(grid,rhs);
 }
