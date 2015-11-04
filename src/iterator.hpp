@@ -56,7 +56,7 @@ public:
   virtual bool Valid() const;
 
   /// Returns an Iterator that is located left from this one.
-  // if we are at the left boundary, the cell sees itself
+  // If we are at the left boundary, the cell sees itself
   virtual Iterator Left() const;
 
   /// Returns an Iterator that is located right from this one
@@ -76,7 +76,6 @@ protected:
   index_t _value;
   bool _valid;
 
-  //virtual index_t Pos_To_Value(multi_index_t pos) const; // not needed
 };
 
 //------------------------------------------------------------------------------

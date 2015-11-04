@@ -7,32 +7,39 @@
 #include <algorithm>	// std::max
 #include <iostream>
 
-// Solver
+/* Solver */
 
-// Constructor
+/**
+The constructor of the abstract Solver class.
+\param[in]	geom	Geometry object providing all necessary geometrical information
+*/
 Solver::Solver(const Geometry* geom)
 : _geom(geom)
 {
 }
 
-// Destructor
+/**
+The destructor of the abstract Solver class.
+*/
 Solver::~Solver()
 {
 }
 
+/**
+This method returns the local residual for the pressure Poisson equation specified by grid and rhs at the position given by it.
+\param[in]	it	Iterator, which specifies the position, where the local residual shall be computed
+\param[in]	grid	Approximate solution of the pressure Poisson equation
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+
+\return		The local residual at [it]
+*/
 real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
 {
-	// TODO: test
 	return std::abs(rhs->Cell(it) - grid->dxx(it) - grid->dyy(it));
-
-	//std::cout << "rhs in localRes: " << rhs->Cell(it) << "\n";
-	
-	//return std::abs(- grid->dxx(it) - grid->dyy(it));
 }
 
 /*real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) const
 {
-	// TODO: test
 	index_t eps_W(0);
 	index_t eps_E(0);
 	index_t eps_S(0);
@@ -48,71 +55,89 @@ real_t Solver::localRes(const Iterator& it, const Grid* grid, const Grid* rhs) c
 
 	return pow((eps_E*(grid->Cell(it.Right())-grid->Cell(it)) - eps_W*(grid->Cell(it)-grid->Cell(it.Left())))/hx + (eps_N*(grid->Cell(it.Top())-grid->Cell(it)) - eps_S*(grid->Cell(it)-grid->Cell(it.Down())))/hy - rhs->Cell(it),2.0);
 }*/
-	
 
-/*// own method
+/**
+This function return the total residual of the approximate solution in grid for the discrete pressure Poisson equation with right hand side like specified in rhs.
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+
+\return 	The total residual
+*/
 real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
 {
-	// TODO: test
+	return totalRes_L1_averaged(grid,rhs);
+}
+
+/**
+This function return the total Linf residual of the approximate solution in grid for the discrete pressure Poisson equation with right hand side like specified in rhs.
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+
+\return 	The total Linf residual
+*/
+real_t Solver::totalRes_Linf(const Grid* grid, const Grid* rhs) const
+{
 	real_t totalRes(0.0);
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		//std::cout << "localRes " << it.Pos()[0] << ", " << it.Pos()[1] << ": " << localRes(it,grid,rhs) << "\n";
 		totalRes = std::max(totalRes, localRes(it,grid,rhs));
 		it.Next();
-		//if (localRes(it,grid,rhs) < 1.99) std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 	}
 	return totalRes;
-}*/
+}
 
-real_t Solver::totalRes(const Grid* grid, const Grid* rhs) const
+/**
+This function return the averaged L1 residual of the approximate solution in grid for the discrete pressure Poisson equation with right hand side like specified in rhs.
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+
+\return 	The averaged L1 residual
+*/
+real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 {
-	Grid localResGrid(_geom);
-	localResGrid.Initialize(0.0);
-	// TODO: test
 	real_t totalRes(0.0);
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		//std::cout << "localRes " << it.Pos()[0] << ", " << it.Pos()[1] << ": " << localRes(it,grid,rhs) << "\n";
-		
-		localResGrid.Cell(it) = localRes(it,grid,rhs);
-
 		totalRes += localRes(it,grid,rhs);
 		it.Next();
-		//if (localRes(it,grid,rhs) < 1.99) std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 	}
-	//localResGrid.Out();
 	return totalRes/((_geom->Size()[0]-1.0) * (_geom->Size()[1]-1.0));
 }
 
+/**
+This method deletes the average value from an arbitrary scalar grid.
+\param[in][out]	grid	A scalar grid, which average value is being deleted
+*/
 void Solver::delete_average(Grid* grid) const
 {
 	// compute the average value
 	real_t avg = grid->average_value();
 
-	Iterator it2(_geom);
-	it2.First();
-	while (it2.Valid()){
-		grid->Cell(it2) -= avg;
-		//std::cout << "1: " << grid->Data()[it2.Value()] << "\n";
-		//grid->Data()[it2.Value()] -= avg;
-		//std::cout << "2: " << grid->Data()[it2.Value()] << "\n";
-		it2.Next();
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		grid->Cell(it) -= avg;
+		it.Next();
 	}
-	//std::cout << "Average: " << avg << "\n";
 }
 
-// Concrete SOR solver
+/* Concrete SOR solver */
 
-// Constructor
+/**
+The constructor of the SOR class.
+\param[in]	geom	Geoemetry object containing all geometrical information needed
+\param[in]	omega	Relaxation factor
+*/
 SOR::SOR(const Geometry* geom, const real_t& omega)
 : Solver(geom), _omega(omega)
 {
 }
 
-// Destructor
+/**
+the destructor of the SOR class.
+*/
 SOR::~SOR()
 {
 }

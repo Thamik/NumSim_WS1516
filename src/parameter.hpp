@@ -40,14 +40,14 @@ public:
   const real_t &Tau() const;
 
 private:
-  real_t _re; // Reynoldszahl
-  real_t _omega; // Relaxationsfaktor
-  real_t _alpha; // Upwind-Differencing-Faktor
-  real_t _dt; // Zeitschrittweite
-  real_t _tend; // Endzeit
-  real_t _eps; // Toleranz fuer Druckiteration
-  real_t _tau; // Sicherheitsfaktor Zeitschritt
-  index_t _itermax; // Maximale Anzahl an Iterationen
+  real_t _re; // Reynolds number
+  real_t _omega; // relaxation factor
+  real_t _alpha; // upwind differencing factor
+  real_t _dt; // time step size
+  real_t _tend; // end time
+  real_t _eps; // tolerance for pressure iteration
+  real_t _tau; // safety factor time step size
+  index_t _itermax; // maximum number of iterations
 };
 //------------------------------------------------------------------------------
 #endif // __PARAMETER_HPP

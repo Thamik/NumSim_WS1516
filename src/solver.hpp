@@ -36,9 +36,8 @@ public:
   // @returns accumulated residual
   virtual real_t Cycle(Grid *grid, const Grid *rhs) const = 0;
 
-	// own method
-	// deletes the average value
-	virtual void delete_average(Grid* grid) const;
+  /// This method deletes the average value of the scalar field given by grid
+  virtual void delete_average(Grid* grid) const;
 
 protected:
   const Geometry *_geom;
@@ -46,9 +45,11 @@ protected:
   /// Returns the residual at [it] for the pressure-Poisson equation
   real_t localRes(const Iterator &it, const Grid *grid, const Grid *rhs) const;
 
-	// own method
-	// return the total residual for the pressure-Poisson equation
-	real_t totalRes(const Grid* grid, const Grid* rhs) const;
+  /// Returns the total residual for the pressure-Poisson equation
+  real_t totalRes(const Grid* grid, const Grid* rhs) const;
+
+  real_t totalRes_Linf(const Grid* grid, const Grid* rhs) const;
+  real_t totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
 };
 
 //------------------------------------------------------------------------------

@@ -18,24 +18,37 @@ Hence, from left to right, and then from the bottom to the top.
 
 /* Iterator */
 
-/* Constructor */
+/**
+The constructor with the Iterator class.
+\param[in]	geom	Geometry object, that provides all geometry information
+\param[in]	value	Starting value of the iterator
+*/
 Iterator::Iterator(const Geometry* geom, const index_t& value)
 : _geom(geom), _value(value), _valid(true)
 {
-	// TODO: is this correct?
 }
 
+/**
+Constructor for the Iterator class.
+\param[in]	geom	Geometry object, that provides all geometry information
+*/
 Iterator::Iterator(const Geometry* geom)
-: Iterator(geom, 0)
+: Iterator(geom, 0) // default initial position is zero
 {
-	//Iterator(geom, 0); // Setting the default initial value (position) to zero
 }
 
+/**
+\return The value of the iterator, that is its current position in the grid.
+*/
 const index_t& Iterator::Value() const
 {
 	return _value;
 }
 
+/**
+This is a cast opertor to convert an iterator to an index type. Returns the value of the iterator.
+/return The value of the iterator
+*/
 Iterator::operator const index_t&() const
 {
 	return _value;
@@ -73,9 +86,7 @@ If the Iterator exits the field, it is disabled!
 void Iterator::Next()
 {
 	_value++;
-	if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false; // maybe one step earlier?
-	
-	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
+	if (_value >= _geom->Size()[0]*_geom->Size()[1]) _valid = false;
 }
 
 /**
@@ -93,7 +104,6 @@ it returns itself
 */
 Iterator Iterator::Left() const
 {
-	// TODO: test
 	if (Pos()[0] == 0){
 		// at the left boundary, return a copy of self
 		return Iterator(_geom, _value);
@@ -110,7 +120,6 @@ it returns itself.
 */
 Iterator Iterator::Right() const
 {
-	// TODO: test
 	if (Pos()[0] == _geom->Size()[0]-1){
 		// at the right boundary, return a copy of self
 		return Iterator(_geom, _value);
@@ -127,8 +136,6 @@ it returns itself.
 */
 Iterator Iterator::Top() const
 {
-	// TODO: test
-	//std::cout << Pos()[1] << ", " << _geom->Size()[1]-1 << "\n" << std::flush; // only for debugging issues
 	if (Pos()[1] == _geom->Size()[1]-1){
 		// at the upper boundary, return a copy of self
 		return Iterator(_geom, _value);
@@ -145,7 +152,6 @@ it returns itself.
 */
 Iterator Iterator::Down() const
 {
-	// TODO: test
 	if (Pos()[1] == 0){
 		// at the lower boundary, return a copy of self
 		return Iterator(_geom, _value);
@@ -155,30 +161,29 @@ Iterator Iterator::Down() const
 	}
 }
 
-/* not needed
-// Protected Help Functions
-index_t Iterator::Pos_To_Value(multi_index_t pos) const
-{
-	// TODO
-}
+/* InteriorIterator */
+
+/**
+The constructor of the InteriorIterator class.
+\param[in]	geom	Geometry object containing all geometrical data
 */
-
-// InteriorIterator
-
-// Constructor
 InteriorIterator::InteriorIterator(const Geometry* geom)
 : Iterator(geom)
 {
-	// TODO: constructor complete?
 }
 
+/**
+Sets the position of the InteriorIterator to the first interior cell, which is the second cell from below and the second from left.
+*/
 void InteriorIterator::First()
 {
-	// TODO: right?
 	_value = _geom->Size()[0] + 1; // the second cell from below and the second from left
 	// maybe set _valid as true?
 }
 
+/**
+Moves the InteriorIterator to the next interior cell. If there are no further cells, the InteriorIterator is set to be invalid.
+*/
 void InteriorIterator::Next()
 {
 	if (Pos()[0] >= _geom->Size()[0]-2){
@@ -191,52 +196,34 @@ void InteriorIterator::Next()
 	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }
 
-// BoundaryIterator
+/* BoundaryIterator */
 
-// Constructor
+/**
+The constructor of the BoundaryIterator class. The boundary which shall be considered is undefined. To set the boundary, call the SetBoundary() method.
+\param[in]	geom	Geometry object with all geometrical information
+*/
 BoundaryIterator::BoundaryIterator(const Geometry *geom)
-: Iterator(geom), _boundary(0) // is this right?
+: Iterator(geom), _boundary(0)
 {
-	// TODO: constructor complete?
 }
 
-/*void BoundaryIterator::SetBoundary(const index_t& boundary)
-{
-	// TODO: test!
-	_boundary = boundary;
-	// handling boundary as counter only for boundary cells
-
-	// setting _value
-	if (_boundary <= _geom->Size()[0]-1){
-		// at the lower boundary
-		_value = _boundary;
-	} else if (_boundary >= _geom->Size()[0] + 2*(_geom->Size()[1]-2)){
-		// at the upper boundary
-		_value = _geom->Size()[0]*(_geom->Size()[1]-1) + _boundary - _geom->Size()[0] + 2*(_geom->Size()[1]-2);
-	} else {
-		// at the left or right boundary, not at the lower, not at the upper
-		if ( (_boundary-_geom->Size()[0])%2 == 0){
-			_value = _geom->Size()[0] * ((_boundary-_geom->Size()[0])/2 + 1);
-		} else {
-			_value = _geom->Size()[0] * ((_boundary-_geom->Size()[0])/2 + 1) + _geom->Size()[0] - 1;
-		}
-	}
-	// maybe set _valid as true?
-}*/
-
+/**
+This method sets the index of the boundary, which shall be considered, e.i. over which shall be iterated.
+\param[in]	boundary	An index type value between 1 and 4. 1 for the left, 2 for the right, 3 for the bottom and 4 for the top boundary.
+*/
 void BoundaryIterator::SetBoundary(const index_t& boundary)
 {
 	_boundary = boundary;
 }
 
+/**
+Moves the iterator to the first cell of the boundary specified with the method SetBoundary()
+*/
 void BoundaryIterator::First()
 {
-	// TODO: is this right?
-	// _value = 0;
-	//_boundary = 0; // do not set this here
-
 	if (_boundary == 0){
 		// _boundary is unset, dont know what to do here
+		std::cout << "Warning, BoundaryIterator: boundary index seems to not be set!\n";
 	} else if (_boundary == 1){
 		// the left boundary, set to the lower left corner cell
 		_value = 0;
@@ -251,18 +238,14 @@ void BoundaryIterator::First()
 		_value = _geom->Size()[0] * (_geom->Size()[1] - 1);
 	} else {
 		// this should not happen, invalid value in _boundary
+		std::cout << "Warning, BoundaryIterator: invalid boundary index!\n";
 	}
-
 	// maybe set _valid as true?
 }
 
-/*void BoundaryIterator::Next()
-{
-	// TODO: is this right?
-	SetBoundary(_boundary+1);
-	if (_boundary >= 2*_geom->Size()[0] + 2*_geom->Size()[1] - 4) _valid = false; // maybe do this earlier?
-}*/
-
+/**
+Moves the BoundaryIterator to the next cell of the specified boundary. If there are no further cells, the BoundaryIterator is set to be invalid.
+*/
 void BoundaryIterator::Next()
 {
 	index_t temp(0);
@@ -291,6 +274,4 @@ void BoundaryIterator::Next()
 	} else {
 		_value = temp;
 	}
-
-	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }
