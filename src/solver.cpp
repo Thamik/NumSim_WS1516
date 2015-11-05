@@ -212,30 +212,37 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	return totalRes(grid,rhs);
 }*/
 
-
+/**
+This is the constructor of the JacobiSolver class.
+\param[in]	geom	A Geometry object that encapsulates all necessary geometrical information
+*/
 JacobiSolver::JacobiSolver(const Geometry* geom)
 : Solver(geom)
 {
 }
 
+/**
+This is the destructor of the JacobiSolver class.
+*/
 JacobiSolver::~JacobiSolver()
 {
 }
 
+/**
+This method executes a Jacobi solver cycle on the given grid and returns the total residual.
+\param[in][out]	grid	The current pressure values
+\param[in]	rhs	The right hand side of the pressure Poisson equation
+
+\return 	The total residual of the approximate solution in grid after the solver cycle
+*/
 real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 {
+	// TODO: implement the update of the boundary pressure data
 	Grid* cpy = grid->copy();
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		
 		grid->Cell(it) = 1.0/(-2.0/pow(_geom->Mesh()[0],2.0) - 2.0/pow(_geom->Mesh()[1],2.0)) * (rhs->Cell(it) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Left()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Right()) - 1.0/pow(_geom->Mesh()[1],2.0) * cpy->Cell(it.Top()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Down()));
-
-		/*if (std::abs(grid->Cell(it) - cpy->Cell(it))>1e-8){
-			std::cout << "hier hat sich was geändert: " << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
-		} else {
-			std::cout << "diff: " << 1.0/(-2.0/_geom->Mesh()[0] - 2.0/_geom->Mesh()[1]) * (rhs->Cell(it) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Left()) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Right()) - 1.0/_geom->Mesh()[1] * cpy->Cell(it.Top()) - 1.0/_geom->Mesh()[0] * cpy->Cell(it.Down())) - grid->Cell(it) << "\n";
-		}*/
 
 		it.Next();
 	}
@@ -243,16 +250,29 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 	return totalRes(grid,rhs);
 }
 
-
+/**
+This is the constructor of the HeatConductionSolver class.
+\param[in]	geom	A Geometry object that specifies all geometrical data needed
+*/
 HeatConductionSolver::HeatConductionSolver(const Geometry* geom)
 : Solver(geom)
 {
 }
 
+/**
+This is the destructor method of the HeatConductionSolver class.
+*/
 HeatConductionSolver::~HeatConductionSolver()
 {
 }
 
+/**
+This method executes a solver cycle on the given grid and returns the total residual. To do this, the solution of the corresponding heat conduction equation is approximated and the limit of this solution for the time converging towards infinity is computed.
+\param[in][out]	grid	The current pressure values
+\param[in]	rhs	The right hand side of the pressure Poisson equation
+
+\return 	The total residual of the approximate solution in grid after the solver cycle
+*/
 real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 {
 	real_t dt = 0.000001;
@@ -268,4 +288,3 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 	delete cpy;
 	return totalRes(grid,rhs);
 }
-
