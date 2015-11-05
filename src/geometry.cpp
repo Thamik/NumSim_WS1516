@@ -18,12 +18,18 @@ Geometry::Geometry()
 	// TODO: are the values right?
 }
 
-void Geometry::Load(const char *file)
+void Geometry::Load(const char *file, bool verbose)
 {
-	// TODO: Test this method
+	if (verbose){
+		std::cout << "Loading geometry file from path " << file << " ...\n";
+	}
 	std::string temp_string;
 	std::ifstream infile;
 	infile.open(file);
+	if (!infile.is_open()){
+		std::cout << "Warning: geometry file could not be read!\n";
+		return;
+	}
 	for(int i=1;i<=7;i++)
 	{
 		getline(infile,temp_string);
@@ -54,6 +60,15 @@ void Geometry::Load(const char *file)
 	}
 	infile.close();
 	set_meshwidth(); // update _h
+	if (verbose){
+		std::cout << "--------------------------------------------------\n";
+		std::cout << "Geometry configuration read from file:\n";
+		std::cout << "Size\t=\t(" << _size[0] << ", " << _size[1] << ")\n";
+		std::cout << "Length\t=\t(" << _length[0] << ", " << _length[1] << ")\n";
+		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
+		std::cout << "Pressure\t=\t" << _pressure << "\n";
+		std::cout << "--------------------------------------------------\n";
+	}
 }
 
 const multi_index_t& Geometry::Size() const

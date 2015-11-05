@@ -27,9 +27,44 @@
 #define VERBOSE true
 
 int main(int argc, char **argv) {
+
+	// read the command line arguments
+	std::string param_file("");
+	std::string geom_file("");
+	for (int i=0; i<argc; i++){
+		switch (i){
+			case 0:
+				// this is the path to the executable
+				break;
+			case 1:
+				// this should be the filename of the parameter file
+				param_file.assign(argv[i]);
+				break;
+			case 2:
+				// this should be the filename of the geometry file
+				geom_file.assign(argv[i]);
+				break;
+			default:
+				// too much parameters, don't know what to do here
+				std::cout << "Warning: too much command line arguments!\n";
+				break;
+		}
+	}
+
   // Create parameter and geometry instances with default values
   Parameter param;
   Geometry geom;
+
+	// load data from files, if filenames given in the command line arguments
+	if (param_file.compare("") != 0){
+		// the string is not empty, try to load the data
+		param.Load(param_file.c_str(), VERBOSE);
+	}
+	if (geom_file.compare("") != 0){
+		// the string is not empty, try to load the data
+		geom.Load(geom_file.c_str(), VERBOSE);
+	}
+
   // Create the fluid solver
 	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;
   Compute comp(&geom, &param);

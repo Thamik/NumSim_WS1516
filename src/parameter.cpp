@@ -20,13 +20,20 @@ Parameter::Parameter()
 /**
 This method loads a parameter set from a file. In this file, the parameters should be listed in different rows in the following order: Reynolds number, relaxation factor, upwind differencing factor, tolerance for pressure iteration, safety factor for the time step size, maximum number of iterations, time step size, end time.
 \param[in]	file	Filename of the file, which contains the parameter set
+\param[in]	verbose	Determines, if further information shall be printed to the standard output channel (usually the command line)
 */
-void Parameter::Load(const char* file)
+void Parameter::Load(const char* file, bool verbose)
 {
-	// TODO: Test this method
+	if (verbose){
+		std::cout << "Loading parameter file from path " << file << " ...\n";
+	}
 	std::string temp_string;
 	std::ifstream infile;
 	infile.open(file);
+	if (!infile.is_open()){
+		std::cout << "Warning: parameter file could not be read!\n";
+		return;
+	}
 	for(int i=1;i<=8;i++)
 	{
 		getline(infile,temp_string);
@@ -59,6 +66,19 @@ void Parameter::Load(const char* file)
 		}
 	}
 	infile.close();
+	if (verbose){
+		std::cout << "--------------------------------------------------\n";
+		std::cout << "Parameter configuration read from file:\n";
+		std::cout << "Re\t=\t" << _re << "\n";
+		std::cout << "Omega\t=\t" << _omega << "\n";
+		std::cout << "Alpha\t=\t" << _alpha << "\n";
+		std::cout << "Epsilon\t=\t" << _eps << "\n";
+		std::cout << "Tau\t=\t" << _tau << "\n";
+		std::cout << "Itermax\t=\t" << _itermax << "\n";
+		std::cout << "dt\t=\t" << _dt << "\n";
+		std::cout << "tend\t=\t" << _tend << "\n";
+		std::cout << "--------------------------------------------------\n";
+	}
 }
 
 /**
