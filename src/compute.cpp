@@ -132,6 +132,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		std::cout << "max(F) = " << _F->AbsMax() << ", max(G) = " << _G->AbsMax() << ", max(rhs) = " << _rhs->AbsMax() << "\n";
 		std::cout << "max(u) = " << _u->AbsMax() << ", max(v) = " << _v->AbsMax() << ", max(p) = " << _p->AbsMax() << "\n";
 		std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
+		std::cout << "============================================================\n";
 	}
 }
 

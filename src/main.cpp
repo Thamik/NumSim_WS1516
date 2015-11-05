@@ -119,12 +119,14 @@ int main(int argc, char **argv) {
 	if (VERBOSE) std::cout << "Done.\n";
 
     // Run a few steps
-	if (VERBOSE) std::cout << "Running a few timesteps..." << std::flush;
+	if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
     for (uint32_t i = 0; i < 9; ++i){
       comp.TimeStep(false,VERBOSE);
     }
-	if (VERBOSE) std::cout << "Done.\n";
     comp.TimeStep(true,VERBOSE);
   }
+
+	std::cout << "The program was executed sucessfully! Exiting...\n";
+
   return 0;
 }
