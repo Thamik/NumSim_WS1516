@@ -21,8 +21,7 @@
 #define __SOLVER_HPP
 //------------------------------------------------------------------------------
 
-/** abstract base class for an iterative solver
-*/
+/// abstract base class for an iterative solver
 class Solver {
 public:
   /// Constructor of the abstract Solver class
@@ -54,9 +53,7 @@ protected:
 
 //------------------------------------------------------------------------------
 
-/**
-Concrete SOR solver
-*/
+/// Concrete SOR solver
 class SOR : public Solver {
 public:
   /// Constructs an actual SOR solver
@@ -75,9 +72,7 @@ protected:
 
 //------------------------------------------------------------------------------
 
-/**
-Concrete Jacobi solver
-*/
+/// Concrete Jacobi solver
 class JacobiSolver : public Solver {
 public:
 	JacobiSolver(const Geometry* geom);
@@ -88,9 +83,7 @@ public:
 
 //------------------------------------------------------------------------------
 
-/**
-Concrete solver exploiting the temporal convergence of solutions of the heat equation
-*/
+/// Concrete solver exploiting the temporal convergence of solutions of the heat equation
 class HeatConductionSolver : public Solver {
 public:
 	HeatConductionSolver(const Geometry* geom);

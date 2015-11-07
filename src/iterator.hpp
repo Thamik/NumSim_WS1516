@@ -79,8 +79,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------
-/** Iterator for interior cells
-*/
+/// Iterator for interior cells
 class InteriorIterator : public Iterator {
 public:
   /// Construct a new InteriorIterator
@@ -93,8 +92,7 @@ public:
 };
 
 //------------------------------------------------------------------------------
-/** Iterator for domain boundary cells.
-*/
+/// Iterator for domain boundary cells.
 class BoundaryIterator : public Iterator {
 public:
   /// Constructs a new BoundaryIterator

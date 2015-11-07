@@ -12,6 +12,10 @@
 /* Public methods */
 
 /* Constructor */
+/**
+\param[in] geom pointer on geometry object providing the geometry information
+\param[in] param pointer on parameter object providing the parameter data
+*/
 Compute::Compute(const Geometry *geom, const Parameter *param)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
@@ -67,54 +71,51 @@ Compute::~Compute()
 	delete _solver;
 }
 
+/**
+In order to do so, first a reasonable dt for stability is calculated and F,G,RHS are evaluated.
+Afterwards, the Poisson pressure equation is solved and the velocitys are updated.
+\param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
+\param[in] verbose boolean if debbuging information should be printed (standard: false)
+*/
 void Compute::TimeStep(bool printInfo, bool verbose=false)
 {
 	// TODO: test
 	
 	// compute dt
-	//if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
+	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt();
-	//if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
-	
-	// boundary values
-	// update_boundary_values();
+	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// compute F, G
 	MomentumEqu(dt);
-	update_boundary_values();
+	update_boundary_values(); //update boundary values
 	
 	// compute rhs
 	RHS(dt);
-	//_solver->delete_average(_rhs);
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
 	//while (iteration <= _param->IterMax() && residual > _epslimit){
 	while (true){
-		// do one solver cycle here
-		
-		// boundary values
-		//update_boundary_values();
-		
-		//_geom->Update_P(_p);
-
+		// one solver cycle is done here
 		residual = _solver->Cycle(_p, _rhs);
-
-		// delete average
-		//_solver->delete_average(_p);
 
 		iteration++;
 		if (iteration > _param->IterMax()){
-			std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+			if (printInfo) {
+				std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+			}
 			break;
 		} else if (residual < _epslimit){
-			std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
+			if (printInfo) {
+				std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
+			}
 			break;
 		}
 	}
 	
-	// compute u, v
+	// compute new velocitys u, v
 	NewVelocities(dt);
 	update_boundary_values();
 
@@ -136,35 +137,53 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 	}
 }
 
+/**
+\return actual total time
+*/
 const real_t& Compute::GetTime() const
 {
 	return _t;
 }
 
+/**
+\return pointer on the Grid containing u
+*/
 const Grid* Compute::GetU() const
 {
 	return _u;
 }
 
+/**
+\return pointer on the Grid containing v
+*/
 const Grid* Compute::GetV() const
 {
 	return _v;
 }
 
+/**
+\return pointer on the Grid containing p
+*/
 const Grid* Compute::GetP() const
 {
 	return _p;
 }
 
+/**
+\return pointer on the Grid containing the RHS
+*/
 const Grid* Compute::GetRHS() const
 {
 	return _rhs;
 }
 
+/**
+The absolute velocity in the euklidean norm is calculted at the middle point of the physical grid cells
+\return pointer on the Grid containing absolute velocity
+*/
 const Grid* Compute::GetVelocity()
 {
 	// TODO: test
-	//Grid* res = new Grid(_geom,multi_real_t((-1)*_geom->Mesh()[0],(-1)*_geom->Mesh()[1]));
 	Grid* res = new Grid(_geom,multi_real_t(-0.5,-0.5));	
 	Iterator it(_geom);
 	it.First();
@@ -176,6 +195,9 @@ const Grid* Compute::GetVelocity()
 	return res;
 }
 
+/**
+\return pointer on the Grid containing the Vorticity
+*/
 const Grid* Compute::GetVorticity()
 {
 	// TODO: test
@@ -190,6 +212,9 @@ const Grid* Compute::GetVorticity()
 	return res;
 }
 
+/**
+\return pointer on the Grid containing the stream
+*/
 const Grid* Compute::GetStream()
 {
 	// TODO
@@ -197,6 +222,10 @@ const Grid* Compute::GetStream()
 
 /* private methods */
 
+/**
+The new velocitys are calculated and stored in the _u,_v grids (in-place
+\param[in] dt time step size
+*/
 void Compute::NewVelocities(const real_t& dt)
 {
 	// TODO: test
@@ -209,6 +238,10 @@ void Compute::NewVelocities(const real_t& dt)
 	}
 }
 
+/**
+The expression for F,G arrising for the Momentum equations is evaluated and stored in the Grids _F,_G
+\param[in] dt time step size
+*/
 void Compute::MomentumEqu(const real_t& dt)
 {
 	// TODO: test
@@ -221,6 +254,10 @@ void Compute::MomentumEqu(const real_t& dt)
 	}
 }
 
+/**
+The Right-Hand-Side of the pressure poisson equation is calculated depending on F,G and stored into _rhs
+\param[in] dt time step size
+*/
 void Compute::RHS(const real_t& dt)
 {
 	// TODO: test
@@ -234,6 +271,10 @@ void Compute::RHS(const real_t& dt)
 }
 
 // own methods
+/**
+In the algorithm, dt has to be sufficiently small to provide stability of the algorithm. This is garanteed by calculating the minimum and multiplying with a safety factor
+\return stabile time step
+*/
 real_t Compute::compute_dt() const
 {
 	//std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n"; // for debugging issues
@@ -244,6 +285,7 @@ real_t Compute::compute_dt() const
 	return res;
 }
 
+
 void Compute::update_boundary_values()
 {
 	_geom->Update_U(_u);
@@ -251,6 +293,4 @@ void Compute::update_boundary_values()
 
 	_geom->Update_U(_F);
 	_geom->Update_V(_G);
-
-	//_geom->Update_P(_p); // is this the correct place for this update?
 }

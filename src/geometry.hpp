@@ -20,6 +20,7 @@
 #ifndef __GEOMETRY_HPP
 #define __GEOMETRY_HPP
 //------------------------------------------------------------------------------
+/// Class providing the geometrical information
 class Geometry {
 public:
   /// Constructs a default geometry:
@@ -55,15 +56,20 @@ public:
   void Update_P(Grid *p) const;
 
 private:
+  /// size of the grid
   multi_index_t _size;
+  /// physical length of the domain
   multi_real_t _length;
+  /// meshwidth
   multi_real_t _h;
 
+  /// velocity
   multi_real_t _velocity;
+  /// pressure
   real_t _pressure;
 
 	// own method
-	// sets the meshwidth
+	/// sets the meshwidth
 	void set_meshwidth();
 };
 //------------------------------------------------------------------------------

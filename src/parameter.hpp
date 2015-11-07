@@ -20,6 +20,7 @@
 #ifndef __PARAMETER_HPP
 #define __PARAMETER_HPP
 //------------------------------------------------------------------------------
+/// Class providing the parameters needed for the simulation
 class Parameter {
 public:
   /// Constructs a new Parameter set with default values

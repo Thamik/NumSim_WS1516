@@ -20,6 +20,7 @@
 #ifndef __COMPUTE_HPP
 #define __COMPUTE_HPP
 //------------------------------------------------------------------------------
+/// Class where the simulation data is calculated
 class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
@@ -52,31 +53,31 @@ public:
   const Grid *GetStream();
 
 private:
-  // current timestep
+  /// current timestep
   real_t _t;
 
-  // donor-cell diffusion condition (p. 27)
+  /// donor-cell diffusion condition (p. 27)
   real_t _dtlimit;
 
-  // limit for residual
+  /// limit for residual
   real_t _epslimit;
 
-  // velocities
+  /// velocities
   Grid *_u;
   Grid *_v;
 
-  // pressure
+  /// pressure
   Grid *_p;
 
-  // prel. vel
+  /// prel. vel
   Grid *_F;
   Grid *_G;
 
-  // right-hand side
-  Grid *_rhs;
+  /// right-hand side
+   Grid *_rhs;
 
   // container for interpolating whichever values
-  Grid *_tmp;
+  //Grid *_tmp;
 
   Solver *_solver;
 
@@ -91,7 +92,9 @@ private:
   void RHS(const real_t &dt);
 
 	// own methods
+	/// computing dt for stability
 	real_t compute_dt() const;
+	/// updates the boundary values for u,v,F,G
 	void update_boundary_values();
 };
 //------------------------------------------------------------------------------

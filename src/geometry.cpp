@@ -10,14 +10,24 @@
 /* public methods */
 
 /* constructor */
+/**
+Constructs a Geometry object with standart values<br>
+- 128x128 grid
+- physical x-length: 1
+- physical y-length: 1 
+*/
 Geometry::Geometry()
-: _size(32,32), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
-//: _size(128,128), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standart values
+: _size(128,128), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
 {
 	set_meshwidth(); // set _h to the right values
 	// TODO: are the values right?
 }
 
+/**
+The geometry for the actual problem is given in the file in path file.
+\param[in] file file path
+\param[in] verbose printing debugging information
+*/
 void Geometry::Load(const char *file, bool verbose)
 {
 	if (verbose){
@@ -71,29 +81,44 @@ void Geometry::Load(const char *file, bool verbose)
 	}
 }
 
+/**
+\return number of cells in each direction
+*/
 const multi_index_t& Geometry::Size() const
 {
 	return _size;
 }
 
+/**
+\return physical length of the domain
+*/
 const multi_real_t& Geometry::Length() const
 {
 	return _length;
 }
 
+/**
+\return width of a single grid cell
+*/
 const multi_real_t& Geometry::Mesh() const
 {
 	return _h;
 }
 
-// update the boundary values (have to be done every timestep)
+
+//=================================================================
+// Methods for the update of boundary values (have to be done every timestep)
+//=================================================================
+
+/**
+Updates the boundary values for Grid u according to the pattern of u, i.e. Dirichlet boundary conditions
+\param[out] u Grid in which the boundary conditions should be set
+*/
 void Geometry::Update_U(Grid *u) const
 {
 	//std::cout << "Geometry: Update_U\n" << std::flush; // only for debugging issues
-	// TODO: test
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
-		//std::cout << "!!!!!!!!!!!\n" << std::flush; // only for debugging issues
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
@@ -118,10 +143,12 @@ void Geometry::Update_U(Grid *u) const
 	}
 }
 
-// update the boundary values (have to be done every timestep)
+/**
+Updates the boundary values for Grid v according to the pattern of v, i.e. Dirichlet boundary conditions
+\param[out] v Grid in which the boundary conditions should be set
+*/
 void Geometry::Update_V(Grid *v) const
 {
-	// TODO: test
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
 		BoundaryIterator it(this);
@@ -130,7 +157,6 @@ void Geometry::Update_V(Grid *v) const
 		while (it.Valid()){
 			if (i==4){
 				// upper boundary
-				//v->Cell(it) = - v->Cell(it.Down());
 				v->Cell(it) = 0.0;
 				v->Cell(it.Down()) = 0.0;
 			} else if (i==3){
@@ -140,19 +166,18 @@ void Geometry::Update_V(Grid *v) const
 				v->Cell(it) = -v->Cell(it.Right());
 			} else if (i == 2) {
 				v->Cell(it) = -v->Cell(it.Left());
-			} /*else {
-				// lower boundary
-				v->Cell(it) = - v->Cell(it.Top());
-			}*/
+			}
 			it.Next();
 		}
 	}
 }
 
-// update the boundary values for p
+/**
+Updates the boundary values for Grid p according to the pattern of p, i.e. Neumann boundary conditions
+\param[out] p Grid in which the boundary conditions should be set
+*/
 void Geometry::Update_P(Grid *p) const
 {
-	// TODO: test
 	// see lecture, 3.2.3
 	for (int i=1; i<=4; i++){
 		BoundaryIterator it(this);
@@ -161,7 +186,6 @@ void Geometry::Update_P(Grid *p) const
 		while (it.Valid()){
 			if (i==4){
 				// upper boundary
-				//std::cout << it.Pos()[0] << ", " << it.Pos()[1] << "\n";
 				p->Cell(it) = p->Cell(it.Down());
 			} else if (i==1){
 				// left boundary
@@ -179,6 +203,9 @@ void Geometry::Update_P(Grid *p) const
 }
 
 // own method
+/**
+Calculates the meshwidth such that it satisfies h = length/size
+*/
 void Geometry::set_meshwidth()
 {
 	_h[0] = _length[0]/_size[0];
