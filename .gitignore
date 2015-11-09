@@ -7,6 +7,5 @@ cmake_install.cmake
 CMakeFiles/
 CMakeCache.txt
 *~
-VTK/
 .project
 documentation/

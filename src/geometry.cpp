@@ -70,15 +70,15 @@ void Geometry::Load(const char *file, bool verbose)
 	}
 	infile.close();
 	set_meshwidth(); // update _h
-	if (verbose){
+	//if (verbose){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Geometry configuration read from file:\n";
-		std::cout << "Size\t=\t(" << _size[0] << ", " << _size[1] << ")\n";
-		std::cout << "Length\t=\t(" << _length[0] << ", " << _length[1] << ")\n";
+		std::cout << "Size\t\t=\t(" << _size[0] << ", " << _size[1] << ")\n";
+		std::cout << "Length\t\t=\t(" << _length[0] << ", " << _length[1] << ")\n";
 		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
 		std::cout << "Pressure\t=\t" << _pressure << "\n";
 		std::cout << "--------------------------------------------------\n";
-	}
+	//}
 }
 
 /**

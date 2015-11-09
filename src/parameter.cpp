@@ -66,7 +66,7 @@ void Parameter::Load(const char* file, bool verbose)
 		}
 	}
 	infile.close();
-	if (verbose){
+	//if (verbose){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Parameter configuration read from file:\n";
 		std::cout << "Re\t=\t" << _re << "\n";
@@ -78,7 +78,7 @@ void Parameter::Load(const char* file, bool verbose)
 		std::cout << "dt\t=\t" << _dt << "\n";
 		std::cout << "tend\t=\t" << _tend << "\n";
 		std::cout << "--------------------------------------------------\n";
-	}
+	//}
 }
 
 /**

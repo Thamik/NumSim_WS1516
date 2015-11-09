@@ -103,14 +103,14 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 
 		iteration++;
 		if (iteration > _param->IterMax()){
-			if (printInfo) {
+			//if (printInfo) {
 				std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
-			}
+			//}
 			break;
 		} else if (residual < _epslimit){
-			if (printInfo) {
+			//if (printInfo) {
 				std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
-			}
+			//}
 			break;
 		}
 	}
@@ -132,7 +132,7 @@ void Compute::TimeStep(bool printInfo, bool verbose=false)
 		// magnitudes of the fields
 		std::cout << "max(F) = " << _F->AbsMax() << ", max(G) = " << _G->AbsMax() << ", max(rhs) = " << _rhs->AbsMax() << "\n";
 		std::cout << "max(u) = " << _u->AbsMax() << ", max(v) = " << _v->AbsMax() << ", max(p) = " << _p->AbsMax() << "\n";
-		std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
+		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 		std::cout << "============================================================\n";
 	}
 }
