@@ -20,6 +20,7 @@
 #ifndef __GRID_HPP
 #define __GRID_HPP
 //------------------------------------------------------------------------------
+/// Class providing the data structure for the grids
 class Grid {
 public:
   /// Constructs a grid based on a geometry
@@ -29,13 +30,13 @@ public:
   // @param geom   Geometry information
   // @param offset distance of staggered grid point to cell's anchor point;
   // (anchor point = lower left corner)
-  Grid(const Geometry *geom, const multi_real_t &offset);
+  Grid(const Geometry *geom, const multi_real_t &offset, bool verbose = false);
 
   /// Deletes the grid
   ~Grid();
 
   /// Initializes the grid with a value
-  void Initialize(const real_t &value);
+  void Initialize(const real_t &value, bool verbose = false);
 
   /// Write access to the grid cell at position [it]
   real_t &Cell(const Iterator &it);
@@ -59,8 +60,9 @@ public:
   real_t dyy(const Iterator &it) const;
 
 	// Own methods
-	// central difference quotients at [it]
+	/// Computes the central difference quotient in x-dim at [it]
 	real_t dx_c(const Iterator& it) const;
+	/// Computes the central difference quotient in y-dim at [it]
 	real_t dy_c(const Iterator& it) const;
 
   /// Computes u*du/dx with the donor cell method
@@ -73,11 +75,13 @@ public:
   real_t DC_vdv_y(const Iterator &it, const real_t &alpha) const;
 
 	// Own methods
-	// Compute d(u^2)/dx and d(v^2)/dy
+	/// Compute d(u^2)/dx with the donor cell method
 	real_t DC_duu_x(const Iterator &it, const real_t &alpha) const;
+	/// Compute d(v^2)/dy with the donor cell method
 	real_t DC_dvv_y(const Iterator &it, const real_t &alpha) const;
-	// Compute d(uv)/dx and d(uv)/dy
+	/// Compute d(uv)/dx with the donor cell method
 	real_t DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const;
+	/// Compute d(uv)/dy with the donor cell method
 	real_t DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const;
 
   /// Returns the maximal value of the grid
@@ -91,16 +95,19 @@ public:
   real_t *Data();
 
 	// own method, needed for call for const Grid* v (see above)
+	/// Return a pointer to the raw data (read only)
 	const real_t* Data() const;
 
+	/// Copies the grid
 	Grid* copy() const;
-	// Output to terminal
+	/// Output to terminal
 	void Out() const;
-	// Calculate Laplace
+	/// Calculate Laplace
 	void Laplace(Grid* in);
-	// Check for NaNs in Grid
+	/// Check for NaNs in Grid
 	bool CheckNaN() const;
 
+	/// Calculates the mean
 	real_t average_value() const;
 
 private:

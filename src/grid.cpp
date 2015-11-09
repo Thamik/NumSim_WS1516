@@ -10,83 +10,77 @@
 /* public methods */
 
 /* constructor */
-Grid::Grid(const Geometry* geom, const multi_real_t& offset)
+/**
+Constructs a grid with offset. Note the convention for the offset used here: The offset has to be between -1.0 and 0.0 and gives the relative distance, i.e. offset=-1.0 means that the physical offset length is equal to the length of one grid-cell.
+\param[in] geom the data on the grid size etc.
+\param[in] offset offset to consider the fact, that not all data point are at the same physical points (needs to be between -1.0 and 0.0!!)
+\param[in] verbose true if debugging information should be displayed
+*/
+Grid::Grid(const Geometry* geom, const multi_real_t& offset, bool verbose)
 : _geom(geom), _offset(offset)
-{
-	//_geom = geom;
-
-	/*
-	// TODO: kein malloc/free mehr, benutze new und delete
-	_data = (real_t*) malloc(_geom->Size()[0] * _geom->Size()[1] * sizeof(real_t));
-	if (_data==NULL) exit(-1);
-	*/
-	
-	//std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush; // only for debugging issues
+{	
+	if (verbose) std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush;
 	_data = new real_t[_geom->Size()[0] * _geom->Size()[1]];
-	//std::cout << "Done.\n" << std::flush; // only for debugging issues
-
-	// TODO: what about the offset?
-	//_offset = offset; // is this right?
+	if (verbose) std::cout << "Done.\n" << std::flush;
 }
 
+/**
+Constrcts a basic grid without offset
+\param[in] geom the data on the grid size etc.
+*/
 Grid::Grid(const Geometry* geom)
 : Grid(geom, multi_real_t(0.0,0.0))
 {
-	// does this make sense (offset=0)?
 }
 
 /* destructor */
 Grid::~Grid()
 {
-	// TODO: somethings more to do here?
-
-	/*
-	free(_data);
-	*/
-
 	delete[] _data;
 }
 
-void Grid::Initialize(const real_t& value)
+/**
+/param[in] value value to be written to all grid points
+/param[in] verbose debugging output (default: false)
+*/
+void Grid::Initialize(const real_t& value, bool verbose)
 {
-	// TODO: test this method
-	//std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
+	if (verbose) std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;
 	}
+	if (verbose) std::cout << "Done!" << std::flush;
 }
 
+/**
+/param[in] it position at which the grid should be evaluated
+*/
 real_t& Grid::Cell(const Iterator& it)
 {
-	// TODO: test
 	return _data[it.Value()];
 }
 
+/**
+/param[in] it position at which the grid should be evaluated
+*/
 const real_t& Grid::Cell(const Iterator& it) const
 {
-	// TODO: test
 	return _data[it.Value()];
 }
 
+/**
+The methods first calculates the four nearest indices on the grid (with offset!) and then does a double-linear interpolation to calculate the interpolated value at the given phyical coordinates
+/param[in] pos physical position
+/return value at physical position
+*/
 real_t Grid::Interpolate(const multi_real_t& pos) const
 {
-	//std::cout << "Interpolate!\n" << std::flush;
-
-	/*if(pos[0] > _offset[0] + 1 || pos[0] < _offset[0] || pos[1] > _offset[1] + 1 || pos[1] < _offset[1])
-	{
-		std::cout << "Warning: Interpolation - physical coordinates out of range! (" << pos[0] << ", " << pos[1] << ")\n";
-		return 0.0;
-	}*/
-	/*real_t ix = ( (_geom->Size()[0] - 2.0)*pos[0] + 1.0 ) - (_offset[0]/_geom->Mesh()[0]);
-	real_t iy = ( (_geom->Size()[1] - 2.0)*pos[1] + 1.0 ) - (_offset[1]/_geom->Mesh()[1]);*/
-	real_t ix = ( (_geom->Size()[0] - 2.0)*pos[0] ) - _offset[0];
-	real_t iy = ( (_geom->Size()[1] - 2.0)*pos[1] ) - _offset[1];
+	real_t ix = ( (_geom->Size()[0] - 2.0)*(pos[0]/_geom->Length()[0]) ) - _offset[0];
+	real_t iy = ( (_geom->Size()[1] - 2.0)*(pos[1]/_geom->Length()[1]) ) - _offset[1];
+	
 	if (_offset[0] > 0 || _offset[1] > 0)
 		std::cout << "Warning: Positive Offset \n";
-	
-	//std::cout << "ix: " << ix << std::flush;
-	//std::cout << "iy: " << iy << std::flush;
 
 	index_t x1 = floor(ix);
 	index_t x2 = ceil(ix);
@@ -99,12 +93,10 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
-	//return _data[valro];
-
 	if(vallu < 0)
-		std::cout << "Warnung: " << vallu << "\n" << std::flush;
+		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
 	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
-		std::cout << "Warnung: " << ix << ", " << iy << "\n" << std::flush;
+		std::cout << "Warnng, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
 
 	real_t alpha = ix - x1;
 	real_t beta = iy - y1;
@@ -113,62 +105,91 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	real_t xinter1 = (1.0 - alpha) * _data[vallu] + alpha * _data[valru];
 	real_t xinter2 = (1.0 - alpha) * _data[vallo] + alpha * _data[valro];
 
-	//std::cout << "Interpolate finished!\n" << std::flush;
 	return (1.0 - beta) * xinter1 + beta * xinter2;
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return left-sided x-difference quotient
+*/
 real_t Grid::dx_l(const Iterator& it) const
 {
-	// TODO: test
 	return (_data[it.Value()] - _data[it.Left().Value()])/((_geom->Mesh())[0]);
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return right-sided x-difference quotient
+*/
 real_t Grid::dx_r(const Iterator& it) const
 {
-	// TODO: test
 	return (_data[it.Right().Value()] - _data[it.Value()])/((_geom->Mesh())[0]);
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return left-sided y-difference quotient
+*/
 real_t Grid::dy_l(const Iterator& it) const
 {
-	// TODO: test
 	return (_data[it.Value()] - _data[it.Down().Value()])/((_geom->Mesh())[1]);
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return right-sided y-difference quotient
+*/
 real_t Grid::dy_r(const Iterator& it) const
 {
-	// TODO: test
 	return (_data[it.Top().Value()] - _data[it.Value()])/((_geom->Mesh())[1]);
 }
 
 // own methods, central difference quotients
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return central x-difference quotient
+*/
 real_t Grid::dx_c(const Iterator& it) const
 {
 	return 0.5 * (dx_r(it)+dx_l(it));
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return central y-difference quotient
+*/
 real_t Grid::dy_c(const Iterator& it) const
 {
 	return 0.5 * (dy_r(it)+dy_l(it));
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return central x-difference quotient of 2nd order
+*/
 real_t Grid::dxx(const Iterator &it) const
 {
-	// TODO: test
 	//return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/( (_geom->Mesh())[0] * (_geom->Mesh())[0] );
 	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/pow(_geom->Mesh()[0],2.0);
 }
 
+/**
+/param[in] it position where the difference quotient should be evaluated
+/return central y-difference quotient of 2nd order
+*/
 real_t Grid::dyy(const Iterator& it) const
 {
-	// TODO: test
 	//return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/( (_geom->Mesh())[1] * (_geom->Mesh())[1] );
 	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/pow(_geom->Mesh()[1],2.0);
 }
 
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to u*du/dx
+*/
 real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
 {
-	// TODO: test
 	// we use here that u*du/dx = 0.5 * d(u^2)/dx
 	real_t res;
 	real_t uij = _data[it.Value()];
@@ -189,9 +210,13 @@ real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) co
 	// TODO
 }
 
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to v*dv/dy
+*/
 real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 {
-	// TODO: test
 	// we use here that v*dv/dx = 0.5 * d(v^2)/dx
 	real_t res;
 	real_t vij = _data[it.Value()];
@@ -205,19 +230,33 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 // die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
 
 // the original donor cell methods
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to d(u^2)/dx
+*/
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
 	return 2.0 * DC_udu_x(it,alpha);
 }
 
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to d(v^2)/dx
+*/
 real_t Grid::DC_dvv_y(const Iterator &it, const real_t &alpha) const
 {
 	return 2.0 * DC_vdv_y(it,alpha);
 }
 
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to d(uv)/dx
+*/
 real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const
 {
-	// TODO: test
 	real_t res;
 	real_t vij = _data[it.Value()];
 	real_t uij = u->Data()[it.Value()];
@@ -230,6 +269,11 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 	return res;
 }
 
+/**
+/param[in] it position where the approximation quotient should be evaluated
+/param[in] alpha control parameter
+/return difference quotient approximation to d(uv)/dy
+*/
 real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const
 {
 	// TODO: test
@@ -301,9 +345,11 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 */
 //====================================================================================
 
+/**
+/return maximal value of the grid
+*/
 real_t Grid::Max() const
 {
-	// TODO: test
 	real_t res = _data[0];
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
@@ -312,9 +358,11 @@ real_t Grid::Max() const
 	return res;
 }
 
+/**
+/return minimal value of the grid
+*/
 real_t Grid::Min() const
 {
-	// TODO: test
 	real_t res = _data[0];
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
@@ -323,9 +371,11 @@ real_t Grid::Min() const
 	return res;
 }
 
+/**
+/return maximal value of the grid
+*/
 real_t Grid::AbsMax() const
 {
-	// TODO: test
 	real_t res = std::abs(_data[0]);
 	real_t temp;
 	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
@@ -336,17 +386,29 @@ real_t Grid::AbsMax() const
 	return res;
 }
 
+/**
+Gives write acces directly to the data (better use Cell())
+/return pointer to the raw data
+*/
 real_t* Grid::Data()
 {
 	return _data;
 }
 
 // own method
+/**
+Gives read access directly to the data (better use Cell())
+/return constant pointer to the raw data
+*/
 const real_t* Grid::Data() const
 {
 	return _data;
 }
 
+/**
+Note that the copy is a deep copy, i.e. a completely new grid is generated here
+/return copied grid
+*/
 Grid* Grid::copy() const
 {
 	Grid* res = new Grid(_geom, _offset);
@@ -359,6 +421,9 @@ Grid* Grid::copy() const
 	return res;
 }
 
+/**
+Prints the grid to the terminal.
+*/
 void Grid::Out() const
 {
 	fprintf(stderr,"====================Output of Grid====================\n");
@@ -373,6 +438,11 @@ void Grid::Out() const
 	fprintf(stderr,"====================End of Output!====================\n\n");
 }
 
+/**
+Calculates the laplacian of the data in the interior grid.
+Note, that the data on the calling grid object are overwritten!!
+/param[in] in Grid of which the laplacian method should be calculated
+*/
 void Grid::Laplace(Grid* in)
 {
 	InteriorIterator it(_geom);
@@ -383,6 +453,10 @@ void Grid::Laplace(Grid* in)
 	}
 }
 
+/**
+Debugging method: Checks the interior grid for extremly large values
+/return bool if bad entry found
+*/
 bool Grid::CheckNaN() const
 {
 	bool nan(false);
@@ -401,6 +475,9 @@ bool Grid::CheckNaN() const
 	return nan;
 }
 
+/**
+/return mean value
+*/
 real_t Grid::average_value() const
 {
 	// compute the average value
