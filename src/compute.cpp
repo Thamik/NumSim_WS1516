@@ -20,8 +20,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
-	//_epslimit = param->Eps();
-	_epslimit = 1e-4;
+	_epslimit = param->Eps();
+	//_epslimit = 1e-4;
 	//_dtlimit = 
 
 	_geom = geom;
