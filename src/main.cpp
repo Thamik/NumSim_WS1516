@@ -23,10 +23,15 @@
 #include "vtk.hpp"
 
 #include <iostream>
+#include <time.h>
 
 #define VERBOSE false
 
 int main(int argc, char **argv) {
+
+	// measure runtime
+	time_t total_timer;
+	time(&total_timer); // get current time
 
 	// read the command line arguments
 	std::string param_file("");
@@ -126,7 +131,13 @@ int main(int argc, char **argv) {
     comp.TimeStep(true,VERBOSE);
   }
 
-	std::cout << "The program was executed sucessfully! Exiting...\n";
+	std::cout << "The program was executed sucessfully!\n";
+
+	double seconds;
+	time_t temp_timer;
+	time(&temp_timer);
+	seconds = difftime(total_timer, temp_timer);
+	std::cout << "Total elapsed time: " << seconds << " seconds.\n" << "Exiting...\n" << std::flush;
 
   return 0;
 }
