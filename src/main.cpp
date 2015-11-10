@@ -23,15 +23,27 @@
 #include "vtk.hpp"
 
 #include <iostream>
-#include <time.h>
+
+#ifdef __linux__
+	#include <sys/time.h>
+//#elif _WIN32 // windows 32- and 64-bit
+//	#include <Windows.h>
+#endif
 
 #define VERBOSE false
 
 int main(int argc, char **argv) {
 
 	// measure runtime
-	time_t total_timer;
-	time(&total_timer); // get current time
+#ifdef __linux__
+	timeval tv;
+	gettimeofday(&tv, NULL);
+	long int milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+//#elif _WIN32 // windows 32- and 64-bit
+//
+#else
+	std::cout << "System unknown, no runtime measuring!\n" << std::flush;
+#endif
 
 	// read the command line arguments
 	std::string param_file("");
@@ -133,11 +145,16 @@ int main(int argc, char **argv) {
 
 	std::cout << "The program was executed sucessfully!\n";
 
-	double seconds;
-	time_t temp_timer;
-	time(&temp_timer);
-	seconds = difftime(total_timer, temp_timer);
-	std::cout << "Total elapsed time: " << seconds << " seconds.\n" << "Exiting...\n" << std::flush;
+#ifdef __linux__
+	gettimeofday(&tv, NULL);
+	long int milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+	double diff_sec = (milliseconds_end - milliseconds_begin) / 1000.0;
+	std::cout << "Total elapsed time: " << diff_sec << " seconds.\n";
+//#elif _WIN32 // windows 32- and 64-bit
+//	
+#endif
+
+	std::cout << "Exiting...\n" << std::flush;
 
   return 0;
 }
