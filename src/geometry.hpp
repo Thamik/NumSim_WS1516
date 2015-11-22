@@ -60,10 +60,14 @@ public:
   void Update_P(Grid *p) const;
 
 private:
+  const Communicator *_comm;
+
   /// size of the grid
   multi_index_t _size;
+  multi_index_t _bsize;
   /// physical length of the domain
   multi_real_t _length;
+  multi_real_t _blength;
   /// meshwidth
   multi_real_t _h;
 
