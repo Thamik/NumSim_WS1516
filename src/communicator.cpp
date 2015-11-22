@@ -14,47 +14,69 @@
 /* Public methods */
 
 Communicator::Communicator(int *argc, char ***argv)
+: _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL)
 {
 	MPI_Init( argc, argv); //TODO
 	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
+	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
 	//TODO
 }
 
 Communicator::~Communicator()
 {
 	MPI_Finalize();
+	if( _rankDistribution != NULL ) {
+		for(int ii = 0; ii < _tdim[0]; ii++) {
+			delete[] _rankDistribution[ii];
+		}
+		delete[] _rankDistribution;
+	}
 	//TODO More to do?
 }
 
 const multi_index_t& Communicator::ThreadIdx() const
 {
-	//TODO
+	//TODO Correct?
+	return _tidx;	
 }
 
 const multi_index_t& Communicator::ThreadDim() const
 {
-	//TODO
+	//TODO Correct?
+	return _tdim;
 }
 
 const bool &Communicator::EvenOdd() const
 {
+	//TODO Debug
 	return _evenodd;
-	//TODO Correct?
 }
 
 real_t Communicator::gatherSum(const real_t &val) const
 {
-	//TODO With Reduction MPI_SUM
+	//TODO Debug
+	real_t res(0.0);
+	real_t sendBuff(val);
+	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	return res;
 }
 
 real_t Communicator::gatherMin(const real_t &val) const
 {
-	//TODO With Reduction and MPI_MIN
+	//TODO Debug
+	real_t res(0.0);
+	real_t sendBuff(val);
+	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+	return res;
 }
 
 real_t Communicator::gatherMax(const real_t &val) const
 {
-	//TODO With Reduction and MPI_MAX
+	//TODO Debug
+	real_t res(0.0);
+	real_t sendBuff(val);
+	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+	return res;
 }
 
 void Communicator::copyBoundary(Grid *grid) const
@@ -90,7 +112,49 @@ const int &Communicator::getRank() const
 
 const int &Communicator::getSize() const
 {
-	//TODO
+	return _size;
+}
+
+multi_index_t Communicator::getLocalSize() const
+{
+	return _localSize;
+}
+
+void Communicator::setProcDistribution(const int** rankDistri, const multi_index_t tdim, const multi_index_t** localSizes)
+{
+	// delete _rankDistribution if not NULL
+	if( _rankDistribution != NULL ) {
+		for(int ii = 0; ii < _tdim[0]; ii++) {
+			delete[] _rankDistribution[ii];
+		}
+		delete[] _rankDistribution;
+	}
+
+	_tdim = tdim;
+
+	// allocate _rankDistribution
+	_rankDistribution = new int*[_tdim[0]];
+	for(int ii = 0; ii < _tdim[0]; ii++) {
+		_rankDistribution[ii] = new int[_tdim[1]];
+	}
+
+	// write new values in _rankDistribution
+	for(int ii = 0; ii < _tdim[0]; ii++) {
+		for(int jj = 0; jj < _tdim[1]; jj++) {
+			_rankDistribution[ii][jj] = int(rankDistri[ii][jj]);
+		}
+	}
+
+	for(int ii = 0; ii < _tdim[0]; ii++) {
+		for(int jj = 0; jj < _tdim[1]; jj++) {
+			if( _rankDistribution[ii][jj] == _rank ) {
+				_tidx[0] = ii;
+				_tidx[1] = jj;
+			}
+		}
+	}
+
+	_localSize = localSizes[_tidx[0]][_tidx[1]];
 }
 
 

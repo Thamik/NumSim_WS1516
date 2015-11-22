@@ -99,12 +99,21 @@ public:
    */
   const int &getSize() const;
 
+
+	// own methods
+	void setProcDistribution(const int** rankDistri, const multi_index_t tdim, const multi_index_t** localSizes);
+	multi_index_t getLocalSize() const;
+
+
 private:
   multi_index_t _tidx;
   multi_index_t _tdim;
   int _rank;
   int _size;
   bool _evenodd;
+  int** _rankDistribution;
+  multi_index_t _localSize;
+
 
   /** Function to sync ghost layer on left boundary:
    *  send values of own left boundary to left neighbor and
