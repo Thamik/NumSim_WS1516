@@ -53,6 +53,9 @@ public:
   /// Returns the meshwidth
   const multi_real_t &Mesh() const;
 
+	/// Returns a pointer to the communicator
+	const Communicator* getCommunicator() const;
+
   /// Updates the velocity field u
   void Update_U(Grid *u) const;
   /// Updates the velocity field v
@@ -80,6 +83,10 @@ private:
 	// own method
 	/// sets the meshwidth
 	void set_meshwidth();
+
+	/// decides whether the given boundary is a global boundary or is not
+	bool is_global_boundary(int boundary_index) const;
+	
 };
 //------------------------------------------------------------------------------
 #endif // __GEOMETRY_HPP

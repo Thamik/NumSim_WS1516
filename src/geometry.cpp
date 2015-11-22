@@ -1,6 +1,7 @@
 #include "geometry.hpp"
 #include "grid.hpp"
 #include "iterator.hpp"
+#include "communicator.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -121,6 +122,14 @@ const multi_real_t& Geometry::Mesh() const
 	return _h;
 }
 
+/**
+\return pointer to the communicator instance
+*/
+const Communicator* Geometry::getCommunicator() const
+{
+	return _comm;
+}
+
 
 //==============================================================================
 // Methods for the update of boundary values (have to be done every timestep)
@@ -137,6 +146,9 @@ void Geometry::Update_U(Grid *u) const
 	//std::cout << "Geometry: Update_U\n" << std::flush; // only for debugging issues
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
+		// check if this is a domain boundary
+		if (!is_global_boundary(i)) continue;
+
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
@@ -169,6 +181,9 @@ void Geometry::Update_V(Grid *v) const
 {
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
+		// check if this is a domain boundary
+		if (!is_global_boundary(i)) continue;
+
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
@@ -198,6 +213,9 @@ void Geometry::Update_P(Grid *p) const
 {
 	// see lecture, 3.2.3
 	for (int i=1; i<=4; i++){
+		// check if this is a domain boundary
+		if (!is_global_boundary(i)) continue;
+
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
@@ -228,4 +246,26 @@ void Geometry::set_meshwidth()
 {
 	_h[0] = _length[0]/_size[0];
 	_h[1] = _length[1]/_size[1];
+}
+
+/**
+Decides whether the given boundary is a global boundary or is not
+*/
+bool Geometry::is_global_boundary(int boundary_index) const
+{
+	switch (boundary_index)
+	{
+		case BoundaryIterator::boundaryBottom :
+			return _comm->isBottom();
+			break;
+		case BoundaryIterator::boundaryLeft :
+			return _comm->isLeft();
+			break;
+		case BoundaryIterator::boundaryTop :
+			return _comm->isTop();
+			break;
+		case BoundaryIterator::boundaryRight :
+			return _comm->isRight();
+			break;
+	}
 }

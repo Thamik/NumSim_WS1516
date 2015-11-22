@@ -228,7 +228,7 @@ This is the constructor of the RedOrBlackSOR class.
 RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega)
 : SOR(geom, omega)
 {
-	// TODO
+	// TODO: something else to do here?
 }
 
 /**

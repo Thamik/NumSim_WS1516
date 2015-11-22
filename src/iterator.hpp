@@ -97,11 +97,17 @@ class BoundaryIterator : public Iterator {
 public:
 
   // TODO: use this enum
-  enum {
+  /*enum {
     boundaryBottom = 0,
     boundaryLeft = 1,
     boundaryTop = 2,
     boundaryRight = 3
+  };*/
+  enum { // our values
+    boundaryBottom = 3,
+    boundaryLeft = 1,
+    boundaryTop = 4,
+    boundaryRight = 2
   };
 
   /// Constructs a new BoundaryIterator

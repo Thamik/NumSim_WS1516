@@ -78,6 +78,9 @@ int main(int argc, char **argv) {
 #endif
 	}
 
+	// do domain decomposition on master and send information to all other processes
+	// TODO
+
   // Create parameter and geometry instances with default values
   Parameter param;
   Geometry geom(&comm); // TODO: handle communicator argument
