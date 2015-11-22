@@ -68,10 +68,10 @@ private:
 
   /// size of the grid
   multi_index_t _size;
-  multi_index_t _bsize;
+  multi_index_t _bsize; // total size
   /// physical length of the domain
   multi_real_t _length;
-  multi_real_t _blength;
+  multi_real_t _blength; // total length
   /// meshwidth
   multi_real_t _h;
 

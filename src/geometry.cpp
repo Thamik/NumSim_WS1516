@@ -18,16 +18,18 @@ Constructs a Geometry object with standart values<br>
 - physical y-length: 1 
 */
 Geometry::Geometry()
-: _size(128,128), _length(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
+: Geometry(NULL) // TODO: is there a nicer way?
 {
-	set_meshwidth(); // set _h to the right values
-	// TODO: are the values right?
+	std::cout << "Warning: Geometry Constructor: no communicator given!\n" << std::flush;
 }
 
 Geometry::Geometry(const Communicator *comm)
+: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
 {
-	_comm = comm;
-	//TODO: something else to do?
+	set_meshwidth(); // set _h to the right values
+	// TODO: handle total/partial size/length values
+	
+	// TODO: something else to do?
 }
 
 /**
@@ -98,7 +100,7 @@ const multi_index_t& Geometry::Size() const
 
 const multi_index_t& Geometry::TotalSize() const
 {
-	//TODO
+	return _bsize;
 }
 
 /**
@@ -111,7 +113,7 @@ const multi_real_t& Geometry::Length() const
 
 const multi_real_t &Geometry::TotalLength() const
 {
-	//TODO
+	return _blength;
 }
 
 /**
@@ -244,8 +246,15 @@ Calculates the meshwidth such that it satisfies h = length/size
 */
 void Geometry::set_meshwidth()
 {
-	_h[0] = _length[0]/_size[0];
-	_h[1] = _length[1]/_size[1];
+	// update meshwidth
+	_h[0] = _blength[0]/_bsize[0];
+	_h[1] = _blength[1]/_bsize[1];
+
+	// update local size and length
+	_size[0] = _comm->getLocalSize()[0];
+	_size[1] = _comm->getLocalSize()[1];
+	_length[0] = _size[0] * _h[0];
+	_length[1] = _size[1] * _h[1];
 }
 
 /**
@@ -266,6 +275,10 @@ bool Geometry::is_global_boundary(int boundary_index) const
 			break;
 		case BoundaryIterator::boundaryRight :
 			return _comm->isRight();
+			break;
+		default:
+			std::cout << "Warning: Geometry is_global_boundary: invalid boundary_index given!\n" << std::flush;
+			return false;
 			break;
 	}
 }
