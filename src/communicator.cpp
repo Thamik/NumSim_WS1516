@@ -1,5 +1,6 @@
 #include "communicator.hpp"
 #include "compute.hpp"
+#include "geometry.hpp"
 #include "grid.hpp"
 #include "iterator.hpp"
 #include "geometry.hpp"
@@ -19,7 +20,7 @@ Communicator::Communicator(int *argc, char ***argv)
 	MPI_Init( argc, argv); //TODO
 	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
 	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
-	//TODO
+	//TODO Noch was?
 }
 
 Communicator::~Communicator()
@@ -81,28 +82,53 @@ real_t Communicator::gatherMax(const real_t &val) const
 
 void Communicator::copyBoundary(Grid *grid) const
 {
-	//TODO
+	bool success(true);
+	bool temp(true);
+
+	// left boundary
+	temp = copyLeftBoundary(grid);
+	success = success && temp;
+
+	// right boundary
+	temp = copyRightBoundary(grid);
+	success = success && temp;
+
+	// top boundary
+	temp = copyTopBoundary(grid);
+	success = success && temp;
+	
+	// bottom boundary
+	temp = copyBottomBoundary(grid);
+	success = success && temp;
+	
+	// output for debugging
+	if( success ) {
+		std::cout << "Process no. " << _rank << " copied successful!\n";
+	}
+	else {
+		std::cout << "Copy failed!!! (Process no. " << _rank << ")\n";
+	}
 }
 
 const bool Communicator::isLeft() const
 {
-	//TODO
+	return _tidx[0] == 0;
 }
 
 const bool Communicator::isRight() const
 {
-
+	return _tidx[0] == _tdim[0] - 1;
 }
 
 const bool Communicator::isTop() const
 {
-	//TODO
+	return _tidx[1] == _tdim[1] - 1;
 }
 
 
 const bool Communicator::isBottom() const
 {
-	//TODO
+	return _tidx[1] == 0;
 }
 
 const int &Communicator::getRank() const
@@ -155,6 +181,8 @@ void Communicator::setProcDistribution(const int** rankDistri, const multi_index
 	}
 
 	_localSize = localSizes[_tidx[0]][_tidx[1]];
+
+	//TODO Set _evenodd
 }
 
 
@@ -162,22 +190,258 @@ void Communicator::setProcDistribution(const int** rankDistri, const multi_index
 
 bool Communicator::copyLeftBoundary(Grid *grid) const
 {
-	//TODO
+	//TODO Debug
+	const Geometry* tempGeom = grid->getGeometry();
+	real_t* sendBuff;
+	real_t* recBuff;
+
+	//initialize boundary iterator
+	BoundaryIterator itSend(tempGeom);
+	itSend.SetBoundary(BoundaryIterator::boundaryLeft);
+	itSend.First();
+
+	//TODO create buffer as local variables!!!!
+	// copy boundary values to buffer
+	if(!isLeft()) {
+		sendBuff = new real_t[_localSize[1]];
+		int index(0);
+		while(itSend.Valid()) {
+			sendBuff[index] = grid->Cell(itSend.Right());
+			index++;
+			itSend.Next();
+		}
+	}
+
+	//allocate recieve buffer
+	if(!isRight()) recBuff = new real_t[_localSize[1]];
+	
+	//Blocking SendReceive
+	if(!isRight() && !isLeft()) {
+		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, recBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else if(!isLeft()) {
+		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+	}
+	else if(!isRight()) {
+		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else {
+		// the process is at the left as well as at the right boundary
+		//TODO maybe output for debugging perpurse?
+	}
+
+	// Copy received data to grid
+	BoundaryIterator itRecv(tempGeom);
+	itRecv.SetBoundary(BoundaryIterator::boundaryRight);
+	itRecv.First();
+	
+	if(!isRight()) {
+		int index(0);
+		while(itRecv.Valid()) {
+			grid->Cell(itRecv) = recBuff[index];
+			index++;
+			itRecv.Next();
+		}
+	}
+
+	if(!isLeft()) delete[] sendBuff;
+	if(!isRight()) delete[] recBuff;
 }
 
 bool Communicator::copyRightBoundary(Grid *grid) const
 {
-	//TODO
+	//TODO Debug
+	const Geometry* tempGeom = grid->getGeometry();
+	real_t* sendBuff;
+	real_t* recBuff;
+
+	//initialize boundary iterator
+	BoundaryIterator itSend(tempGeom);
+	itSend.SetBoundary(BoundaryIterator::boundaryRight);
+	itSend.First();
+
+	//TODO create buffer as local variables!!!!
+	// copy boundary values to buffer
+	if(!isRight()) {
+		sendBuff = new real_t[_localSize[1]];
+		int index(0);
+		while(itSend.Valid()) {
+			sendBuff[index] = grid->Cell(itSend.Left());
+			index++;
+			itSend.Next();
+		}
+	}
+
+	//allocate recieve buffer
+	if(!isLeft()) recBuff = new real_t[_localSize[1]];
+	
+	//Blocking SendReceive
+	if(!isRight() && !isLeft()) {
+		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, recBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else if(!isRight()) {
+		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+	}
+	else if(!isLeft()) {
+		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else {
+		// the process is at the left as well as at the right boundary
+		//TODO maybe output for debugging perpurse?
+	}
+
+	// Copy received data to grid
+	BoundaryIterator itRecv(tempGeom);
+	itRecv.SetBoundary(BoundaryIterator::boundaryLeft);
+	itRecv.First();
+	
+	if(!isLeft()) {
+		int index(0);
+		while(itRecv.Valid()) {
+			grid->Cell(itRecv) = recBuff[index];
+			index++;
+			itRecv.Next();
+		}
+	}
+
+	if(!isRight()) delete[] sendBuff;
+	if(!isLeft()) delete[] recBuff;
 }
 
 bool Communicator::copyTopBoundary(Grid *grid) const
 {
-	//TODO
+	//TODO Debug
+	const Geometry* tempGeom = grid->getGeometry();
+	real_t* sendBuff;
+	real_t* recBuff;
+
+	//initialize boundary iterator
+	BoundaryIterator itSend(tempGeom);
+	itSend.SetBoundary(BoundaryIterator::boundaryTop);
+	itSend.First();
+
+	//TODO create buffer as local variables!!!!
+	// copy boundary values to buffer
+	if(!isTop()) {
+		sendBuff = new real_t[_localSize[0]];
+		int index(0);
+		while(itSend.Valid()) {
+			sendBuff[index] = grid->Cell(itSend.Down());
+			index++;
+			itSend.Next();
+		}
+	}
+
+	//allocate recieve buffer
+	if(!isBottom()) recBuff = new real_t[_localSize[0]];
+	
+	//Blocking SendReceive
+	if(!isBottom() && !isTop()) {
+		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, recBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else if(!isTop()) {
+		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+	}
+	else if(!isBottom()) {
+		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else {
+		// the process is at the left as well as at the right boundary
+		//TODO maybe output for debugging perpurse?
+	}
+
+	// Copy received data to grid
+	BoundaryIterator itRecv(tempGeom);
+	itRecv.SetBoundary(BoundaryIterator::boundaryBottom);
+	itRecv.First();
+	
+	if(!isBottom()) {
+		int index(0);
+		while(itRecv.Valid()) {
+			grid->Cell(itRecv) = recBuff[index];
+			index++;
+			itRecv.Next();
+		}
+	}
+
+	if(!isTop()) delete[] sendBuff;
+	if(!isBottom()) delete[] recBuff;
 }
 
 bool Communicator::copyBottomBoundary(Grid *grid) const
 {
-	//TODO
+	//TODO Debug
+	const Geometry* tempGeom = grid->getGeometry();
+	real_t* sendBuff;
+	real_t* recBuff;
+
+	//initialize boundary iterator
+	BoundaryIterator itSend(tempGeom);
+	itSend.SetBoundary(BoundaryIterator::boundaryBottom);
+	itSend.First();
+
+	//TODO create buffer as local variables!!!!
+	// copy boundary values to buffer
+	if(!isBottom()) {
+		sendBuff = new real_t[_localSize[0]];
+		int index(0);
+		while(itSend.Valid()) {
+			sendBuff[index] = grid->Cell(itSend.Top());
+			index++;
+			itSend.Next();
+		}
+	}
+
+	//allocate recieve buffer
+	if(!isTop()) recBuff = new real_t[_localSize[0]];
+	
+	//Blocking SendReceive
+	if(!isBottom() && !isTop()) {
+		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, recBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else if(!isBottom()) {
+		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+	}
+	else if(!isTop()) {
+		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	else {
+		// the process is at the left as well as at the right boundary
+		//TODO maybe output for debugging perpurse?
+	}
+
+	// Copy received data to grid
+	BoundaryIterator itRecv(tempGeom);
+	itRecv.SetBoundary(BoundaryIterator::boundaryTop);
+	itRecv.First();
+	
+	if(!isTop()) {
+		int index(0);
+		while(itRecv.Valid()) {
+			grid->Cell(itRecv) = recBuff[index];
+			index++;
+			itRecv.Next();
+		}
+	}
+
+	if(!isBottom()) delete[] sendBuff;
+	if(!isTop()) delete[] recBuff;
 }
 
 
