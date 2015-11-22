@@ -83,6 +83,7 @@ class Geometry;
 class Grid;
 class Parameter;
 class Solver;
+class RedOrBlackSOR; // filled in, used in the Compute class
 class Compute;
 
 #endif // __TYPEDEF_HPP

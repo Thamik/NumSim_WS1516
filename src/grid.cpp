@@ -1,6 +1,7 @@
 #include "grid.hpp"
 #include "geometry.hpp"
 #include "iterator.hpp"
+#include "communicator.hpp"
 
 #include <stdio.h>      /* NULL */
 #include <stdlib.h>     /* malloc, free */
@@ -200,7 +201,7 @@ real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
 	return res;
 }
 
-real_t Grid::DC_vdu_y(const Iterator& it, const real_t& alpha, const Grid* v) const
+/*real_t Grid::DC_vdu_y(const Iterator& it, const real_t& alpha, const Grid* v) const
 {
 	// TODO
 }
@@ -208,7 +209,7 @@ real_t Grid::DC_vdu_y(const Iterator& it, const real_t& alpha, const Grid* v) co
 real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) const
 {
 	// TODO
-}
+}*/
 
 /**
 /param[in] it position where the approximation quotient should be evaluated
@@ -276,7 +277,6 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 */
 real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const
 {
-	// TODO: test
 	real_t res;
 	real_t uij = _data[it.Value()];
 	real_t vij = v->Data()[it.Value()];
@@ -386,6 +386,24 @@ real_t Grid::AbsMax() const
 	return res;
 }
 
+real_t Grid::TotalMax() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMax(Max());
+}
+
+real_t Grid::TotalMin() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMin(Min());
+}
+
+real_t Grid::TotalAbsMax() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMax(AbsMax());
+}
+
 /**
 Gives write acces directly to the data (better use Cell())
 /return pointer to the raw data
@@ -489,4 +507,14 @@ real_t Grid::average_value() const
 		it.Next();
 	}
 	return avg / real_t(_geom->Size()[0] * _geom->Size()[1]);
+}
+
+const multi_real_t& Grid::getOffset() const
+{
+	return _offset;
+}
+
+const Geometry* Grid::getGeometry() const
+{
+	return _geom;
 }

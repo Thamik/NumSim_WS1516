@@ -80,7 +80,7 @@ private:
   // container for interpolating whichever values
   //Grid *_tmp;
 
-  Solver *_solver;
+  RedOrBlackSOR *_solver;
 
   const Geometry *_geom;
   const Parameter *_param;
@@ -98,6 +98,10 @@ private:
 	real_t compute_dt() const;
 	/// updates the boundary values for u,v,F,G
 	void update_boundary_values();
+
+	void sync_FG();
+	void sync_uv();
+	void sync_p();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

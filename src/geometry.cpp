@@ -26,9 +26,8 @@ Geometry::Geometry()
 Geometry::Geometry(const Communicator *comm)
 : _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
 {
+	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
-	// TODO: handle total/partial size/length values
-	
 	// TODO: something else to do?
 }
 

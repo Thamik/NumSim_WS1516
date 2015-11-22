@@ -67,10 +67,10 @@ public:
 
   /// Computes u*du/dx with the donor cell method
   real_t DC_udu_x(const Iterator &it, const real_t &alpha) const;
-  /// Computes v*du/dy with the donor cell method
+/*  /// Computes v*du/dy with the donor cell method
   real_t DC_vdu_y(const Iterator &it, const real_t &alpha, const Grid *v) const;
   /// Computes u*dv/dx with the donor cell method
-  real_t DC_udv_x(const Iterator &it, const real_t &alpha, const Grid *u) const;
+  real_t DC_udv_x(const Iterator &it, const real_t &alpha, const Grid *u) const; */
   /// Computes v*dv/dy with the donor cell method
   real_t DC_vdv_y(const Iterator &it, const real_t &alpha) const;
 
@@ -90,6 +90,10 @@ public:
   real_t Min() const;
   /// Returns the absolute maximal value
   real_t AbsMax() const;
+
+	real_t TotalMax() const;
+	real_t TotalMin() const;
+	real_t TotalAbsMax() const;
 
   /// Returns a pointer to the raw data
   real_t *Data();
@@ -112,10 +116,10 @@ public:
   
   /** Get the offset value of the grid
    */
-  const multi_real_t &getOffset() const;
+  const multi_real_t& getOffset() const;
 
   /// Return a pointer to the Geometry
-  const Geometry *getGeometry() const;
+  const Geometry* getGeometry() const;
 
 private:
   real_t *_data;

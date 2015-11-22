@@ -4,6 +4,7 @@
 #include "geometry.hpp"
 #include "parameter.hpp"
 #include "solver.hpp"
+#include "communicator.hpp"
 
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
@@ -13,19 +14,18 @@
 
 /* Constructor */
 /**
-\param[in] geom pointer on geometry object providing the geometry information
-\param[in] param pointer on parameter object providing the parameter data
+\param[in]	geom	pointer on geometry object providing the geometry information
+\param[in]	param	pointer on parameter object providing the parameter data
+\param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
 	//_epslimit = 1e-4;
 	//_dtlimit = 
 
-	_geom = geom;
-	_param = param;
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
 	_v = new Grid(_geom, multi_real_t(-0.5,-1.0));
 	_p = new Grid(_geom, multi_real_t(-0.5,-0.5));
@@ -53,8 +53,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
 	//real_t omega = 1.0;
 	
-	_solver = new SOR(_geom, omega);
-	//_solver = new JacobiSolver(_geom);
+	_solver = new RedOrBlackSOR(_geom, omega);
 }
 
 /* Destructor */
@@ -72,7 +71,7 @@ Compute::~Compute()
 }
 
 /**
-In order to do so, first a reasonable dt for stability is calculated and F,G,RHS are evaluated.
+In order to do so, first a reasonable dt for stability is calculated and F, G, RHS are evaluated.
 Afterwards, the Poisson pressure equation is solved and the velocitys are updated.
 \param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
 \param[in] verbose boolean if debbuging information should be printed (standard: false)
@@ -83,12 +82,15 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 	
 	// compute dt
 	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
-	real_t dt = compute_dt();
+	real_t dt = compute_dt(); // BLOCKING
 	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
-	// compute F, G
+	// compute F, G...
 	MomentumEqu(dt);
 	update_boundary_values(); //update boundary values
+
+	// ...and sync them
+	sync_FG(); // BLOCKING
 	
 	// compute rhs
 	RHS(dt);
@@ -96,28 +98,31 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
-	//while (iteration <= _param->IterMax() && residual > _epslimit){
 	while (true){
-		// one solver cycle is done here
-		residual = _solver->Cycle(_p, _rhs);
+		// one solver cycle is done here, alternating red or black
+		if ((iteration % 2) == 0){
+			residual = _solver->RedCycle(_p, _rhs);
+		} else {
+			residual = _solver->BlackCycle(_p, _rhs);
+		}
 
 		iteration++;
-		if (iteration > _param->IterMax()){
-			//if (printInfo) {
-				std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
-			//}
+
+		if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
+			std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 			break;
 		} else if (residual < _epslimit){
-			//if (printInfo) {
-				std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
-			//}
+			std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
 			break;
 		}
 	}
 	
-	// compute new velocitys u, v
+	// compute new velocitys u, v...
 	NewVelocities(dt);
 	update_boundary_values();
+
+	// ...and sync them
+	sync_uv(); // BLOCKING
 
 	//update total time
 	_t += dt;
@@ -130,8 +135,8 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		// timestep
 		std::cout << "Last timestep: dt = " << dt << "\n";
 		// magnitudes of the fields
-		std::cout << "max(F) = " << _F->AbsMax() << ", max(G) = " << _G->AbsMax() << ", max(rhs) = " << _rhs->AbsMax() << "\n";
-		std::cout << "max(u) = " << _u->AbsMax() << ", max(v) = " << _v->AbsMax() << ", max(p) = " << _p->AbsMax() << "\n";
+		//std::cout << "max(F) = " << _F->TotalAbsMax() << ", max(G) = " << _G->TotalAbsMax() << ", max(rhs) = " << _rhs->TotalAbsMax() << "\n";
+		//std::cout << "max(u) = " << _u->TotalAbsMax() << ", max(v) = " << _v->TotalAbsMax() << ", max(p) = " << _p->TotalAbsMax() << "\n";
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 		std::cout << "============================================================\n";
 	}
@@ -277,14 +282,13 @@ In the algorithm, dt has to be sufficiently small to provide stability of the al
 */
 real_t Compute::compute_dt() const
 {
-	//std::cout << "max u: " << _u->AbsMax() << ", max v: " << _v->AbsMax() << "\n"; // for debugging issues
-	real_t res = std::min(_geom->Mesh()[0] / _u->AbsMax(), _geom->Mesh()[1] / _v->AbsMax());
+	real_t u_absmax = _u->TotalAbsMax();
+	real_t v_absmax = _v->TotalAbsMax();
+	real_t res = std::min(_geom->Mesh()[0]/u_absmax, _geom->Mesh()[1]/v_absmax);
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
-	//res /= 25.0;
 	return res;
 }
-
 
 void Compute::update_boundary_values()
 {
@@ -293,4 +297,21 @@ void Compute::update_boundary_values()
 
 	_geom->Update_U(_F);
 	_geom->Update_V(_G);
+}
+
+void Compute::sync_FG()
+{
+	_comm->copyBoundary(_F);
+	_comm->copyBoundary(_G);
+}
+
+void Compute::sync_uv()
+{
+	_comm->copyBoundary(_u);
+	_comm->copyBoundary(_v);
+}
+
+void Compute::sync_p()
+{
+	_comm->copyBoundary(_p);
 }
