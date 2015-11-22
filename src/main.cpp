@@ -37,19 +37,6 @@
 
 int main(int argc, char **argv) {
 
-	// measure runtime
-	if (comm.getRank() == 0) { // do this only on the master process
-#ifdef __linux__
-		timeval tv;
-		gettimeofday(&tv, NULL);
-		long int milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-//#elif _WIN32 // windows 32- and 64-bit
-//
-#else
-		std::cout << "System unknown, no runtime measurement!\n" << std::flush;
-#endif
-	}
-
 	// read the command line arguments
 	std::string param_file("");
 	std::string geom_file("");
@@ -75,6 +62,19 @@ int main(int argc, char **argv) {
 
   // Create communicator
   Communicator comm(&argc, &argv); // TODO: handle arguments
+
+	// measure runtime
+	if (comm.getRank() == 0) { // do this only on the master process
+#ifdef __linux__
+		timeval tv;
+		gettimeofday(&tv, NULL);
+		long int milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+//#elif _WIN32 // windows 32- and 64-bit
+//
+#else
+		std::cout << "System unknown, no runtime measurement!\n" << std::flush;
+#endif
+	}
 
   // Create parameter and geometry instances with default values
   Parameter param;

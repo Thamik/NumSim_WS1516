@@ -7,6 +7,8 @@
 #include <algorithm>	// std::max
 #include <iostream>
 
+//------------------------------------------------------------------------------
+
 /* Solver */
 
 /**
@@ -123,6 +125,8 @@ void Solver::delete_average(Grid* grid) const
 	}
 }
 
+//------------------------------------------------------------------------------
+
 /* Concrete SOR solver */
 
 /**
@@ -212,6 +216,18 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	return totalRes(grid,rhs);
 }*/
 
+//------------------------------------------------------------------------------
+
+/* Red Or Black SOR Solver */
+
+/**
+This is the constructor of the RedOrBlackSOR Solver class.
+\param[in] 	geom 	A Geometry object that 
+
+//------------------------------------------------------------------------------
+
+/* Jacobi Solver */
+
 /**
 This is the constructor of the JacobiSolver class.
 \param[in]	geom	A Geometry object that encapsulates all necessary geometrical information
@@ -249,6 +265,10 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 	delete cpy;
 	return totalRes(grid,rhs);
 }
+
+//------------------------------------------------------------------------------
+
+/* Heat Conduction Solver */
 
 /**
 This is the constructor of the HeatConductionSolver class.
