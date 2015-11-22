@@ -2,6 +2,7 @@
 #include "geometry.hpp"
 #include "iterator.hpp"
 #include "grid.hpp"
+#include "communicator.hpp"
 
 #include <cmath>	// std::abs
 #include <algorithm>	// std::max
@@ -108,6 +109,21 @@ real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 	return totalRes/((_geom->Size()[0]-1.0) * (_geom->Size()[1]-1.0));
 }
 
+real_t Solver::synced_totalRes(const Grid* grid, const Grid* rhs) const
+{
+	return synced_totalRes_L1_averaged(grid,rhs);
+}
+
+real_t Solver::synced_totalRes_Linf(const Grid* grid, const Grid* rhs) const
+{
+	return _geom->getCommunicator()->gatherMax(totalRes_Linf(grid,rhs));
+}
+
+real_t Solver::synced_totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
+{
+	return (_geom->getCommunicator()->gatherSum(totalRes_L1_averaged(grid,rhs))) / (_geom->getCommunicator()->getSize());
+}
+
 /**
 This method deletes the average value from an arbitrary scalar grid.
 \param[in][out]	grid	A scalar grid, which average value is being deleted
@@ -155,26 +171,29 @@ This method executes a SOR solver cycle on the given grid and returns the total 
 */
 real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
-	real_t corr(0.0);
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
-		real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
-
-		corr = (hx*hy)/(2.0*(hx + hy)) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
-		grid->Cell(it) += _omega * corr;
-
-		// set one cell to zero (the alternative to deleting the pressure average)
-		if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
-			grid->Cell(it) = 0.0;
-		}
-
+		erase_local_residual(grid,rhs,it);
 		it.Next();
 	}
 	// update the pressure boundary values
 	_geom->Update_P(grid);
 	return totalRes(grid,rhs);
+}
+
+void SOR::erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) const
+{
+	real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
+	real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
+
+	real_t corr = (hx*hy)/(2.0*(hx + hy)) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
+	grid->Cell(it) += _omega * corr;
+
+	// set one cell to zero (the alternative to deleting the pressure average)
+	if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
+		grid->Cell(it) = 0.0;
+	}
 }
 
 // SOR Cycle, Neumann boundary conditions included
@@ -246,7 +265,15 @@ Performs a red cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::RedCycle(Grid* grid, const Grid* rhs) const
 {
-	// TODO
+	JumpingInteriorIterator it(_geom, false);
+	it.First();
+	while (it.Valid()){
+		erase_local_residual(grid,rhs,it);
+		it.Next();
+	}
+	// update the pressure boundary values
+	_geom->Update_P(grid);
+	return synced_totalRes(grid,rhs);
 }
 
 /**
@@ -256,7 +283,15 @@ Performs a black cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::BlackCycle(Grid* grid, const Grid* rhs) const
 {
-	// TODO
+	JumpingInteriorIterator it(_geom, true);
+	it.First();
+	while (it.Valid()){
+		erase_local_residual(grid,rhs,it);
+		it.Next();
+	}
+	// update the pressure boundary values
+	_geom->Update_P(grid);
+	return synced_totalRes(grid,rhs);
 }
 
 //------------------------------------------------------------------------------

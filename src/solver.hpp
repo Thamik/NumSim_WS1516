@@ -50,6 +50,12 @@ protected:
 
   real_t totalRes_Linf(const Grid* grid, const Grid* rhs) const;
   real_t totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
+
+	real_t synced_totalRes(const Grid* grid, const Grid* rhs) const;
+
+	real_t synced_totalRes_Linf(const Grid* grid, const Grid* rhs) const;
+	real_t synced_totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
+
 };
 
 //------------------------------------------------------------------------------
@@ -69,6 +75,9 @@ public:
 
 protected:
   real_t _omega;
+
+	void erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) const;
+
 };
 
 //------------------------------------------------------------------------------

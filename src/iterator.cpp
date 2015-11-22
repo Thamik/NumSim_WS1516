@@ -196,6 +196,41 @@ void InteriorIterator::Next()
 	//std::cout << Pos()[0] << ", " << Pos()[1] << "\n";
 }
 
+//------------------------------------------------------------------------------
+
+/* JumpingInteriorIterator */
+
+JumpingInteriorIterator::JumpingInteriorIterator(const Geometry* geom, bool shifted)
+: InteriorIterator(geom), _shifted(shifted)
+{
+}
+
+void JumpingInteriorIterator::First()
+{
+	InteriorIterator::First();
+	if (_shifted) InteriorIterator::Next();
+}
+
+void JumpingInteriorIterator::Next()
+{
+	if ((_geom->Size()[0] % 2) == 1){
+		InteriorIterator::Next();
+		InteriorIterator::Next();
+	} else {
+		// handle row change
+		index_t temp_row = Pos()[1];
+		InteriorIterator::Next();
+		if (Pos()[1] == temp_row){
+			InteriorIterator::Next();
+			if (Pos()[1] != temp_row){
+				InteriorIterator::Next();
+			}
+		}
+	}
+}
+
+//------------------------------------------------------------------------------
+
 /* BoundaryIterator */
 
 /**

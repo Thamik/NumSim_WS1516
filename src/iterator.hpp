@@ -83,12 +83,28 @@ protected:
 class InteriorIterator : public Iterator {
 public:
   /// Construct a new InteriorIterator
-  InteriorIterator(const Geometry *geom);
+  InteriorIterator(const Geometry* geom);
 
   /// Sets the iterator to the first element
-  void First();
+  virtual void First();
   /// Goes to the next element of the iterator, disables it if position is end
-  void Next();
+  virtual void Next();
+};
+
+//------------------------------------------------------------------------------
+/// Iterator for interior cells in the red or black cycle
+class JumpingInteriorIterator : public InteriorIterator {
+public:
+	/// Construct a new JumpingInteriorIterator
+	JumpingInteriorIterator(const Geometry* geom, bool shifted);
+
+	/// Sets the iterator to the first element
+	void First();
+	/// Goes to the next element of the iterator, disables it if position is end
+	void Next();
+
+private:
+	bool _shifted;
 };
 
 //------------------------------------------------------------------------------
