@@ -25,7 +25,8 @@ Geometry::Geometry()
 
 Geometry::Geometry(const Communicator *comm)
 {
-	//TODO
+	_comm = comm;
+	//TODO: something else to do?
 }
 
 /**

@@ -221,8 +221,42 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 /* Red Or Black SOR Solver */
 
 /**
-This is the constructor of the RedOrBlackSOR Solver class.
-\param[in] 	geom 	A Geometry object that 
+This is the constructor of the RedOrBlackSOR class.
+\param[in] 	geom 	A Geometry object that encapsulates all necessary geometrical information
+\param[in]	omega	Relaxation factor
+*/
+RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega)
+{
+	// TODO
+}
+
+/**
+This is the destructor of the RedOrBlackSOR class.
+*/
+RedOrBlackSOR::~RedOrBlackSOR()
+{
+	// TODO: is there something to do here?
+}
+
+/**
+Performs a red cycle to solve the Poisson equation.
+\param[in][out]	grid	Initial value and result of the cycle
+\param[in]	rhs	Grid, where the right hand side of the Poisson equation is specified
+*/
+real_t RedOrBlackSOR::RedCycle(Grid* grid, const Grid* rhs) const
+{
+	// TODO
+}
+
+/**
+Performs a black cycle to solve the Poisson equation.
+\param[in][out]	grid	Initial value and result of the cycle
+\param[in]	rhs	Grid, where the right hand side of the Poisson equation is specified
+*/
+real_t RedOrBlackSOR::BlackCycle(Grid* grid, const Grid* rhs) const
+{
+	// TODO
+}
 
 //------------------------------------------------------------------------------
 
