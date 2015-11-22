@@ -77,7 +77,7 @@ Afterwards, the Poisson pressure equation is solved and the velocitys are update
 \param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
 \param[in] verbose boolean if debbuging information should be printed (standard: false)
 */
-void Compute::TimeStep(bool printInfo, bool verbose=false)
+void Compute::TimeStep(bool printInfo, bool verbose)
 {
 	// TODO: test
 	

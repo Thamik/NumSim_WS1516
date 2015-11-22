@@ -9,17 +9,21 @@
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
 #include <iostream>	// std::cout
+#include <mpi.h>	// MPI
 
 /* Public methods */
 
 Communicator::Communicator(int *argc, char ***argv)
 {
+	MPI_Init( argc, argv); //TODO
+	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
 	//TODO
 }
 
 Communicator::~Communicator()
 {
-	//TODO
+	MPI_Finalize();
+	//TODO More to do?
 }
 
 const multi_index_t& Communicator::ThreadIdx() const
@@ -34,22 +38,23 @@ const multi_index_t& Communicator::ThreadDim() const
 
 const bool &Communicator::EvenOdd() const
 {
-	//TODO
+	return _evenodd;
+	//TODO Correct?
 }
 
 real_t Communicator::gatherSum(const real_t &val) const
 {
-	//TODO
+	//TODO With Reduction MPI_SUM
 }
 
 real_t Communicator::gatherMin(const real_t &val) const
 {
-	//TODO
+	//TODO With Reduction and MPI_MIN
 }
 
 real_t Communicator::gatherMax(const real_t &val) const
 {
-	//TODO
+	//TODO With Reduction and MPI_MAX
 }
 
 void Communicator::copyBoundary(Grid *grid) const
@@ -80,7 +85,7 @@ const bool Communicator::isBottom() const
 
 const int &Communicator::getRank() const
 {
-	//TODO
+	return _rank;
 }
 
 const int &Communicator::getSize() const
@@ -91,22 +96,22 @@ const int &Communicator::getSize() const
 
 /* Private methods */
 
-bool copyLeftBoundary(Grid *grid) const
+bool Communicator::copyLeftBoundary(Grid *grid) const
 {
 	//TODO
 }
 
-bool copyRightBoundary(Grid *grid) const
+bool Communicator::copyRightBoundary(Grid *grid) const
 {
 	//TODO
 }
 
-bool copyTopBoundary(Grid *grid) const
+bool Communicator::copyTopBoundary(Grid *grid) const
 {
 	//TODO
 }
 
-bool copyBottomBoundary(Grid *grid) const
+bool Communicator::copyBottomBoundary(Grid *grid) const
 {
 	//TODO
 }
