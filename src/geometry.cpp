@@ -144,6 +144,8 @@ Updates the boundary values for Grid u according to the pattern of u, i.e. Diric
 */
 void Geometry::Update_U(Grid *u) const
 {
+	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
+
 	//std::cout << "Geometry: Update_U\n" << std::flush; // only for debugging issues
 	// see lecture, 3.1.2
 	for (int i=1; i<=4; i++){
@@ -254,6 +256,9 @@ void Geometry::set_meshwidth()
 	_size[1] = _comm->getLocalSize()[1];
 	_length[0] = _size[0] * _h[0];
 	_length[1] = _size[1] * _h[1];
+
+	//std::cout << "set_meshwidth: " << _comm->getLocalSize()[0] << ", " << _comm->getLocalSize()[1] << "\n" << std::flush;
+	//std::cout << "set_meshwidth: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
 }
 
 /**
@@ -280,4 +285,11 @@ bool Geometry::is_global_boundary(int boundary_index) const
 			return false;
 			break;
 	}
+}
+
+void Geometry::update_values()
+{
+	//std::cout << "Geometry: update values!\n" << std::flush;
+	set_meshwidth();
+	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
 }

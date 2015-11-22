@@ -101,7 +101,7 @@ public:
 
 
 	// own methods
-	void setProcDistribution(const int** rankDistri, const multi_index_t tdim, const multi_index_t** localSizes);
+	void setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes);
 	multi_index_t getLocalSize() const;
 
 

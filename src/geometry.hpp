@@ -63,6 +63,8 @@ public:
   /// Updates the pressure field p
   void Update_P(Grid *p) const;
 
+	void update_values();
+
 private:
   const Communicator *_comm;
 

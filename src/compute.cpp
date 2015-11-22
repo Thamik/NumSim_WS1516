@@ -47,7 +47,6 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	//set boundary values
 	update_boundary_values();
 
-	
 	// TODO: is this right, anything else to initialize?
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
 	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
@@ -91,7 +90,7 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 
 	// ...and sync them
 	sync_FG(); // BLOCKING
-	
+
 	// compute rhs
 	RHS(dt);
 	
@@ -109,10 +108,10 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		iteration++;
 
 		if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
-			std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+			if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 			break;
 		} else if (residual < _epslimit){
-			std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
+			if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
 			break;
 		}
 	}

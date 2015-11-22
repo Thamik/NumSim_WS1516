@@ -17,9 +17,11 @@
 Communicator::Communicator(int *argc, char ***argv)
 : _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL)
 {
-	MPI_Init( argc, argv); //TODO
+	//for (int i = 0; i<*argc; i++) std::cout << (*argv)[i] << "\n" << std::flush;
+	MPI_Init(argc, argv); //TODO
 	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
 	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
+	//if (_rank == 0) std::cout << "MPI initialized with " << _size << " processes.\n" << std::flush;
 	//TODO Noch was?
 }
 
@@ -49,13 +51,11 @@ const multi_index_t& Communicator::ThreadDim() const
 
 const bool &Communicator::EvenOdd() const
 {
-	//TODO Debug
 	return _evenodd;
 }
 
 real_t Communicator::gatherSum(const real_t &val) const
 {
-	//TODO Debug
 	real_t res(0.0);
 	real_t sendBuff(val);
 	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
@@ -64,7 +64,6 @@ real_t Communicator::gatherSum(const real_t &val) const
 
 real_t Communicator::gatherMin(const real_t &val) const
 {
-	//TODO Debug
 	real_t res(0.0);
 	real_t sendBuff(val);
 	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
@@ -73,7 +72,6 @@ real_t Communicator::gatherMin(const real_t &val) const
 
 real_t Communicator::gatherMax(const real_t &val) const
 {
-	//TODO Debug
 	real_t res(0.0);
 	real_t sendBuff(val);
 	MPI_Allreduce(&sendBuff, &res, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
@@ -101,13 +99,13 @@ void Communicator::copyBoundary(Grid *grid) const
 	temp = copyBottomBoundary(grid);
 	success = success && temp;
 	
-	// output for debugging
+	/*// output for debugging
 	if( success ) {
 		std::cout << "Process no. " << _rank << " copied successful!\n";
 	}
 	else {
 		std::cout << "Copy failed!!! (Process no. " << _rank << ")\n";
-	}
+	}*/
 }
 
 const bool Communicator::isLeft() const
@@ -146,7 +144,7 @@ multi_index_t Communicator::getLocalSize() const
 	return _localSize;
 }
 
-void Communicator::setProcDistribution(const int** rankDistri, const multi_index_t tdim, const multi_index_t** localSizes)
+void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes)
 {
 	// delete _rankDistribution if not NULL
 	if( _rankDistribution != NULL ) {
@@ -182,7 +180,19 @@ void Communicator::setProcDistribution(const int** rankDistri, const multi_index
 
 	_localSize = localSizes[_tidx[0]][_tidx[1]];
 
-	//TODO Set _evenodd
+	// set _evenodd
+	int temp(0);
+	for (int i=0; i<_tidx[0]; i++){
+		temp += localSizes[i][0][0];
+	}
+	for (int i=0; i<_tidx[1]; i++){
+		temp += localSizes[i][0][1];
+	}
+	if ((temp % 2) == 0){
+		_evenodd = true;
+	} else {
+		_evenodd = false;
+	}
 }
 
 
@@ -190,6 +200,8 @@ void Communicator::setProcDistribution(const int** rankDistri, const multi_index
 
 bool Communicator::copyLeftBoundary(Grid *grid) const
 {
+	int tag = 1013;
+
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff;
@@ -219,15 +231,15 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 	if(!isRight() && !isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
-		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, recBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, recBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
-		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isRight()) {
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
-		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
@@ -250,10 +262,14 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 
 	if(!isLeft()) delete[] sendBuff;
 	if(!isRight()) delete[] recBuff;
+
+	return true;
 }
 
 bool Communicator::copyRightBoundary(Grid *grid) const
 {
+	int tag = 1013;
+
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff;
@@ -283,15 +299,15 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 	if(!isRight() && !isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
-		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, recBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, recBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isRight()) {
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
-		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
-		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, leftRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
@@ -314,10 +330,14 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 
 	if(!isRight()) delete[] sendBuff;
 	if(!isLeft()) delete[] recBuff;
+
+	return true;
 }
 
 bool Communicator::copyTopBoundary(Grid *grid) const
 {
+	int tag = 1013;
+
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff;
@@ -347,15 +367,15 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 	if(!isBottom() && !isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
-		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, recBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, topRank, tag, recBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
-		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isBottom()) {
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
-		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
@@ -378,10 +398,14 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 
 	if(!isTop()) delete[] sendBuff;
 	if(!isBottom()) delete[] recBuff;
+
+	return true;
 }
 
 bool Communicator::copyBottomBoundary(Grid *grid) const
 {
+	int tag = 1013;
+
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff;
@@ -411,15 +435,15 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	if(!isBottom() && !isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
-		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, recBuff, _localSize[0], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, recBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isBottom()) {
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
-		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, MPI_ANY_TAG, MPI_COMM_WORLD);
+		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
-		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, topRank, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
@@ -442,6 +466,8 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 
 	if(!isBottom()) delete[] sendBuff;
 	if(!isTop()) delete[] recBuff;
+
+	return true;
 }
 
 
