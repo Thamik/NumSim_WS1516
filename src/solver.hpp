@@ -21,7 +21,8 @@
 #define __SOLVER_HPP
 //------------------------------------------------------------------------------
 
-/// abstract base class for an iterative solver
+/** abstract base class for an iterative solver
+ */
 class Solver {
 public:
   /// Constructor of the abstract Solver class
@@ -68,6 +69,21 @@ public:
 
 protected:
   real_t _omega;
+};
+
+//------------------------------------------------------------------------------
+
+/** concrete Red or Black SOR solver
+ */
+class RedOrBlackSOR : public SOR {
+public:
+  /// Constructs an actual SOR solver
+  RedOrBlackSOR(const Geometry *geom, const real_t &omega);
+  /// Destructor
+  ~RedOrBlackSOR();
+
+  real_t RedCycle(Grid *grid, const Grid *rhs) const;
+  real_t BlackCycle(Grid *grid, const Grid *rhs) const;
 };
 
 //------------------------------------------------------------------------------

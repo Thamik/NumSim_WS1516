@@ -95,6 +95,15 @@ public:
 /// Iterator for domain boundary cells.
 class BoundaryIterator : public Iterator {
 public:
+
+  // TODO: use this enum
+  enum {
+    boundaryBottom = 0,
+    boundaryLeft = 1,
+    boundaryTop = 2,
+    boundaryRight = 3
+  };
+
   /// Constructs a new BoundaryIterator
   BoundaryIterator(const Geometry *geom);
 
