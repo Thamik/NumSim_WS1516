@@ -83,6 +83,7 @@ private:
 
   const Geometry *_geom;
   const Parameter *_param;
+  const Communicator *_comm;
 
   /// Compute the new velocites u,v
   void NewVelocities(const real_t &dt);
