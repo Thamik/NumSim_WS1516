@@ -226,6 +226,7 @@ This is the constructor of the RedOrBlackSOR class.
 \param[in]	omega	Relaxation factor
 */
 RedOrBlackSOR::RedOrBlackSOR(const Geometry* geom, const real_t& omega)
+: SOR(geom, omega)
 {
 	// TODO
 }

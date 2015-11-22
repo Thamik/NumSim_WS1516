@@ -122,9 +122,11 @@ const multi_real_t& Geometry::Mesh() const
 }
 
 
-//=================================================================
+//==============================================================================
 // Methods for the update of boundary values (have to be done every timestep)
-//=================================================================
+//==============================================================================
+
+// TODO: something to edit here?
 
 /**
 Updates the boundary values for Grid u according to the pattern of u, i.e. Dirichlet boundary conditions

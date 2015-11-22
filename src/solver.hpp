@@ -60,7 +60,7 @@ public:
   /// Constructs an actual SOR solver
   SOR(const Geometry *geom, const real_t &omega);
   /// Destructor
-  ~SOR();
+  virtual ~SOR(); // TODO: virtual? because this is being inherited...
 
   /// Returns the total residual and executes a solver cycle
   // @param grid current pressure values
