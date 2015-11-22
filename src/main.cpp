@@ -27,16 +27,75 @@
 #include <iostream>
 #include <sys/stat.h>
 
+#ifdef __linux__
+	#include <sys/time.h>
+//#elif _WIN32 // windows 32- and 64-bit
+//	#include <Windows.h>
+#endif
+
+#define VERBOSE false
+
 int main(int argc, char **argv) {
 
-  // Create parameter and geometry instances with default values
-  Communicator comm(&argc, &argv);
-  Parameter param;
-  Geometry geom(&comm);
-  // Create the fluid solver
-  Compute comp(&geom, &param, &comm);
+	// measure runtime
+	if (comm.getRank() == 0) { // do this only on the master process
+#ifdef __linux__
+		timeval tv;
+		gettimeofday(&tv, NULL);
+		long int milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+//#elif _WIN32 // windows 32- and 64-bit
+//
+#else
+		std::cout << "System unknown, no runtime measurement!\n" << std::flush;
+#endif
+	}
 
-  if (comm.getRank() == 0) {
+	// read the command line arguments
+	std::string param_file("");
+	std::string geom_file("");
+	for (int i=0; i<argc; i++){
+		switch (i){
+			case 0:
+				// this is the path to the executable
+				break;
+			case 1:
+				// this should be the filename of the parameter file
+				param_file.assign(argv[i]);
+				break;
+			case 2:
+				// this should be the filename of the geometry file
+				geom_file.assign(argv[i]);
+				break;
+			default:
+				// too much parameters, don't know what to do here
+				std::cout << "Warning: too much command line arguments!\n";
+				break;
+		}
+	}
+
+  // Create communicator
+  Communicator comm(&argc, &argv); // TODO: handle arguments
+
+  // Create parameter and geometry instances with default values
+  Parameter param;
+  Geometry geom(&comm); // TODO: handle communicator argument
+
+	// load data from files, if filenames given in the command line arguments
+	if (param_file.compare("") != 0){
+		// the string is not empty, try to load the data
+		param.Load(param_file.c_str(), VERBOSE);
+	}
+	if (geom_file.compare("") != 0){
+		// the string is not empty, try to load the data
+		geom.Load(geom_file.c_str(), VERBOSE);
+	}
+
+  // Create the fluid solver
+	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;
+  Compute comp(&geom, &param, &comm);
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
+
+  if (comm.getRank() == 0) { // TODO: do this on every process? what if the processes run on different nodes?
     // check if folder "VTK" exists
     struct stat info;
 
@@ -47,18 +106,22 @@ int main(int argc, char **argv) {
 
 // Create and initialize the visualization
 #ifdef USE_DEBUG_VISU
+	if (VERBOSE) std::cout << "Initializing the visualization..." << std::flush;
   Renderer visu(geom.Length(), geom.Mesh());
   visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
             comm.getRank() + 1);
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 #endif // USE_DEBUG_VISU
 
   // Create a VTK generator;
+	if (VERBOSE) std::cout << "Creating the VTK generator..." << std::flush;
   // use offset as the domain shift
   multi_real_t offset;
   offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2));
   offset[1] = comm.ThreadIdx()[1] * (geom.Mesh()[1] * (double)(geom.Size()[1] - 2));
   VTK vtk(geom.Mesh(), geom.Size(), geom.TotalSize(), offset, comm.getRank(),
           comm.getSize(), comm.ThreadDim());
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
 #ifdef USE_DEBUG_VISU
   const Grid *visugrid;
@@ -88,9 +151,11 @@ int main(int argc, char **argv) {
     default:
       break;
     };
+	visugrid->CheckNaN(); // check for NaNs
 #endif // USE_DEBUG_VISU
 
     // Create VTK Files in the folder VTK
+	if (VERBOSE) std::cout << "Creating VTK files..." << std::flush;
     // Note that when using VTK module as it is you first have to write cell
     // information, then call SwitchToPointData(), and then write point data.
     vtk.Init("VTK/field");
@@ -100,12 +165,31 @@ int main(int argc, char **argv) {
     vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
     vtk.AddPointScalar("Pressure", comp.GetP());
     vtk.Finish();
+	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
     // Run a few steps
+	if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
     for (uint32_t i = 0; i < 9; ++i)
-      comp.TimeStep(false);
+      comp.TimeStep(false,VERBOSE);
     bool printOnlyOnMaster = !comm.getRank();
-    comp.TimeStep(printOnlyOnMaster);
+    comp.TimeStep(printOnlyOnMaster,VERBOSE);
   }
+
+	std::cout << "The program was executed sucessfully!\n";
+
+	// runtime measurement
+	if (comm.getRank() == 0) { // do this only on the master
+#ifdef __linux__
+		gettimeofday(&tv, NULL);
+		long int milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+		double diff_sec = (milliseconds_end - milliseconds_begin) / 1000.0;
+		std::cout << "Total elapsed time: " << diff_sec << " seconds.\n";
+//#elif _WIN32 // windows 32- and 64-bit
+//	
+#endif
+	}
+
+	std::cout << "Exiting...\n" << std::flush;
+
   return 0;
 }
