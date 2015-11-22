@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2015   Michael Lahnert
 #
 # This program is free software: you can redistribute it and/or modify
@@ -12,23 +13,21 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 project (NUMSIM)
 
 cmake_minimum_required (VERSION 2.8)
 
-# force to set a build type
 if (NOT CMAKE_BUILD_TYPE)
   set (CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
     "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif (NOT CMAKE_BUILD_TYPE)
 
-# set compiler
 set (CMAKE_CC_COMPILER "/usr/bin/gcc")
 set (CMAKE_CXX_COMPILER "/usr/bin/g++")
 
-# set some good compiler flags
-set (GOOD_FLAGS "-Wall -Wextra -pedantic -O3 -std=c++11")
+set (GOOD_FLAGS "-Wall -Wextra -pedantic -std=c++11")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
 # debug visu?
@@ -46,6 +45,7 @@ INCLUDE_DIRECTORIES(${INCLUDE_DIRECTORIES} ${MPI_INCLUDE_PATH})
 
 # Using glob is discouraged in cmake.
 set (HEADERS
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.hpp
@@ -54,11 +54,11 @@ set (HEADERS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/solver.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/typedef.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/zeitgeist.hpp
   )
 
 set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/communicator.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compute.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/geometry.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/grid.cpp
@@ -68,8 +68,6 @@ set (SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/vtk.cpp
   )
 
-# add header and source of visu if it shall be built
-# additionally set a flag
 if (DEBUG_VISU)
   set (HEADERS
     ${HEADERS}
@@ -84,7 +82,6 @@ if (DEBUG_VISU)
   add_definitions(-DUSE_DEBUG_VISU)
 endif (DEBUG_VISU)
 
-# build executable and link libs against it
 add_executable (numsim ${SOURCES})
 target_link_libraries (numsim ${SDL2_LIBRARIES} ${MPI_LIBRARIES})
 
