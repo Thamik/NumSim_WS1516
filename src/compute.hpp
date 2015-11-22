@@ -24,14 +24,15 @@
 class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
-  Compute(const Geometry *geom, const Parameter *param);
+  Compute(const Geometry *geom, const Parameter *param,
+          const Communicator *comm = 0);
   /// Deletes all grids
   ~Compute();
 
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  void TimeStep(bool printInfo, bool verbose);
+  void TimeStep(bool printInfo, bool verbose = false);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;

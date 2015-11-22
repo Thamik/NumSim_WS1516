@@ -16,7 +16,7 @@
 \param[in] geom pointer on geometry object providing the geometry information
 \param[in] param pointer on parameter object providing the parameter data
 */
-Compute::Compute(const Geometry *geom, const Parameter *param)
+Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
 : _t(0.0), _dtlimit(0.0), _epslimit(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?

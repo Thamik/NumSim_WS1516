@@ -23,6 +23,11 @@ Geometry::Geometry()
 	// TODO: are the values right?
 }
 
+Geometry::Geometry(const Communicator *comm)
+{
+	//TODO
+}
+
 /**
 The geometry for the actual problem is given in the file in path file.
 \param[in] file file path
@@ -89,12 +94,22 @@ const multi_index_t& Geometry::Size() const
 	return _size;
 }
 
+const multi_index_t& Geometry::TotalSize() const
+{
+	//TODO
+}
+
 /**
 \return physical length of the domain
 */
 const multi_real_t& Geometry::Length() const
 {
 	return _length;
+}
+
+const multi_real_t &Geometry::TotalLength() const
+{
+	//TODO
 }
 
 /**

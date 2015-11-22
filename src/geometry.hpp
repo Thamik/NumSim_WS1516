@@ -37,6 +37,7 @@ public:
   //    -------------
   //      u=0, v=0
   Geometry();
+  Geometry(const Communicator *comm);
 
   /// Loads a geometry from a file
   void Load(const char *file, bool verbose = false);
