@@ -64,11 +64,13 @@ int main(int argc, char **argv) {
   Communicator comm(&argc, &argv); // TODO: handle arguments
 
 	// measure runtime
+	timeval tv;
+	long int milliseconds_begin(0), milliseconds_end(0);
+	double diff_sec(0.0);
 	if (comm.getRank() == 0) { // do this only on the master process
 #ifdef __linux__
-		timeval tv;
 		gettimeofday(&tv, NULL);
-		long int milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+		milliseconds_begin = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 //#elif _WIN32 // windows 32- and 64-bit
 //
 #else
@@ -181,8 +183,8 @@ int main(int argc, char **argv) {
 	if (comm.getRank() == 0) { // do this only on the master
 #ifdef __linux__
 		gettimeofday(&tv, NULL);
-		long int milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
-		double diff_sec = (milliseconds_end - milliseconds_begin) / 1000.0;
+		milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+		diff_sec = (milliseconds_end - milliseconds_begin) / 1000.0;
 		std::cout << "Total elapsed time: " << diff_sec << " seconds.\n";
 //#elif _WIN32 // windows 32- and 64-bit
 //	
