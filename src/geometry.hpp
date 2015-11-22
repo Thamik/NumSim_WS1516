@@ -43,8 +43,12 @@ public:
 
   /// Returns the number of cells in each dimension
   const multi_index_t &Size() const;
+  /// Returns the total number of cells in each dimension
+  const multi_index_t &TotalSize() const;
   /// Returns the length of the domain
   const multi_real_t &Length() const;
+  /// Returns the total length of the domain
+  const multi_real_t &TotalLength() const;
   /// Returns the meshwidth
   const multi_real_t &Mesh() const;
 
