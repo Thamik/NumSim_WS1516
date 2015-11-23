@@ -152,18 +152,23 @@ void Geometry::Update_U(Grid *u) const
 		// check if this is a domain boundary
 		if (!is_global_boundary(i)) continue;
 
+		//std::cout << "Process " << _comm->getRank() << " updates boundary " << i << ".\n" << std::flush;
+
 		BoundaryIterator it(this);
 		it.SetBoundary(i);
 		it.First();
 		while (it.Valid()){
 			//std::cout << "i = " << i << ", it = " << it.Value() << "\n" << std::flush; // only for debugging issues
-			if (i==4){
+			//if (i==4){
+			if (i==BoundaryIterator::boundaryTop){
 				// upper boundary
 				u->Cell(it) = 2*1.0 - u->Cell(it.Down());
-			} else if (i==1){
+			//} else if (i==1){
+			} else if (i==BoundaryIterator::boundaryLeft) {
 				// left boundary
 				u->Cell(it) = 0.0;
-			} else if (i==2) {
+			//} else if (i==2) {
+			} else if (i==BoundaryIterator::boundaryRight) {
 				// right boundary
 				u->Cell(it) = 0.0;
 				u->Cell(it.Left()) = 0.0;
@@ -191,16 +196,20 @@ void Geometry::Update_V(Grid *v) const
 		it.SetBoundary(i);
 		it.First();
 		while (it.Valid()){
-			if (i==4){
+			//if (i==4){
+			if (i==BoundaryIterator::boundaryTop){
 				// upper boundary
 				v->Cell(it) = 0.0;
 				v->Cell(it.Down()) = 0.0;
-			} else if (i==3){
+			//} else if (i==3){
+			} else if (i==BoundaryIterator::boundaryBottom) {
 				// lower boundary
 				v->Cell(it) = 0.0;
-			} else if (i == 1) {
+			//} else if (i == 1) {
+			} else if (i==BoundaryIterator::boundaryLeft) {
 				v->Cell(it) = -v->Cell(it.Right());
-			} else if (i == 2) {
+			//} else if (i == 2) {
+			} else if (i==BoundaryIterator::boundaryRight) {
 				v->Cell(it) = -v->Cell(it.Left());
 			}
 			it.Next();
@@ -223,16 +232,20 @@ void Geometry::Update_P(Grid *p) const
 		it.SetBoundary(i);
 		it.First();
 		while (it.Valid()){
-			if (i==4){
+			//if (i==4){
+			if (i==BoundaryIterator::boundaryTop){
 				// upper boundary
 				p->Cell(it) = p->Cell(it.Down());
-			} else if (i==1){
+			//} else if (i==1){
+			} else if (i==BoundaryIterator::boundaryLeft) {
 				// left boundary
 				p->Cell(it) = p->Cell(it.Right());
-			} else if (i==2){
+			//} else if (i==2){
+			} else if (i==BoundaryIterator::boundaryRight) {
 				// right boundary
 				p->Cell(it) = p->Cell(it.Left());
-			} else if (i==3){
+			//} else if (i==3){
+			} else if (i==BoundaryIterator::boundaryBottom) {
 				// lower boundary
 				p->Cell(it) = p->Cell(it.Top());
 			}
@@ -305,9 +318,9 @@ void Geometry::do_domain_decomposition()
 		// horizontal decomposition
 		//horizontal_domain_decomposition(tdim, rankDistri, localSizes);
 		// vertical decomposition
-		//vertical_domain_decomposition(tdim, rankDistri, localSizes);
+		vertical_domain_decomposition(tdim, rankDistri, localSizes);
 		// 2d decomposition
-		rect_domain_decomposition(tdim, rankDistri, localSizes);
+		//rect_domain_decomposition(tdim, rankDistri, localSizes);
 
 		// send information
 		//std::cout << "Broadcasting domain decomposition information...\n" << std::flush;
@@ -374,6 +387,8 @@ void Geometry::do_domain_decomposition()
 
 	// update geometry values
 	update_values();
+
+	std::cout << "Process " << _comm->getRank() << ": left(" << is_global_boundary(BoundaryIterator::boundaryLeft) << "), right(" << is_global_boundary(BoundaryIterator::boundaryRight) << "), top(" << is_global_boundary(BoundaryIterator::boundaryTop) << "), bottom(" << is_global_boundary(BoundaryIterator::boundaryBottom) << ")\n" << std::flush;
 }
 
 void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
@@ -424,7 +439,6 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 	// search for a good decomposition
 	tdim[0] = np;
 	tdim[1] = 1;
-	std::cout << "1111111111111\n" << std::flush;
 	while (tdim[0] > tdim[1]){
 		bool divisor_found = false;
 		for (int i=2; i<=(np/2); i++){
@@ -437,7 +451,6 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 		}
 		if (!divisor_found) break;
 	}
-	std::cout << "22222222222222\n" << std::flush;
 	// allocate
 	rankDistri = new int*[tdim[0]];
 	for (int i=0; i<tdim[0]; i++){
