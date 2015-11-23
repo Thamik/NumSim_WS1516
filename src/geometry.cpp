@@ -452,9 +452,13 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 		bool divisor_found = false;
 		for (int i=2; i<=(np/2); i++){
 			if ((tdim[0] % i) == 0){
-				tdim[0] = tdim[0] / i;
-				tdim[1] = tdim[1] * i;
-				divisor_found = true;
+				index_t temp_x = tdim[0] / i;
+				index_t temp_y = tdim[1] * i;
+				if (temp_x >= temp_y){
+					tdim[0] = temp_x;
+					tdim[1] = temp_y;
+					divisor_found = true;
+				}
 				break;
 			}
 		}
