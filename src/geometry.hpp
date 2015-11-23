@@ -37,7 +37,7 @@ public:
   //    -------------
   //      u=0, v=0
   Geometry();
-  Geometry(const Communicator *comm);
+  Geometry(Communicator *comm);
 
   /// Loads a geometry from a file
   void Load(const char *file, bool verbose = false);
@@ -65,8 +65,10 @@ public:
 
 	void update_values();
 
+	void do_domain_decomposition();
+
 private:
-  const Communicator *_comm;
+  Communicator *_comm;
 
   /// size of the grid
   multi_index_t _size;
@@ -88,6 +90,10 @@ private:
 
 	/// decides whether the given boundary is a global boundary or is not
 	bool is_global_boundary(int boundary_index) const;
+
+	void horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
+	void vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
+	void rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
 	
 };
 //------------------------------------------------------------------------------

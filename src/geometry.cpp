@@ -23,7 +23,7 @@ Geometry::Geometry()
 	std::cout << "Warning: Geometry Constructor: no communicator given!\n" << std::flush;
 }
 
-Geometry::Geometry(const Communicator *comm)
+Geometry::Geometry(Communicator *comm)
 : _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
 {
 	// handle total/partial size/length values
@@ -292,4 +292,175 @@ void Geometry::update_values()
 	//std::cout << "Geometry: update values!\n" << std::flush;
 	set_meshwidth();
 	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
+}
+
+void Geometry::do_domain_decomposition()
+{
+	multi_index_t tdim;
+	int** rankDistri;
+	multi_index_t** localSizes;
+	if (_comm->getRank() == 0) {
+		std::cout << "Domain decomposition...\n" << std::flush;
+
+		// horizontal decomposition
+		//horizontal_domain_decomposition(tdim, rankDistri, localSizes);
+		// vertical decomposition
+		//vertical_domain_decomposition(tdim, rankDistri, localSizes);
+		// 2d decomposition
+		rect_domain_decomposition(tdim, rankDistri, localSizes);
+
+		// send information
+		//std::cout << "Broadcasting domain decomposition information...\n" << std::flush;
+		int sendBuf(tdim[0]);
+		MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		sendBuf = tdim[1];
+		MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+		//std::cout << "First broadcasting completed.\n" << std::flush;
+
+		for (int i=0; i<tdim[0]; i++){
+			MPI_Bcast(rankDistri[i], tdim[1], MPI_INT, 0, MPI_COMM_WORLD);
+		}
+
+		//std::cout << "Second broadcasting completed.\n" << std::flush;
+
+		for (int i=0; i<tdim[0]; i++){
+			for (int j=0; j<tdim[1]; j++) {
+				sendBuf = localSizes[i][j][0];
+				MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+				sendBuf = localSizes[i][j][1];
+				MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			}
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+		//std::cout << "All broadcasting completed.\n" << std::flush;
+	} else {
+		// receive information
+		int recBuf(0);
+		MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		tdim[0] = recBuf;
+		MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		tdim[1] = recBuf;
+
+		//std::cout << "Recieved tdim: " << tdim[0] << ", " << tdim[1] << "\n" << std::flush;
+
+		// allocate
+		rankDistri = new int*[tdim[0]];
+		for (int i=0; i<tdim[0]; i++){
+			rankDistri[i] = new int[tdim[1]];
+		}
+		localSizes = new multi_index_t*[tdim[0]];
+		for (int i=0; i<tdim[0]; i++){
+			localSizes[i] = new multi_index_t[tdim[1]];
+		}
+
+		for (int i=0; i<tdim[0]; i++){
+			MPI_Bcast(rankDistri[i], tdim[1], MPI_INT, 0, MPI_COMM_WORLD);
+		}
+		for (int i=0; i<tdim[0]; i++){
+			for (int j=0; j<tdim[1]; j++) {
+				MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+				localSizes[i][j][0] = recBuf;
+				MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
+				localSizes[i][j][1] = recBuf;
+				//std::cout << "Recieved localSizes[i][j]: " << localSizes[i][j][0] << ", " << localSizes[i][j][1] << "\n" << std::flush;
+			}
+		}
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
+
+	// write to communicator
+	_comm->setProcDistribution(rankDistri, tdim, localSizes);
+
+	// update geometry values
+	update_values();
+}
+
+void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
+{
+	index_t np = _comm->getSize();
+	tdim[0] = np;
+	tdim[1] = 1;
+	// allocate
+	rankDistri = new int*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		rankDistri[i] = new int[tdim[1]];
+	}
+	localSizes = new multi_index_t*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		localSizes[i] = new multi_index_t[tdim[1]];
+	}
+	// write values
+	for (int i=0; i<np; i++){
+		rankDistri[i][0] = i;
+		localSizes[i][0] = multi_index_t(TotalSize()[0]/real_t(np), TotalSize()[1]);
+	}
+}
+
+void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
+{
+	index_t np = _comm->getSize();
+	tdim[0] = 1;
+	tdim[1] = np;
+	// allocate
+	rankDistri = new int*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		rankDistri[i] = new int[tdim[1]];
+	}
+	localSizes = new multi_index_t*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		localSizes[i] = new multi_index_t[tdim[1]];
+	}
+	// write values
+	for (int i=0; i<np; i++){
+		rankDistri[0][i] = i;
+		localSizes[0][i] = multi_index_t(TotalSize()[0], TotalSize()[1]/real_t(np));
+	}
+}
+
+void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
+{
+	index_t np = _comm->getSize();
+	// search for a good decomposition
+	tdim[0] = np;
+	tdim[1] = 1;
+	std::cout << "1111111111111\n" << std::flush;
+	while (tdim[0] > tdim[1]){
+		bool divisor_found = false;
+		for (int i=2; i<=(np/2); i++){
+			if ((tdim[0] % i) == 0){
+				tdim[0] = np/i;
+				tdim[1] = tdim[1] * i;
+				divisor_found = true;
+				break;
+			}
+		}
+		if (!divisor_found) break;
+	}
+	std::cout << "22222222222222\n" << std::flush;
+	// allocate
+	rankDistri = new int*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		rankDistri[i] = new int[tdim[1]];
+	}
+	localSizes = new multi_index_t*[tdim[0]];
+	for (int i=0; i<tdim[0]; i++){
+		localSizes[i] = new multi_index_t[tdim[1]];
+	}
+	// write the other values
+	for (int i=0; i<tdim[0]; i++){
+		for (int j=0; j<tdim[1]; j++){
+			rankDistri[i][j] = i + j*tdim[0];
+			if (i == (tdim[0]-1)){
+				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
+			} else {
+				localSizes[i][j][0] = TotalSize()[0] / tdim[0];
+			}
+			if (j == (tdim[1]-1)){
+				localSizes[i][j][1] = TotalSize()[1] - int(TotalSize()[1] / tdim[1]) * (tdim[1]-1);
+			} else {
+				localSizes[i][j][1] = TotalSize()[1] / tdim[1];
+			}
+		}
+	}
 }
