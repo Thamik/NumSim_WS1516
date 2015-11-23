@@ -108,11 +108,11 @@ public:
 private:
   multi_index_t _tidx;
   multi_index_t _tdim;
-  int _rank;
-  int _size;
-  bool _evenodd;
-  int** _rankDistribution;
-  multi_index_t _localSize;
+  int _rank; // rank of this process
+  int _size; // number of processes
+  bool _evenodd; // determines if the grids belonging to this process start with a red or black cell
+  int** _rankDistribution; // the distribution of the processes to the decomposed domain
+  multi_index_t _localSize; // the size of the (local) domain belonging to this process
 
 
   /** Function to sync ghost layer on left boundary:
