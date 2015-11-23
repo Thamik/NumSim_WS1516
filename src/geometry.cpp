@@ -382,8 +382,12 @@ void Geometry::do_domain_decomposition()
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
 
+	//std::cout << "Process no. " << _comm->getRank() << " is still working (1)!!\n" << std::flush;
+
 	// write to communicator
 	_comm->setProcDistribution(rankDistri, tdim, localSizes);
+
+	//std::cout << "Process no. " << _comm->getRank() << " is still working (2)!!\n" << std::flush;
 
 	// update geometry values
 	update_values();

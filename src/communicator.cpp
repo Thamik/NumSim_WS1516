@@ -15,7 +15,7 @@
 /* Public methods */
 
 Communicator::Communicator(int *argc, char ***argv)
-: _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL)
+: _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL), _localSize(0,0)
 {
 	//for (int i = 0; i<*argc; i++) std::cout << (*argv)[i] << "\n" << std::flush;
 	MPI_Init(argc, argv); //TODO
@@ -146,6 +146,8 @@ multi_index_t Communicator::getLocalSize() const
 
 void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes)
 {
+	// std::cout << _rank << ": " << tdim[0] << ", " << tdim[1] << "\n" << std::flush;
+
 	// delete _rankDistribution if not NULL
 	if( _rankDistribution != NULL ) {
 		for(int ii = 0; ii < _tdim[0]; ii++) {
@@ -156,11 +158,14 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 
 	_tdim = tdim;
 
+	//std::cout << _rank << ": " << "start allocating..." << "\n" << std::flush;
 	// allocate _rankDistribution
 	_rankDistribution = new int*[_tdim[0]];
 	for(int ii = 0; ii < _tdim[0]; ii++) {
 		_rankDistribution[ii] = new int[_tdim[1]];
 	}
+
+	//std::cout << _rank << ": " << "done allocating!" << "\n" << std::flush;
 
 	// write new values in _rankDistribution
 	for(int ii = 0; ii < _tdim[0]; ii++) {
@@ -169,6 +174,7 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 		}
 	}
 
+	//std::cout << _rank << ": " << "start searching for position..." << "\n" << std::flush;
 	for(int ii = 0; ii < _tdim[0]; ii++) {
 		for(int jj = 0; jj < _tdim[1]; jj++) {
 			if( _rankDistribution[ii][jj] == _rank ) {
@@ -177,8 +183,11 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 			}
 		}
 	}
+	//std::cout << _rank << ": " << "position found!" << "\n" << std::flush;
 
 	_localSize = localSizes[_tidx[0]][_tidx[1]];
+
+	//std::cout << _rank << ": " << "local sizes written!" << "\n" << std::flush;
 
 	// set _evenodd
 	int temp(0);
@@ -186,13 +195,15 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 		temp += localSizes[i][0][0];
 	}
 	for (int i=0; i<_tidx[1]; i++){
-		temp += localSizes[i][0][1];
+		temp += localSizes[0][i][1];
 	}
 	if ((temp % 2) == 0){
 		_evenodd = true;
 	} else {
 		_evenodd = false;
 	}
+
+	//std::cout << _rank << ": " << "evenodd set!" << "\n" << std::flush;
 }
 
 
