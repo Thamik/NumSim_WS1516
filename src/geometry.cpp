@@ -318,9 +318,9 @@ void Geometry::do_domain_decomposition()
 		// horizontal decomposition
 		//horizontal_domain_decomposition(tdim, rankDistri, localSizes);
 		// vertical decomposition
-		vertical_domain_decomposition(tdim, rankDistri, localSizes);
+		//vertical_domain_decomposition(tdim, rankDistri, localSizes);
 		// 2d decomposition
-		//rect_domain_decomposition(tdim, rankDistri, localSizes);
+		rect_domain_decomposition(tdim, rankDistri, localSizes);
 
 		// send information
 		//std::cout << "Broadcasting domain decomposition information...\n" << std::flush;
@@ -389,6 +389,15 @@ void Geometry::do_domain_decomposition()
 	update_values();
 
 	std::cout << "Process " << _comm->getRank() << ": left(" << is_global_boundary(BoundaryIterator::boundaryLeft) << "), right(" << is_global_boundary(BoundaryIterator::boundaryRight) << "), top(" << is_global_boundary(BoundaryIterator::boundaryTop) << "), bottom(" << is_global_boundary(BoundaryIterator::boundaryBottom) << ")\n" << std::flush;
+
+	if(_comm->getRank()==0) {
+		for(int i=0; i < tdim[0]; i++) {
+			for(int j=0; j < tdim[1]; j++) {
+				std::cout << rankDistri[i][j] << " - ";
+			}
+			std::cout << "\n";
+		}
+	}
 }
 
 void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const

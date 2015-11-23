@@ -231,14 +231,24 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 	if(!isRight() && !isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+
+		if( leftRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << leftRank << std::flush;
+		if( rightRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << rightRank << std::flush;
+
 		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, recBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+
+		if( leftRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << leftRank << std::flush;
+		
 		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isRight()) {
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+		
+		if( rightRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << rightRank << std::flush;
+
 		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
@@ -268,7 +278,7 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 
 bool Communicator::copyRightBoundary(Grid *grid) const
 {
-	int tag = 1013;
+	int tag = 1014;
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
@@ -299,14 +309,24 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 	if(!isRight() && !isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+
+		if( leftRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << leftRank << std::flush;
+		if( rightRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << rightRank << std::flush;
+
 		MPI_Sendrecv(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, recBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isRight()) {
 		int rightRank = _rankDistribution[_tidx[0]+1][_tidx[1]];
+
+		if( rightRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << rightRank << std::flush;
+
 		MPI_Send(sendBuff, _localSize[1], MPI_DOUBLE, rightRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isLeft()) {
 		int leftRank = _rankDistribution[_tidx[0]-1][_tidx[1]];
+
+		if( leftRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << leftRank << std::flush;
+
 		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, leftRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
@@ -336,7 +356,7 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 
 bool Communicator::copyTopBoundary(Grid *grid) const
 {
-	int tag = 1013;
+	int tag = 1015;
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
@@ -367,14 +387,24 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 	if(!isBottom() && !isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+
+		if( topRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << topRank << std::flush;
+		if( bottomRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << bottomRank << std::flush;
+
 		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, topRank, tag, recBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+
+		if( topRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << topRank << std::flush;
+
 		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isBottom()) {
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		
+		if( bottomRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << bottomRank << std::flush;
+
 		MPI_Recv(recBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
@@ -404,7 +434,7 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 
 bool Communicator::copyBottomBoundary(Grid *grid) const
 {
-	int tag = 1013;
+	int tag = 1016;
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
@@ -435,19 +465,30 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	if(!isBottom() && !isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+		
+		if( topRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << topRank << std::flush;
+		if( bottomRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << bottomRank << std::flush;
+		
 		MPI_Sendrecv(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, recBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else if(!isBottom()) {
 		int bottomRank = _rankDistribution[_tidx[0]][_tidx[1]-1];
+
+		if( bottomRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << bottomRank << std::flush;
+
 		MPI_Send(sendBuff, _localSize[0], MPI_DOUBLE, bottomRank, tag, MPI_COMM_WORLD);
 	}
 	else if(!isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
+
+		if( topRank >= _size ) std::cout << "process " << _rank << " tried to call rank " << topRank << std::flush;
+
 		MPI_Recv(recBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
 		//TODO maybe output for debugging perpurse?
+		std::cout << "process " << _rank << "is bottom and top" << std::flush;
 	}
 
 	// Copy received data to grid
