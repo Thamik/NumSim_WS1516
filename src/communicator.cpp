@@ -443,7 +443,7 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	}
 	else if(!isTop()) {
 		int topRank = _rankDistribution[_tidx[0]][_tidx[1]+1];
-		MPI_Recv(recBuff, _localSize[1], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(recBuff, _localSize[0], MPI_DOUBLE, topRank, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	}
 	else {
 		// the process is at the left as well as at the right boundary
