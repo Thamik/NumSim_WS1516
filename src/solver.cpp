@@ -191,7 +191,8 @@ void SOR::erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) 
 	grid->Cell(it) += _omega * corr;
 
 	// set one cell to zero (the alternative to deleting the pressure average)
-	if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
+	//if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
+	if (it.Value()==((_geom->TotalSize()[0]*_geom->TotalSize()[1])/2)+_geom->TotalSize()[0]/2){
 		grid->Cell(it) = 0.0;
 	}
 }

@@ -111,7 +111,7 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 			if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 			break;
 		} else if (residual < _epslimit){
-			if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " timesteps. Residual: " << residual << "\n";
+			if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " iterations. Residual: " << residual << "\n";
 			break;
 		}
 	}
