@@ -78,7 +78,6 @@ Afterwards, the Poisson pressure equation is solved and the velocitys are update
 void Compute::TimeStep(bool printInfo, bool verbose)
 {
 	// TODO: test
-	
 	// compute dt
 	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt(); // BLOCKING
@@ -104,6 +103,8 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		} else {
 			residual = _solver->BlackCycle(_p, _rhs);
 		}
+
+		sync_p();
 
 		iteration++;
 
@@ -136,9 +137,15 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		// magnitudes of the fields
 		//std::cout << "max(F) = " << _F->TotalAbsMax() << ", max(G) = " << _G->TotalAbsMax() << ", max(rhs) = " << _rhs->TotalAbsMax() << "\n";
 		//std::cout << "max(u) = " << _u->TotalAbsMax() << ", max(v) = " << _v->TotalAbsMax() << ", max(p) = " << _p->TotalAbsMax() << "\n";
+		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 		std::cout << "============================================================\n";
 	}
+
+	if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[16+18*2] << ", " << _v->Data()[16+18*2] << "\n" << std::flush;
+	if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[16+18] << ", " << _v->Data()[16+18] << "\n" << std::flush;
+	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[18*17-2] << ", " << _v->Data()[18*17-2] << "\n" << std::flush;
+	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[18*16-2] << ", " << _v->Data()[18*16-2] << "\n" << std::flush;
 }
 
 /**
@@ -313,4 +320,11 @@ void Compute::sync_uv()
 void Compute::sync_p()
 {
 	_comm->copyBoundary(_p);
+}
+
+void Compute::sync_all()
+{
+	sync_FG();
+	sync_uv();
+	sync_p();
 }

@@ -499,7 +499,7 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	else {
 		// the process is at the left as well as at the right boundary
 		//TODO maybe output for debugging perpurse?
-		std::cout << "process " << _rank << "is bottom and top" << std::flush;
+		//std::cout << "process " << _rank << "is bottom and top" << std::flush;
 	}
 
 	// Copy received data to grid

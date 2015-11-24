@@ -102,6 +102,7 @@ private:
 	void sync_FG();
 	void sync_uv();
 	void sync_p();
+	void sync_all();
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

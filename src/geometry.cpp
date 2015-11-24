@@ -24,7 +24,8 @@ Geometry::Geometry()
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
+//: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
+: _comm(comm), _size(32,32), _bsize(32,32), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
@@ -163,18 +164,22 @@ void Geometry::Update_U(Grid *u) const
 			if (i==BoundaryIterator::boundaryTop){
 				// upper boundary
 				u->Cell(it) = 2*1.0 - u->Cell(it.Down());
+				//std::cout << _comm->getRank() << ": setting top boundary values\n";
 			//} else if (i==1){
 			} else if (i==BoundaryIterator::boundaryLeft) {
 				// left boundary
 				u->Cell(it) = 0.0;
-			//} else if (i==2) {
+				//std::cout << _comm->getRank() << ": setting left boundary values\n";
+			//} else if (i==2) {      
 			} else if (i==BoundaryIterator::boundaryRight) {
 				// right boundary
 				u->Cell(it) = 0.0;
 				u->Cell(it.Left()) = 0.0;
+				//std::cout << _comm->getRank() << ": setting right boundary values\n";
 			} else {
 				// lower boundary
 				u->Cell(it) = - u->Cell(it.Top());
+				//std::cout << _comm->getRank() << ": setting bottom boundary values\n";
 			}
 			it.Next();
 		}
@@ -261,14 +266,14 @@ Calculates the meshwidth such that it satisfies h = length/size
 void Geometry::set_meshwidth()
 {
 	// update meshwidth
-	_h[0] = _blength[0]/_bsize[0];
-	_h[1] = _blength[1]/_bsize[1];
+	_h[0] = _blength[0]/(_bsize[0]-2);
+	_h[1] = _blength[1]/(_bsize[1]-2);
 
 	// update local size and length
 	_size[0] = _comm->getLocalSize()[0];
 	_size[1] = _comm->getLocalSize()[1];
-	_length[0] = _size[0] * _h[0];
-	_length[1] = _size[1] * _h[1];
+	_length[0] = (_size[0]-2) * _h[0];
+	_length[1] = (_size[1]-2) * _h[1];
 
 	//std::cout << "set_meshwidth: " << _comm->getLocalSize()[0] << ", " << _comm->getLocalSize()[1] << "\n" << std::flush;
 	//std::cout << "set_meshwidth: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
@@ -384,6 +389,9 @@ void Geometry::do_domain_decomposition()
 
 	//std::cout << "Process no. " << _comm->getRank() << " is still working (1)!!\n" << std::flush;
 
+	_bsize[0] += 2;
+	_bsize[1] += 2;
+
 	// write to communicator
 	_comm->setProcDistribution(rankDistri, tdim, localSizes);
 
@@ -419,9 +427,50 @@ void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankD
 		localSizes[i] = new multi_index_t[tdim[1]];
 	}
 	// write values
-	for (int i=0; i<np; i++){
-		rankDistri[i][0] = i;
-		localSizes[i][0] = multi_index_t(TotalSize()[0]/real_t(np), TotalSize()[1]);
+	for (int i=0; i<tdim[0]; i++){
+		for (int j=0; j<tdim[1]; j++){
+			rankDistri[i][j] = i + j*tdim[0];
+			if (i == (tdim[0]-1)){
+				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
+			} else {
+				localSizes[i][j][0] = TotalSize()[0] / tdim[0];
+			}
+			if (j == (tdim[1]-1)){
+				localSizes[i][j][1] = TotalSize()[1] - int(TotalSize()[1] / tdim[1]) * (tdim[1]-1);
+			} else {
+				localSizes[i][j][1] = TotalSize()[1] / tdim[1];
+			}
+		}
+	}
+
+	//add ghost cells to domains
+	/*for (int i=0; i<tdim[0]; i++) {
+		for (int j=0; j<tdim[1]; j++) {
+			// add ghost cells in x-dim
+			if (i == 0 && i == (tdim[0]-1)) {
+				// do nothing
+			} else if (i == 0 || i == (tdim[0]-1)) {
+				localSizes[i][j][0] += 1;
+			} else {
+				localSizes[i][j][0] += 2;
+			}
+
+			// add ghost cells in y-dim
+			if (j == 0 && j == (tdim[1]-1)) {
+				// do nothing
+			} else if (j == 0 || j == (tdim[1]-1)) {
+				localSizes[i][j][1] += 1;
+			} else {
+				localSizes[i][j][1] += 2; 
+			}
+		}
+	}*/
+
+	for (int i=0; i < tdim[0]; i++) {
+		for (int j = 0; j < tdim[1]; j++) {
+			localSizes[i][j][0] += 2;
+			localSizes[i][j][1] += 2;
+		}
 	}
 }
 
@@ -440,9 +489,50 @@ void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDis
 		localSizes[i] = new multi_index_t[tdim[1]];
 	}
 	// write values
-	for (int i=0; i<np; i++){
-		rankDistri[0][i] = i;
-		localSizes[0][i] = multi_index_t(TotalSize()[0], TotalSize()[1]/real_t(np));
+	for (int i=0; i<tdim[0]; i++){
+		for (int j=0; j<tdim[1]; j++){
+			rankDistri[i][j] = i + j*tdim[0];
+			if (i == (tdim[0]-1)){
+				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
+			} else {
+				localSizes[i][j][0] = TotalSize()[0] / tdim[0];
+			}
+			if (j == (tdim[1]-1)){
+				localSizes[i][j][1] = TotalSize()[1] - int(TotalSize()[1] / tdim[1]) * (tdim[1]-1);
+			} else {
+				localSizes[i][j][1] = TotalSize()[1] / tdim[1];
+			}
+		}
+	}
+
+	//add ghost cells to domains
+	/*for (int i=0; i<tdim[0]; i++) {
+		for (int j=0; j<tdim[1]; j++) {
+			// add ghost cells in x-dim
+			if (i == 0 && i == (tdim[0]-1)) {
+				// do nothing
+			} else if (i == 0 || i == (tdim[0]-1)) {
+				localSizes[i][j][0] += 1;
+			} else {
+				localSizes[i][j][0] += 2;
+			}
+
+			// add ghost cells in y-dim
+			if (j == 0 && j == (tdim[1]-1)) {
+				// do nothing
+			} else if (j == 0 || j == (tdim[1]-1)) {
+				localSizes[i][j][1] += 1;
+			} else {
+				localSizes[i][j][1] += 2; 
+			}
+		}
+	}*/
+
+	for (int i=0; i < tdim[0]; i++) {
+		for (int j = 0; j < tdim[1]; j++) {
+			localSizes[i][j][0] += 2;
+			localSizes[i][j][1] += 2;
+		}
 	}
 }
 
@@ -491,6 +581,36 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 			} else {
 				localSizes[i][j][1] = TotalSize()[1] / tdim[1];
 			}
+		}
+	}
+
+	//add ghost cells to domains
+	/*for (int i=0; i<tdim[0]; i++) {
+		for (int j=0; j<tdim[1]; j++) {
+			// add ghost cells in x-dim
+			if (i == 0 && i == (tdim[0]-1)) {
+				// do nothing
+			} else if (i == 0 || i == (tdim[0]-1)) {
+				localSizes[i][j][0] += 1;
+			} else {
+				localSizes[i][j][0] += 2;
+			}
+
+			// add ghost cells in y-dim
+			if (j == 0 && j == (tdim[1]-1)) {
+				// do nothing
+			} else if (j == 0 || j == (tdim[1]-1)) {
+				localSizes[i][j][1] += 1;
+			} else {
+				localSizes[i][j][1] += 2; 
+			}
+		}
+	}*/
+
+	for (int i=0; i < tdim[0]; i++) {
+		for (int j = 0; j < tdim[1]; j++) {
+			localSizes[i][j][0] += 2;
+			localSizes[i][j][1] += 2;
 		}
 	}
 }
