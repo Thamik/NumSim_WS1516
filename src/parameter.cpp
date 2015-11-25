@@ -38,7 +38,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 	infile.open(file);
 	if (!infile.is_open()){
 		std::cout << "Warning: parameter file could not be read!\n";
-		return;
+		continue;
 	}
 	for(int i=1;i<=8;i++)
 	{

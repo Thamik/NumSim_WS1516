@@ -52,7 +52,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 	infile.open(file);
 	if (!infile.is_open()){
 		std::cout << "Warning: geometry file could not be read!\n";
-		return;
+		continue;
 	}
 	for(int i=1;i<=7;i++)
 	{
@@ -83,13 +83,13 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		}
 	}
 	infile.close();
-	set_meshwidth(); // update _h
+	//set_meshwidth(); // update _h
 	//if (verbose){
 	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Geometry configuration read from file:\n";
-		std::cout << "Size\t\t=\t(" << _size[0] << ", " << _size[1] << ")\n";
-		std::cout << "Length\t\t=\t(" << _length[0] << ", " << _length[1] << ")\n";
+		std::cout << "Total Size\t\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
+		std::cout << "Total Length\t\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
 		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
 		std::cout << "Pressure\t=\t" << _pressure << "\n";
 		std::cout << "--------------------------------------------------\n";
