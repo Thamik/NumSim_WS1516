@@ -88,8 +88,8 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Geometry configuration read from file:\n";
-		std::cout << "Total Size\t\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
-		std::cout << "Total Length\t\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
+		std::cout << "Total Size\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
+		std::cout << "Total Length\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
 		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
 		std::cout << "Pressure\t=\t" << _pressure << "\n";
 		std::cout << "--------------------------------------------------\n";
@@ -329,7 +329,7 @@ void Geometry::do_domain_decomposition()
 	int** rankDistri;
 	multi_index_t** localSizes;
 	if (_comm->getRank() == 0) {
-		std::cout << "Domain decomposition...\n" << std::flush;
+		//std::cout << "Domain decomposition...\n" << std::flush;
 
 		// horizontal decomposition
 		//horizontal_domain_decomposition(tdim, rankDistri, localSizes);
@@ -411,15 +411,19 @@ void Geometry::do_domain_decomposition()
 	// update geometry values
 	update_values();
 
-	std::cout << "Process " << _comm->getRank() << ": left(" << is_global_boundary(BoundaryIterator::boundaryLeft) << "), right(" << is_global_boundary(BoundaryIterator::boundaryRight) << "), top(" << is_global_boundary(BoundaryIterator::boundaryTop) << "), bottom(" << is_global_boundary(BoundaryIterator::boundaryBottom) << ")\n" << std::flush;
+	//std::cout << "Process " << _comm->getRank() << ": left(" << is_global_boundary(BoundaryIterator::boundaryLeft) << "), right(" << is_global_boundary(BoundaryIterator::boundaryRight) << "), top(" << is_global_boundary(BoundaryIterator::boundaryTop) << "), bottom(" << is_global_boundary(BoundaryIterator::boundaryBottom) << ")\n" << std::flush;
 
 	if(_comm->getRank()==0) {
-		for(int i=0; i < tdim[0]; i++) {
-			for(int j=0; j < tdim[1]; j++) {
-				std::cout << rankDistri[i][j] << " - ";
+		std::cout << "--------------------------------------------------\n";
+		std::cout << "Process distribution (" << _comm->getSize() << " processes in total):\n" << std::flush;
+		for(int j=tdim[1]-1; j >= 0; j--) {
+			for(int i=0; i < tdim[0]; i++) {
+				if (i != 0) std::cout << "\t-\t";
+				std::cout << rankDistri[i][j];
 			}
-			std::cout << "\n";
+			std::cout << "\n" << std::flush;
 		}
+		std::cout << "--------------------------------------------------\n";
 	}
 }
 

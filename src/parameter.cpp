@@ -76,14 +76,14 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Parameter configuration read from file:\n";
-		std::cout << "Re\t=\t" << _re << "\n";
-		std::cout << "Omega\t=\t" << _omega << "\n";
-		std::cout << "Alpha\t=\t" << _alpha << "\n";
-		std::cout << "Epsilon\t=\t" << _eps << "\n";
-		std::cout << "Tau\t=\t" << _tau << "\n";
-		std::cout << "Itermax\t=\t" << _itermax << "\n";
-		std::cout << "dt\t=\t" << _dt << "\n";
-		std::cout << "tend\t=\t" << _tend << "\n";
+		std::cout << "Re\t\t=\t" << _re << "\n";
+		std::cout << "Omega\t\t=\t" << _omega << "\n";
+		std::cout << "Alpha\t\t=\t" << _alpha << "\n";
+		std::cout << "Epsilon\t\t=\t" << _eps << "\n";
+		std::cout << "Tau\t\t=\t" << _tau << "\n";
+		std::cout << "Itermax\t\t=\t" << _itermax << "\n";
+		std::cout << "dt\t\t=\t" << _dt << "\n";
+		std::cout << "tend\t\t=\t" << _tend << "\n";
 		std::cout << "--------------------------------------------------\n";
 	}
 

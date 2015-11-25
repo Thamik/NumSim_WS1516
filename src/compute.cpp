@@ -33,6 +33,10 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
 
+	_tmp_velocity = new Grid(_geom, multi_real_t(-0.5,-0.5));
+	_tmp_vorticity = new Grid(_geom);
+	_tmp_stream = new Grid(_geom);
+
 	// Initialize Grids
 	_u->Initialize(0.0);
 	_v->Initialize(0.0);
@@ -42,7 +46,10 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_F->Initialize(0.0);
 	_G->Initialize(0.0);
 	_rhs->Initialize(0.0);
-	//_temp->Initialize(0.0);
+	
+	_tmp_velocity->Initialize(0.0);
+	_tmp_vorticity->Initialize(0.0);
+	_tmp_stream->Initialize(0.0);
 
 	//set boundary values
 	update_boundary_values();
@@ -65,6 +72,10 @@ Compute::~Compute()
 	delete _F;
 	delete _G;
 	delete _rhs;
+
+	delete _tmp_velocity;
+	delete _tmp_vorticity;
+	delete _tmp_stream;
 	
 	delete _solver;
 }
@@ -196,15 +207,14 @@ The absolute velocity in the euklidean norm is calculted at the middle point of 
 const Grid* Compute::GetVelocity()
 {
 	// TODO: test
-	Grid* res = new Grid(_geom,multi_real_t(-0.5,-0.5));	
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		res->Cell(it) = sqrt(pow(0.5*(_u->Cell(it)+_u->Cell(it.Left())),2.0)+pow(0.5*(_v->Cell(it)+_v->Cell(it.Down())),2.0));
+		_tmp_velocity->Cell(it) = sqrt(pow(0.5*(_u->Cell(it)+_u->Cell(it.Left())),2.0)+pow(0.5*(_v->Cell(it)+_v->Cell(it.Down())),2.0));
 		it.Next();
 	}
-	res->CheckNaN();
-	return res;
+	//_tmp_velocity->CheckNaN();
+	return _tmp_velocity;
 }
 
 /**
@@ -213,15 +223,19 @@ const Grid* Compute::GetVelocity()
 const Grid* Compute::GetVorticity()
 {
 	// TODO: test
-	Grid* res = new Grid(_geom);
-	InteriorIterator it(_geom);
+	//InteriorIterator it(_geom);
+	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
 		// here, we use central difference quotients
-		res->Cell(it) = _v->dx_c(it) - _u->dy_c(it);
+		//_tmp_vorticity->Cell(it) = _v->dx_c(it) - _u->dy_c(it);
+		
+		// as wanted in the exercise sheet, we use forward quotients
+		_tmp_vorticity->Cell(it) = _u->dy_r(it) - _v->dx_r(it);
+
 		it.Next();
 	}
-	return res;
+	return _tmp_vorticity;
 }
 
 /**

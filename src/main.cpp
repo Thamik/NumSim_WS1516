@@ -197,9 +197,9 @@ int main(int argc, char **argv) {
 //#elif _WIN32 // windows 32- and 64-bit
 //	
 #endif
-	}
 
-	std::cout << "Exiting...\n" << std::flush;
+		std::cout << "Exiting...\n" << std::flush;
+	}
 
   return 0;
 }
