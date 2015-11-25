@@ -25,7 +25,7 @@ class Parameter {
 public:
   /// Constructs a new Parameter set with default values
   // Driven Cavity parameters; see exercise sheet 1
-  Parameter();
+  Parameter(Communicator* comm);
 
   /// Loads the parameter values from a file
   void Load(const char *file, bool verbose = false);
@@ -49,6 +49,8 @@ private:
   real_t _eps; // tolerance for pressure iteration
   real_t _tau; // safety factor time step size
   index_t _itermax; // maximum number of iterations
+
+	Communicator* _comm;
 };
 //------------------------------------------------------------------------------
 #endif // __PARAMETER_HPP

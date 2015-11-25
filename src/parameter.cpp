@@ -1,16 +1,19 @@
 #include "parameter.hpp"
 #include "typedef.hpp"
+#include "communicator.hpp"
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <stdlib.h>     /* atof */
 
+#include <mpi.h>
+
 /**
 The constructor of the Parameter class. Constructs a default parameter set.
 */
-Parameter::Parameter()
-: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100) // standard parameter
+Parameter::Parameter(Communicator* comm)
+: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _comm(comm) // standard parameter
 {
 	// First time parameter values (see exercise 1, page 7 below)
 	_dt = 0.2;
@@ -24,7 +27,10 @@ This method loads a parameter set from a file. In this file, the parameters shou
 */
 void Parameter::Load(const char* file, bool verbose)
 {
-	if (verbose){
+for (int i_rank=0; i_rank < _comm->getSize(); i_rank++){
+if(i_rank == _comm->getRank()){ // read the files sequentially
+
+	if (verbose && _comm->getRank()==0){
 		std::cout << "Loading parameter file from path " << file << " ...\n";
 	}
 	std::string temp_string;
@@ -67,6 +73,7 @@ void Parameter::Load(const char* file, bool verbose)
 	}
 	infile.close();
 	//if (verbose){
+	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Parameter configuration read from file:\n";
 		std::cout << "Re\t=\t" << _re << "\n";
@@ -78,7 +85,12 @@ void Parameter::Load(const char* file, bool verbose)
 		std::cout << "dt\t=\t" << _dt << "\n";
 		std::cout << "tend\t=\t" << _tend << "\n";
 		std::cout << "--------------------------------------------------\n";
-	//}
+	}
+
+}
+MPI_Barrier(MPI_COMM_WORLD);
+}
+
 }
 
 /**

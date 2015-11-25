@@ -8,6 +8,8 @@
 #include <string>
 #include <stdlib.h>     /* atof */
 
+#include <mpi.h>
+
 /* public methods */
 
 /* constructor */
@@ -39,7 +41,10 @@ The geometry for the actual problem is given in the file in path file.
 */
 void Geometry::Load(const char *file, bool verbose)
 {
-	if (verbose){
+for (int i_rank=0; i_rank < _comm->getSize(); i_rank++){
+if(i_rank == _comm->getRank()){ // read the files sequentially
+
+	if (verbose && _comm->getRank()==0){
 		std::cout << "Loading geometry file from path " << file << " ...\n";
 	}
 	std::string temp_string;
@@ -55,16 +60,16 @@ void Geometry::Load(const char *file, bool verbose)
 		switch(i)
 		{
 			case 1:
-				_size[0] = atoi(temp_string.c_str());
+				_bsize[0] = atoi(temp_string.c_str());
 				break;
 			case 2:
-				_size[1] = atoi(temp_string.c_str());
+				_bsize[1] = atoi(temp_string.c_str());
 				break;
 			case 3:
-				_length[0] = atof(temp_string.c_str());
+				_blength[0] = atof(temp_string.c_str());
 				break;
 			case 4:
-				_length[1] = atof(temp_string.c_str());
+				_blength[1] = atof(temp_string.c_str());
 				break;
 			case 5:
 				_velocity[0] = atof(temp_string.c_str());
@@ -80,6 +85,7 @@ void Geometry::Load(const char *file, bool verbose)
 	infile.close();
 	set_meshwidth(); // update _h
 	//if (verbose){
+	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Geometry configuration read from file:\n";
 		std::cout << "Size\t\t=\t(" << _size[0] << ", " << _size[1] << ")\n";
@@ -87,7 +93,12 @@ void Geometry::Load(const char *file, bool verbose)
 		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
 		std::cout << "Pressure\t=\t" << _pressure << "\n";
 		std::cout << "--------------------------------------------------\n";
-	//}
+	}
+
+}
+MPI_Barrier(MPI_COMM_WORLD);
+}
+
 }
 
 /**

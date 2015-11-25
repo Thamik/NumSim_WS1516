@@ -37,6 +37,9 @@
 
 int main(int argc, char **argv) {
 
+  // Create communicator
+  Communicator comm(&argc, &argv); // TODO: handle arguments
+
 	// read the command line arguments
 	std::string param_file("");
 	std::string geom_file("");
@@ -60,9 +63,6 @@ int main(int argc, char **argv) {
 		}
 	}
 
-  // Create communicator
-  Communicator comm(&argc, &argv); // TODO: handle arguments
-
 	// measure runtime
 	timeval tv;
 	long int milliseconds_begin(0), milliseconds_end(0);
@@ -79,11 +79,8 @@ int main(int argc, char **argv) {
 	}
 
   // Create parameter and geometry instances with default values
-  Parameter param;
+  Parameter param(&comm);
   Geometry geom(&comm);
-
-	// do domain decomposition on master and send information to all other processes
-	geom.do_domain_decomposition();
 
 	// load data from files, if filenames given in the command line arguments
 	if (param_file.compare("") != 0){
@@ -94,6 +91,9 @@ int main(int argc, char **argv) {
 		// the string is not empty, try to load the data
 		geom.Load(geom_file.c_str(), VERBOSE);
 	}
+
+	// do domain decomposition on master and send information to all other processes
+	geom.do_domain_decomposition();
 
   // Create the fluid solver
 	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;
