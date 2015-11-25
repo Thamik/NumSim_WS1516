@@ -113,8 +113,13 @@ int main(int argc, char **argv) {
 #ifdef USE_DEBUG_VISU
 	if (VERBOSE) std::cout << "Initializing the visualization..." << std::flush;
   Renderer visu(geom.Length(), geom.Mesh());
-  visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
-            comm.getRank() + 1);
+
+  /*visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
+            comm.getRank() + 1);*/
+
+  // set window position automatically fix
+  visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
+
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 #endif // USE_DEBUG_VISU
 

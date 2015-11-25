@@ -142,10 +142,11 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		std::cout << "============================================================\n";
 	}
 
-	if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[16+18*2] << ", " << _v->Data()[16+18*2] << "\n" << std::flush;
+	// print debug information
+	/*if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[16+18*2] << ", " << _v->Data()[16+18*2] << "\n" << std::flush;
 	if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[16+18] << ", " << _v->Data()[16+18] << "\n" << std::flush;
 	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[18*17-2] << ", " << _v->Data()[18*17-2] << "\n" << std::flush;
-	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[18*16-2] << ", " << _v->Data()[18*16-2] << "\n" << std::flush;
+	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[18*16-2] << ", " << _v->Data()[18*16-2] << "\n" << std::flush;*/
 }
 
 /**

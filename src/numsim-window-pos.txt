@@ -1,0 +1,34 @@
++-----------------------------------+
+|          NumSim Blatt02           |
+| Set Window Position automatically |
++-----------------------------------+
+
+change "void Init(..." in visu.hpp to:
+----------------------------------------------------------------
+  void Init(const index_t &width, const index_t &height, const int &idx = 0, const multi_index_t &t_idx = multi_index_t(0), const multi_index_t &t_dim = multi_index_t(0));
+----------------------------------------------------------------
+
+change "void Renderer::Init(..." function in visu.cpp to:
+----------------------------------------------------------------
+void Renderer::Init(const index_t &width, const index_t &height,
+                    const int &idx, const multi_index_t &t_idx, const multi_index_t &t_dim) {
+  // SDL_WM_SetCaption("Grid Renderer","Grid Renderer");
+  _width = width;
+  _height = height;
+  _idx = idx;
+  _window = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED,
+                             SDL_WINDOWPOS_UNDEFINED, _width, _height, 0);
+  _screen = SDL_GetWindowSurface(_window); // SDL_SetVideoMode(_width,_height,
+                                           // 32, SDL_HWSURFACE |
+                                           // SDL_DOUBLEBUF);
+  // 70 and 30 is distance to left and top window border, here set to 70 and 30 to fit Ubuntu Unity launcher
+  SDL_SetWindowPosition(_window, 70 + _width * t_idx[0], 30 + (t_dim[1] - t_idx[1] - 1) * _height);
+}
+----------------------------------------------------------------
+
+change "visi.Init(..." call in main.cpp to:
+----------------------------------------------------------------
+  visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
+            comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
+----------------------------------------------------------------
+
