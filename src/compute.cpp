@@ -260,7 +260,7 @@ const Grid* Compute::GetStream()
 	// communicate and update values at the bottom subdomains
 	index_t nx = _comm->ThreadDim()[0];
 	index_t ny = _comm->ThreadDim()[1];
-	for (int i=0; i<=nx-2; i++){
+	for (int i=0; i<=(int(nx)-2); i++){
 		if (_comm->getRank() == _comm->getRankDistribution(i,0)){
 			MPI_Send(&(_tmp_stream->Data()[_geom->Size()[0]-1-2]), 1, MPI_DOUBLE, _comm->getRankDistribution(i+1, 0), 0, MPI_COMM_WORLD);
 		} else if (_comm->getRank() == _comm->getRankDistribution(i+1, 0)){
@@ -279,9 +279,10 @@ const Grid* Compute::GetStream()
 
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
+
 	// comunicate and update all other values
-	for (int j=0; j<=ny-2; j++){
-		for (int i=0; i<nx; i++){
+	for (int j=0; j<=(int(ny)-2); j++){
+		for (int i=0; i<int(nx); i++){
 			if (_comm->getRank() == _comm->getRankDistribution(i, j)){
 				MPI_Send(&(_tmp_stream->Data()[_geom->Size()[0]*(_geom->Size()[1]-1-2)]), 1, MPI_DOUBLE, _comm->getRankDistribution(i, j+1), 0, MPI_COMM_WORLD);
 			} else if (_comm->getRank() == _comm->getRankDistribution(i, j+1)){
