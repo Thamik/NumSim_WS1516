@@ -154,7 +154,7 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 		std::cout << "============================================================\n";
 		// total simulated time
 		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %\n" << std::flush;
-		std::cout << "Total simulated time: t = \t" << _t << "\t seconds\n";
+		std::cout << "Total simulated time: t = \t" << _t << "    \t seconds\n";
 		// timestep
 		//std::cout << "Last timestep: dt = " << dt << "\n";
 		// magnitudes of the fields
@@ -164,9 +164,9 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 
 		if (_solver_converging){
-			std::cout << "(Solver is converging.)\n" << std::flush;
+			std::cout << "(Solver is converging.)          \n" << std::flush;
 		} else {
-			std::cout << "(Solver is NOT converging.)\n" << std::flush;
+			std::cout << "(Solver is NOT converging!)      \n" << std::flush;
 		}
 
 		std::cout << "============================================================\n";
