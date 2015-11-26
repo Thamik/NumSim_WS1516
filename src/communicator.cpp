@@ -522,4 +522,7 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	return true;
 }
 
-
+int Communicator::getRankDistribution(int i, int j) const
+{
+	return _rankDistribution[i][j];
+}

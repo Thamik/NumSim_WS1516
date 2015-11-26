@@ -104,6 +104,8 @@ public:
 	void setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes);
 	multi_index_t getLocalSize() const;
 
+	int getRankDistribution(int i, int j) const;
+
 
 private:
   multi_index_t _tidx;

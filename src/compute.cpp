@@ -243,7 +243,68 @@ const Grid* Compute::GetVorticity()
 */
 const Grid* Compute::GetStream()
 {
-	// TODO
+	// set values in own grid
+	Iterator it(_geom);
+	it.First();
+	_tmp_stream->Cell(it) = 0;
+	it.Next();
+	while (it.Valid()){
+		if (it.Pos()[1] == 0){
+			_tmp_stream->Cell(it) = _tmp_stream->Cell(it.Left()) - _v->Cell(it) * _geom->Mesh()[0];
+		} else {
+			_tmp_stream->Cell(it) = _tmp_stream->Cell(it.Down()) + _u->Cell(it) * _geom->Mesh()[1];
+		}
+		it.Next();
+	}
+
+	// communicate and update values at the bottom subdomains
+	index_t nx = _comm->ThreadDim()[0];
+	index_t ny = _comm->ThreadDim()[1];
+	for (int i=0; i<=nx-2; i++){
+		if (_comm->getRank() == _comm->getRankDistribution(i,0)){
+			MPI_Send(&(_tmp_stream->Data()[_geom->Size()[0]-1-2]), 1, MPI_DOUBLE, _comm->getRankDistribution(i+1, 0), 0, MPI_COMM_WORLD);
+		} else if (_comm->getRank() == _comm->getRankDistribution(i+1, 0)){
+			real_t recBuf(0);
+			MPI_Recv(&recBuf, 1, MPI_DOUBLE, _comm->getRankDistribution(i, 0), 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			// update values (add constant)
+			Iterator it(_geom);
+			it.First();
+			_tmp_stream->Cell(it) = recBuf - _v->Cell(it) * _geom->Mesh()[0];
+			it.Next();
+			while (it.Valid()){
+				_tmp_stream->Cell(it) += _tmp_stream->Data()[0];
+				it.Next();
+			}
+		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
+	// comunicate and update all other values
+	for (int j=0; j<=ny-2; j++){
+		for (int i=0; i<nx; i++){
+			if (_comm->getRank() == _comm->getRankDistribution(i, j)){
+				MPI_Send(&(_tmp_stream->Data()[_geom->Size()[0]*(_geom->Size()[1]-1-2)]), 1, MPI_DOUBLE, _comm->getRankDistribution(i, j+1), 0, MPI_COMM_WORLD);
+			} else if (_comm->getRank() == _comm->getRankDistribution(i, j+1)){
+				real_t recBuf(0);
+				MPI_Recv(&recBuf, 1, MPI_DOUBLE, _comm->getRankDistribution(i, j), 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				// update values (add constant)
+				Iterator it(_geom);
+				it.First();
+				_tmp_stream->Cell(it) = recBuf + _u->Cell(it) * _geom->Mesh()[1];
+				it.Next();
+				while (it.Valid()){
+					_tmp_stream->Cell(it) += _tmp_stream->Data()[0];
+					it.Next();
+				}
+			}
+		}
+
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
+
+	//if (_comm->getRank()==0) std::cout << "Stream has been computed!\n" << std::flush;
+
+	return _tmp_stream;
 }
 
 /* private methods */
