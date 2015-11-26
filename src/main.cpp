@@ -143,7 +143,13 @@ int main(int argc, char **argv) {
   while (comp.GetTime() < param.Tend()) {
 #ifdef USE_DEBUG_VISU
     // Render and check if window is closed
-    switch (visu.Render(visugrid)) {
+
+/*    switch (visu.Render(visugrid)) { */
+
+	real_t min_visugrid = visugrid->TotalInnerMin();
+	real_t max_visugrid = visugrid->TotalInnerMax();
+	switch (visu.Render(visugrid, min_visugrid, max_visugrid)) {
+
     case -1:
       return -1;
     case 0:

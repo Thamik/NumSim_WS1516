@@ -95,6 +95,11 @@ public:
 	real_t TotalMin() const;
 	real_t TotalAbsMax() const;
 
+	real_t InnerMax() const;
+	real_t InnerMin() const;
+	real_t TotalInnerMax() const;
+	real_t TotalInnerMin() const;
+
   /// Returns a pointer to the raw data
   real_t *Data();
 

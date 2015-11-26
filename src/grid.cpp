@@ -358,6 +358,30 @@ real_t Grid::Max() const
 	return res;
 }
 
+real_t Grid::InnerMax() const
+{
+	InteriorIterator it(_geom);
+	it.First();
+	real_t res = Cell(it);
+	while (it.Valid()){
+		if (Cell(it)>res) res = Cell(it);
+		it.Next();
+	}
+	return res;
+}
+
+real_t Grid::InnerMin() const
+{
+	InteriorIterator it(_geom);
+	it.First();
+	real_t res = Cell(it);
+	while (it.Valid()){
+		if (Cell(it)<res) res = Cell(it);
+		it.Next();
+	}
+	return res;
+}
+
 /**
 /return minimal value of the grid
 */
@@ -390,6 +414,18 @@ real_t Grid::TotalMax() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMax(Max());
+}
+
+real_t Grid::TotalInnerMax() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMax(InnerMax());
+}
+
+real_t Grid::TotalInnerMin() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMin(InnerMin());
 }
 
 real_t Grid::TotalMin() const

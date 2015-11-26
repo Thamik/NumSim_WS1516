@@ -58,7 +58,7 @@ public:
   /// Updates the window with a given grid
   int Render(const Grid *grid, const real_t &min, const real_t &max);
 
-  /// Sets the visability of the grid cells
+  /// Sets the visibility of the grid cells
   void ShowGrid(bool grid);
 
 private:

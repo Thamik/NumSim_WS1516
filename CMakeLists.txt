@@ -32,7 +32,8 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
 # debug visu?
 option (DEBUG_VISU
-  "Enable debugging visualization" ON)
+  "Disable debugging visualization" OFF)
+#  "Enable debugging visualization" ON)
 
 # find sdl 2
 INCLUDE(FindPkgConfig)
