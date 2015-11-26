@@ -19,7 +19,7 @@
 \param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
@@ -86,12 +86,19 @@ Afterwards, the Poisson pressure equation is solved and the velocitys are update
 \param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
 \param[in] verbose boolean if debbuging information should be printed (standard: false)
 */
-void Compute::TimeStep(bool printInfo, bool verbose)
+void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 {
 	// TODO: test
 	// compute dt
 	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt(); // BLOCKING
+
+	printInfo = false;
+	if (diff_time <= dt){
+		dt = diff_time;
+		printInfo = !_comm->getRank();
+	}
+
 	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
 	// compute F, G...
@@ -120,10 +127,12 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 		iteration++;
 
 		if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
-			if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+			//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+			_solver_converging = false;
 			break;
 		} else if (residual < _epslimit){
-			if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " iterations. Residual: " << residual << "\n";
+			//if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " iterations. Residual: " << residual << "\n";
+			_solver_converging = true;
 			break;
 		}
 	}
@@ -142,14 +151,22 @@ void Compute::TimeStep(bool printInfo, bool verbose)
 	if (printInfo){
 		std::cout << "============================================================\n";
 		// total simulated time
-		std::cout << "Total simulated time: t = " << _t << "\n";
+		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %\n" << std::flush;
+		std::cout << "Total simulated time: t = \t" << _t << "\t seconds\n";
 		// timestep
-		std::cout << "Last timestep: dt = " << dt << "\n";
+		//std::cout << "Last timestep: dt = " << dt << "\n";
 		// magnitudes of the fields
 		//std::cout << "max(F) = " << _F->TotalAbsMax() << ", max(G) = " << _G->TotalAbsMax() << ", max(rhs) = " << _rhs->TotalAbsMax() << "\n";
 		//std::cout << "max(u) = " << _u->TotalAbsMax() << ", max(v) = " << _v->TotalAbsMax() << ", max(p) = " << _p->TotalAbsMax() << "\n";
 		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
+
+		if (_solver_converging){
+			std::cout << "(Solver is converging.)\n" << std::flush;
+		} else {
+			std::cout << "(Solver is NOT converging.)\n" << std::flush;
+		}
+
 		std::cout << "============================================================\n";
 	}
 

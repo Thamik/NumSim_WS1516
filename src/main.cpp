@@ -139,6 +139,10 @@ int main(int argc, char **argv) {
   visugrid = comp.GetVelocity();
 #endif // USE_DEBUG_VISU
 
+	// initialize the wanted time steps
+	real_t next_wanted_time(param.Dt());
+	real_t difference_time(0.0);
+
   // Run the time steps until the end is reached
   while (comp.GetTime() < param.Tend()) {
 #ifdef USE_DEBUG_VISU
@@ -189,16 +193,28 @@ int main(int argc, char **argv) {
 
     // Run a few steps
 	if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
-    for (uint32_t i = 0; i < 9; ++i)
-      comp.TimeStep(false,VERBOSE);
-    bool printOnlyOnMaster = !comm.getRank();
-    comp.TimeStep(printOnlyOnMaster,VERBOSE);
-  }
 
-	std::cout << "The program was executed sucessfully!\n";
+//    for (uint32_t i = 0; i < 9; ++i){
+
+	next_wanted_time += param.Dt();
+	bool keep_running(true);
+	while (keep_running){
+		difference_time = next_wanted_time - comp.GetTime();
+		comp.TimeStep(false, VERBOSE, difference_time);
+		if (comp.GetTime() >= (next_wanted_time - 1e-10)){
+			keep_running = false;
+		}
+	}
+
+    /*bool printOnlyOnMaster = !comm.getRank();
+    comp.TimeStep(printOnlyOnMaster,VERBOSE);*/
+  }
 
 	// runtime measurement
 	if (comm.getRank() == 0) { // do this only on the master
+
+		std::cout << "The program was executed sucessfully!\n";
+
 #ifdef __linux__
 		gettimeofday(&tv, NULL);
 		milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
