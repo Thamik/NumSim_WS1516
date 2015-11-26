@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 	real_t next_wanted_time(param.Dt());
 	real_t difference_time(0.0);
 
-	std::cout << "\n\n\n" << std::flush;
+	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << std::flush;
 
   // Run the time steps until the end is reached
   while (comp.GetTime() < param.Tend()) {
