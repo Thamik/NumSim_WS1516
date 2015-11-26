@@ -107,6 +107,7 @@ private:
 	void sync_all();
 
 	bool _solver_converging;
+	int _clock_counter;
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

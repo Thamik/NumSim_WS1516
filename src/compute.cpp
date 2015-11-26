@@ -19,7 +19,7 @@
 \param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false), _clock_counter(0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
@@ -98,6 +98,7 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 		dt = diff_time;
 		printInfo = !_comm->getRank();
 	}
+	//printInfo = !_comm->getRank();
 
 	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
@@ -149,12 +150,66 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 
 	// print information
 	if (printInfo){
-		//printf("\b\b\b\b\b");
+
+		// print running clock
+		/*std::string* s = new std::string[4];
+		for (int i=0; i<8; i++){
+			switch (i){
+				case 0:
+					s[i] = " |  |  | ";
+					break;
+				case 1:
+					s[i] = "  / / /  ";
+					break;
+				case 2:
+					s[i] = "   ---   ";
+					break;
+				case 3:
+					s[i] = "\\   \\   \\";
+					break;
+			}
+		}
+		std::string clock_string = s[_clock_counter % 4];*/
+
+		std::string* s = new std::string[8];
+		for (int i=0; i<8; i++){
+			switch (i){
+				case 0:
+					s[i] = " |  o    ";
+					break;
+				case 1:
+					s[i] = "  / o    ";
+					break;
+				case 2:
+					s[i] = "    o-   ";
+					break;
+				case 3:
+					s[i] = "    o   \\";
+					break;
+				case 4:
+					s[i] = "    o  | ";
+					break;
+				case 5:
+					s[i] = "    o /  ";
+					break;
+				case 6:
+					s[i] = "   -o    ";
+					break;
+				case 7:
+					s[i] = "\\   o    ";
+					break;
+			}
+		}
+		std::string clock_string = s[_clock_counter % 8];
+
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		//std::cout << "\x1b[A\x1b[A\x1b[A";
 		std::cout << "============================================================\n";
 		// total simulated time
-		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %\n" << std::flush;
-		std::cout << "Total simulated time: t = \t" << _t << "    \t seconds\n";
+		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %" << std::flush;
+		std::cout << "\t\t" << clock_string[0] << clock_string[1] << clock_string[2] << "\n";
+		std::cout << "Total simulated time: t = \t" << _t << "  \t seconds";
+		std::cout << "\t" << clock_string[3] << clock_string[4] << clock_string[5] << "\n";
 		// timestep
 		//std::cout << "Last timestep: dt = " << dt << "\n";
 		// magnitudes of the fields
@@ -164,12 +219,17 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 
 		if (_solver_converging){
-			std::cout << "(Solver is converging.)          \n" << std::flush;
+			std::cout << "(Solver is converging.)        " << std::flush;
 		} else {
-			std::cout << "(Solver is NOT converging!)      \n" << std::flush;
+			std::cout << "(Solver is NOT converging!)    " << std::flush;
 		}
+		std::cout << "\t\t\t\t" << clock_string[6] << clock_string[7] << clock_string[8] << "\n";
 
 		std::cout << "============================================================\n";
+
+
+		_clock_counter++;
+
 	}
 
 	// print debug information
