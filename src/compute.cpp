@@ -149,6 +149,8 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 
 	// print information
 	if (printInfo){
+		//printf("\b\b\b\b\b");
+		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 		std::cout << "============================================================\n";
 		// total simulated time
 		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %\n" << std::flush;
