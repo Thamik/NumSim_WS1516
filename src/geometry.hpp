@@ -63,8 +63,10 @@ public:
   /// Updates the pressure field p
   void Update_P(Grid *p) const;
 
+	/// Updates the local geometry data
 	void update_values();
 
+	/// Does the domain decomposition and distributes the resulting data
 	void do_domain_decomposition();
 
 private:
@@ -91,6 +93,7 @@ private:
 	/// decides whether the given boundary is a global boundary or is not
 	bool is_global_boundary(int boundary_index) const;
 
+	// these functions implement a discrete domain decomposition
 	void horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
 	void vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
 	void rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;

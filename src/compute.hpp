@@ -16,6 +16,9 @@
  */
 
 #include "typedef.hpp"
+
+#include "console_output.hpp"
+
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
 #define __COMPUTE_HPP
@@ -32,7 +35,7 @@ public:
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  void TimeStep(bool printInfo, bool verbose = false, real_t diff_time = 1e10);
+  void TimeStep(bool verbose = false, real_t diff_time = 1e10);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;
@@ -101,13 +104,18 @@ private:
 	/// updates the boundary values for u,v,F,G
 	void update_boundary_values();
 
+	/// synchronize the grids
 	void sync_FG();
 	void sync_uv();
 	void sync_p();
 	void sync_all();
 
+	/// specifies if the solver is currently converging
 	bool _solver_converging;
-	int _clock_counter;
+
+	/// the console clock
+	ConsoleClock* _clock;
+	
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

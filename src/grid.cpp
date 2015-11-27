@@ -228,7 +228,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 	return res;
 }
 
-// die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
+// The use of the functions  vdu_y and udv_x are unclear, since only d(uv)/dx and d(uv)/dy have been presented in the lecture. The last mentioned functions are implemented below.
 
 // the original donor cell methods
 /**
@@ -410,30 +410,45 @@ real_t Grid::AbsMax() const
 	return res;
 }
 
+/**
+\return the maximal value of all grids
+*/
 real_t Grid::TotalMax() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMax(Max());
 }
 
+/**
+\return the maximal value of the interior cell points of all grids
+*/
 real_t Grid::TotalInnerMax() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMax(InnerMax());
 }
 
+/**
+\return the minimal value of the interior cell points of all grids
+*/
 real_t Grid::TotalInnerMin() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMin(InnerMin());
 }
 
+/**
+\return the minimal value of all grids
+*/
 real_t Grid::TotalMin() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMin(Min());
 }
 
+/**
+\return the maximal absolute value of all grids
+*/
 real_t Grid::TotalAbsMax() const
 {
 	// this needs to be called by all processes!
@@ -545,11 +560,17 @@ real_t Grid::average_value() const
 	return avg / real_t(_geom->Size()[0] * _geom->Size()[1]);
 }
 
+/**
+\return the offset of this grid
+*/
 const multi_real_t& Grid::getOffset() const
 {
 	return _offset;
 }
 
+/**
+\return a pointer to the underlying geometry object
+*/
 const Geometry* Grid::getGeometry() const
 {
 	return _geom;

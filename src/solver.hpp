@@ -48,12 +48,17 @@ protected:
   /// Returns the total residual for the pressure-Poisson equation
   real_t totalRes(const Grid* grid, const Grid* rhs) const;
 
-  real_t totalRes_Linf(const Grid* grid, const Grid* rhs) const;
-  real_t totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
+	/// Computes the total Linf residual of the local grid
+	real_t totalRes_Linf(const Grid* grid, const Grid* rhs) const;
+	/// Computes the total L1 residual of the local grid
+	real_t totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
 
+	/// Computes the total residual of the all grids
 	real_t synced_totalRes(const Grid* grid, const Grid* rhs) const;
 
+	/// Computes the total Linf residual of all grids
 	real_t synced_totalRes_Linf(const Grid* grid, const Grid* rhs) const;
+	/// Computes the total L1 residual of all grids
 	real_t synced_totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
 
 };
@@ -76,13 +81,14 @@ public:
 protected:
   real_t _omega;
 
+	/// Deletes the local residual at a particular position
 	void erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) const;
 
 };
 
 //------------------------------------------------------------------------------
 
-/** concrete Red or Black SOR solver
+/** Concrete Red or Black SOR solver
  */
 class RedOrBlackSOR : public SOR {
 public:
@@ -91,8 +97,10 @@ public:
   /// Destructor
   ~RedOrBlackSOR();
 
-  real_t RedCycle(Grid *grid, const Grid *rhs) const;
-  real_t BlackCycle(Grid *grid, const Grid *rhs) const;
+	/// Performs a red SOR cycle
+	real_t RedCycle(Grid *grid, const Grid *rhs) const;
+	/// Performs a black SOR cycle
+	real_t BlackCycle(Grid *grid, const Grid *rhs) const;
 };
 
 //------------------------------------------------------------------------------

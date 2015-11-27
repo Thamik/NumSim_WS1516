@@ -37,8 +37,8 @@
 
 int main(int argc, char **argv) {
 
-  // Create communicator
-  Communicator comm(&argc, &argv); // TODO: handle arguments
+	// Create communicator
+	Communicator comm(&argc, &argv); // the argument are being handed over to the MPI_Init call
 
 	// read the command line arguments
 	std::string param_file("");
@@ -78,9 +78,9 @@ int main(int argc, char **argv) {
 #endif
 	}
 
-  // Create parameter and geometry instances with default values
-  Parameter param(&comm);
-  Geometry geom(&comm);
+	// Create parameter and geometry instances with default values
+	Parameter param(&comm);
+	Geometry geom(&comm);
 
 	// load data from files, if filenames given in the command line arguments
 	if (param_file.compare("") != 0){
@@ -95,122 +95,116 @@ int main(int argc, char **argv) {
 	// do domain decomposition on master and send information to all other processes
 	geom.do_domain_decomposition();
 
-  // Create the fluid solver
+	// Create the fluid solver
 	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;
-  Compute comp(&geom, &param, &comm);
+	Compute comp(&geom, &param, &comm);
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
-  if (comm.getRank() == 0) { // TODO: do this on every process? what if the processes run on different nodes?
-    // check if folder "VTK" exists
-    struct stat info;
+	if (comm.getRank() == 0) { // TODO: do this on every process? what if the processes run on different nodes?
+		// check if folder "VTK" exists
+		struct stat info;
 
-    if (stat("VTK", &info) != 0) {
-      system("mkdir VTK");
-    }
-  }
+		if (stat("VTK", &info) != 0) {
+		system("mkdir VTK");
+		}
+	}
 
-// Create and initialize the visualization
+	// Create and initialize the visualization
 #ifdef USE_DEBUG_VISU
 	if (VERBOSE) std::cout << "Initializing the visualization..." << std::flush;
-  Renderer visu(geom.Length(), geom.Mesh());
+	Renderer visu(geom.Length(), geom.Mesh());
 
-  /*visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1],
-            comm.getRank() + 1);*/
+	/*visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1);*/
 
-  // set window position automatically fix
-  visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
+	// set window position automatically fix
+	visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
 
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 #endif // USE_DEBUG_VISU
 
-  // Create a VTK generator;
+	// Create a VTK generator;
 	if (VERBOSE) std::cout << "Creating the VTK generator..." << std::flush;
-  // use offset as the domain shift
-  multi_real_t offset;
-  offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2));
-  offset[1] = comm.ThreadIdx()[1] * (geom.Mesh()[1] * (double)(geom.Size()[1] - 2));
-  VTK vtk(geom.Mesh(), geom.Size(), geom.TotalSize(), offset, comm.getRank(),
-          comm.getSize(), comm.ThreadDim());
+	// use offset as the domain shift
+	multi_real_t offset;
+	offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2));
+	offset[1] = comm.ThreadIdx()[1] * (geom.Mesh()[1] * (double)(geom.Size()[1] - 2));
+	VTK vtk(geom.Mesh(), geom.Size(), geom.TotalSize(), offset, comm.getRank(), comm.getSize(), comm.ThreadDim());
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
 #ifdef USE_DEBUG_VISU
-  const Grid *visugrid;
+	const Grid *visugrid;
 
-  visugrid = comp.GetVelocity();
+	visugrid = comp.GetVelocity();
 #endif // USE_DEBUG_VISU
+
+	// prepare console output
+	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << std::flush;
 
 	// initialize the wanted time steps
 	real_t next_wanted_time(param.Dt());
 	real_t difference_time(0.0);
 
-	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << std::flush;
-
-  // Run the time steps until the end is reached
-  while (comp.GetTime() < param.Tend()) {
+	// Run the time steps until the end is reached
+	while (comp.GetTime() < param.Tend()) {
 #ifdef USE_DEBUG_VISU
-    // Render and check if window is closed
+		// Render and check if window is closed
 
 /*    switch (visu.Render(visugrid)) { */
 
-	real_t min_visugrid = visugrid->TotalInnerMin();
-	real_t max_visugrid = visugrid->TotalInnerMax();
-	switch (visu.Render(visugrid, min_visugrid, max_visugrid)) {
-
-    case -1:
-      return -1;
-    case 0:
-      visugrid = comp.GetVelocity();
-      break;
-    case 1:
-      visugrid = comp.GetU();
-      break;
-    case 2:
-      visugrid = comp.GetV();
-      break;
-    case 3:
-      visugrid = comp.GetP();
-      break;
-    default:
-      break;
-    };
-	visugrid->CheckNaN(); // check for NaNs
+		real_t min_visugrid = visugrid->TotalInnerMin();
+		real_t max_visugrid = visugrid->TotalInnerMax();
+		switch (visu.Render(visugrid, min_visugrid, max_visugrid)) {
+			case -1:
+				return -1;
+			case 0:
+				visugrid = comp.GetVelocity();
+				break;
+			case 1:
+				visugrid = comp.GetU();
+				break;
+			case 2:
+				visugrid = comp.GetV();
+				break;
+			case 3:
+				visugrid = comp.GetP();
+				break;
+			default:
+				break;
+		};
+		//visugrid->CheckNaN(); // check for NaNs
 #endif // USE_DEBUG_VISU
 
-    // Create VTK Files in the folder VTK
-	if (VERBOSE) std::cout << "Creating VTK files..." << std::flush;
-    // Note that when using VTK module as it is you first have to write cell
-    // information, then call SwitchToPointData(), and then write point data.
-    vtk.Init("VTK/field");
-    vtk.AddRank();
-    vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
-    vtk.SwitchToPointData();
-    vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
-    vtk.AddPointScalar("Pressure", comp.GetP());
+		// Create VTK Files in the folder VTK
+		if (VERBOSE) std::cout << "Creating VTK files..." << std::flush;
+		// Note that when using VTK module as it is you first have to write cell
+		// information, then call SwitchToPointData(), and then write point data.
+		vtk.Init("VTK/field");
+		vtk.AddRank();
+		vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
+		vtk.SwitchToPointData();
+		vtk.AddPointField("Velocity", comp.GetU(), comp.GetV());
+		vtk.AddPointScalar("Pressure", comp.GetP());
+		vtk.AddPointScalar("Vorticity", comp.GetVorticity());
+		vtk.AddPointScalar("Stream Function", comp.GetStream());
 
-	vtk.AddPointScalar("Vorticity", comp.GetVorticity());
-	vtk.AddPointScalar("Stream Function", comp.GetStream());
+		vtk.Finish();
+		if (VERBOSE) std::cout << "Done.\n" << std::flush;
 
-    vtk.Finish();
-	if (VERBOSE) std::cout << "Done.\n" << std::flush;
+		// Run a few steps
+		if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
 
-    // Run a few steps
-	if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
-
-//    for (uint32_t i = 0; i < 9; ++i){
-
-	next_wanted_time += param.Dt();
-	bool keep_running(true);
-	while (keep_running){
-		difference_time = next_wanted_time - comp.GetTime();
-		comp.TimeStep(false, VERBOSE, difference_time);
-		if (comp.GetTime() >= (next_wanted_time - 1e-10)){
-			keep_running = false;
+		next_wanted_time += param.Dt();
+		bool keep_running(true);
+		while (keep_running){
+			difference_time = next_wanted_time - comp.GetTime(); // time difference to the next timestep for vtk and visu
+			comp.TimeStep(VERBOSE, difference_time);
+			if (comp.GetTime() >= (next_wanted_time - 1e-10)){
+				// the next wanted timestep is achieved
+				keep_running = false;
+			}
 		}
-	}
 
-    /*bool printOnlyOnMaster = !comm.getRank();
-    comp.TimeStep(printOnlyOnMaster,VERBOSE);*/
-  }
+	}
 
 	// runtime measurement
 	if (comm.getRank() == 0) { // do this only on the master
@@ -229,5 +223,5 @@ int main(int argc, char **argv) {
 		std::cout << "Exiting...\n" << std::flush;
 	}
 
-  return 0;
+	return 0;
 }

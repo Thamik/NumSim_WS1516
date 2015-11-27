@@ -84,20 +84,27 @@ public:
 	/// Compute d(uv)/dy with the donor cell method
 	real_t DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const;
 
-  /// Returns the maximal value of the grid
+  /// Returns the maximal value of the loacl grid
   real_t Max() const;
-  /// Returns the minimal value of the grid
+  /// Returns the minimal value of the local grid
   real_t Min() const;
-  /// Returns the absolute maximal value
+  /// Returns the maximal absolute value of the local grid
   real_t AbsMax() const;
 
+	/// Returns the maximal value of all grids
 	real_t TotalMax() const;
+	/// Returns the minimal value of all grids
 	real_t TotalMin() const;
+	/// Returns the maximal absolute value of all grids
 	real_t TotalAbsMax() const;
 
+	/// Returns the maximal value of the interior cells of the local grid
 	real_t InnerMax() const;
+	/// Returns the minimal value of the interior cells of the local grid
 	real_t InnerMin() const;
+	/// Returns the maximal value of the interior cells of all grids
 	real_t TotalInnerMax() const;
+	/// Returns the minimal value of the interior cells of all grids
 	real_t TotalInnerMin() const;
 
   /// Returns a pointer to the raw data
@@ -127,9 +134,12 @@ public:
   const Geometry* getGeometry() const;
 
 private:
-  real_t *_data;
-  multi_real_t _offset;
-  const Geometry *_geom;
+	/// Pointer to the raw grid data
+	real_t *_data;
+	/// The offser of this (local) grid
+	multi_real_t _offset;
+	/// Pointer to the underlying geometry
+	const Geometry *_geom;
 };
 //------------------------------------------------------------------------------
 #endif // __GRID_HPP

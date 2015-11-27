@@ -316,6 +316,9 @@ bool Geometry::is_global_boundary(int boundary_index) const
 	}
 }
 
+/**
+This function updates the local geometry data stored in this object, using the latest information provided by the related communicator.
+*/
 void Geometry::update_values()
 {
 	//std::cout << "Geometry: update values!\n" << std::flush;
@@ -323,6 +326,9 @@ void Geometry::update_values()
 	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
 }
 
+/**
+Does the domain decomposition on the master process and broadcasts the resulting information, concerning the process distribution, to all other processes.
+*/
 void Geometry::do_domain_decomposition()
 {
 	multi_index_t tdim;
@@ -427,6 +433,9 @@ void Geometry::do_domain_decomposition()
 	}
 }
 
+/**
+Does a horizontal decomposition of the physical domain.
+*/
 void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
 	index_t np = _comm->getSize();
@@ -489,6 +498,9 @@ void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankD
 	}
 }
 
+/**
+Does a vertical decomposition of the physical domain.
+*/
 void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
 	index_t np = _comm->getSize();
@@ -551,6 +563,9 @@ void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDis
 	}
 }
 
+/**
+Tries to decompose the domain in a two-dimensional fashion. To do so, the function performs a simple prime factorization of the total number of processes.
+*/
 void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
 	index_t np = _comm->getSize();
