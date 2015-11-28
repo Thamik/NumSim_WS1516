@@ -18,7 +18,7 @@ Constructs a grid with offset. Note the convention for the offset used here: The
 \param[in] verbose true if debugging information should be displayed
 */
 Grid::Grid(const Geometry* geom, const multi_real_t& offset, bool verbose)
-: _geom(geom), _offset(offset)
+: _data(NULL), _offset(offset), _geom(geom)
 {	
 	if (verbose) std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush;
 	_data = new real_t[_geom->Size()[0] * _geom->Size()[1]];
@@ -47,7 +47,7 @@ Grid::~Grid()
 void Grid::Initialize(const real_t& value, bool verbose)
 {
 	if (verbose) std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;
 	}
@@ -94,10 +94,11 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
-	if(vallu < 0)
+	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
-	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
+	} else */if(valro >= _geom->Size()[0]*_geom->Size()[1]){
 		std::cout << "Warnng, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
+	}
 
 	real_t alpha = ix - x1;
 	real_t beta = iy - y1;
@@ -351,7 +352,7 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 real_t Grid::Max() const
 {
 	real_t res = _data[0];
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		if (_data[i]>res) res = _data[i];
 	}
@@ -388,7 +389,7 @@ real_t Grid::InnerMin() const
 real_t Grid::Min() const
 {
 	real_t res = _data[0];
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		if (_data[i]<res) res = _data[i];
 	}
@@ -402,7 +403,7 @@ real_t Grid::AbsMax() const
 {
 	real_t res = std::abs(_data[0]);
 	real_t temp;
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		temp = std::abs(_data[i]);
 		if (temp>res) res = temp;

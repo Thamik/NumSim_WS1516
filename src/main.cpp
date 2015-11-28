@@ -105,7 +105,8 @@ int main(int argc, char **argv) {
 		struct stat info;
 
 		if (stat("VTK", &info) != 0) {
-		system("mkdir VTK");
+		int res_sys = system("mkdir VTK");
+		if (!res_sys) std::cout << "Warning: mkdir VTK may have not worked!\n" << std::flush;
 		}
 	}
 
