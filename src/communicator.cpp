@@ -20,10 +20,9 @@
    * \param [in] argv Arguments passed to the program on start
    * \param [in] verbose Debug output on terminal
    */
-Communicator::Communicator(int *argc, char ***argv, bool verbose = false)
+Communicator::Communicator(int *argc, char ***argv, bool verbose)
 : _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL), _localSize(0,0)
 {
-<<<<<<< HEAD
 	if (verbose && _rank == 0) {
 		std::cout << "MPI initializing..." << std::flush;
 	}
@@ -33,11 +32,6 @@ Communicator::Communicator(int *argc, char ***argv, bool verbose = false)
 	if (verbose && _rank == 0) {
 		std::cout << "MPI initialized with " << _size << " processes.\n" << std::flush;
 	}
-=======
-	MPI_Init(argc, argv);
-	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
-	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
->>>>>>> 4b1e181729efa89d13a94b222b799cba877f61a4
 }
 
 /** Communicator destructor; finalizes MPI Environment
@@ -103,6 +97,10 @@ real_t Communicator::gatherMin(const real_t &val) const
 	return res;
 }
 
+/** This is done by using the MPI-function MPI_Allreduce
+	\param[in] val The data over which to find the maximum
+	\return gathered maximum over all processes
+*/
 real_t Communicator::gatherMax(const real_t &val) const
 {
 	real_t res(0.0);

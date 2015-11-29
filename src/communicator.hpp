@@ -25,7 +25,7 @@
 class Communicator {
 public:
   /// Constructor
-  Communicator(int *argc, char ***argv, bool verbose);
+  Communicator(int *argc, char ***argv, bool verbose = false);
 
   /// Destructor
   ~Communicator();
