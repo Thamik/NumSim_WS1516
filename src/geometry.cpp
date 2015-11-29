@@ -41,7 +41,7 @@ The geometry for the actual problem is given in the file in path file.
 */
 void Geometry::Load(const char *file, bool verbose)
 {
-for (int i_rank=0; i_rank < _comm->getSize(); i_rank++){
+for (int i_rank=0; i_rank<_comm->getSize(); i_rank++){
 if(i_rank == _comm->getRank()){ // read the files sequentially
 
 	if (verbose && _comm->getRank()==0){
@@ -54,7 +54,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "Warning: geometry file could not be read!\n";
 		continue;
 	}
-	for(int i=1;i<=7;i++)
+	for(index_t i=1;i<=7;i++)
 	{
 		getline(infile,temp_string);
 		switch(i)
@@ -160,7 +160,7 @@ void Geometry::Update_U(Grid *u) const
 
 	//std::cout << "Geometry: Update_U\n" << std::flush; // only for debugging issues
 	// see lecture, 3.1.2
-	for (int i=1; i<=4; i++){
+	for (index_t i=1; i<=4; i++){
 		// check if this is a domain boundary
 		if (!is_global_boundary(i)) continue;
 
@@ -204,7 +204,7 @@ Updates the boundary values for Grid v according to the pattern of v, i.e. Diric
 void Geometry::Update_V(Grid *v) const
 {
 	// see lecture, 3.1.2
-	for (int i=1; i<=4; i++){
+	for (index_t i=1; i<=4; i++){
 		// check if this is a domain boundary
 		if (!is_global_boundary(i)) continue;
 
@@ -240,7 +240,7 @@ Updates the boundary values for Grid p according to the pattern of p, i.e. Neuma
 void Geometry::Update_P(Grid *p) const
 {
 	// see lecture, 3.2.3
-	for (int i=1; i<=4; i++){
+	for (index_t i=1; i<=4; i++){
 		// check if this is a domain boundary
 		if (!is_global_boundary(i)) continue;
 
@@ -316,6 +316,9 @@ bool Geometry::is_global_boundary(int boundary_index) const
 	}
 }
 
+/**
+This function updates the local geometry data stored in this object, using the latest information provided by the related communicator.
+*/
 void Geometry::update_values()
 {
 	//std::cout << "Geometry: update values!\n" << std::flush;
@@ -323,6 +326,9 @@ void Geometry::update_values()
 	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
 }
 
+/**
+Does the domain decomposition on the master process and broadcasts the resulting information, concerning the process distribution, to all other processes.
+*/
 void Geometry::do_domain_decomposition()
 {
 	multi_index_t tdim;
@@ -347,14 +353,14 @@ void Geometry::do_domain_decomposition()
 
 		//std::cout << "First broadcasting completed.\n" << std::flush;
 
-		for (int i=0; i<tdim[0]; i++){
+		for (index_t i=0; i<tdim[0]; i++){
 			MPI_Bcast(rankDistri[i], tdim[1], MPI_INT, 0, MPI_COMM_WORLD);
 		}
 
 		//std::cout << "Second broadcasting completed.\n" << std::flush;
 
-		for (int i=0; i<tdim[0]; i++){
-			for (int j=0; j<tdim[1]; j++) {
+		for (index_t i=0; i<tdim[0]; i++){
+			for (index_t j=0; j<tdim[1]; j++) {
 				sendBuf = localSizes[i][j][0];
 				MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 				sendBuf = localSizes[i][j][1];
@@ -375,19 +381,19 @@ void Geometry::do_domain_decomposition()
 
 		// allocate
 		rankDistri = new int*[tdim[0]];
-		for (int i=0; i<tdim[0]; i++){
+		for (index_t i=0; i<tdim[0]; i++){
 			rankDistri[i] = new int[tdim[1]];
 		}
 		localSizes = new multi_index_t*[tdim[0]];
-		for (int i=0; i<tdim[0]; i++){
+		for (index_t i=0; i<tdim[0]; i++){
 			localSizes[i] = new multi_index_t[tdim[1]];
 		}
 
-		for (int i=0; i<tdim[0]; i++){
+		for (index_t i=0; i<tdim[0]; i++){
 			MPI_Bcast(rankDistri[i], tdim[1], MPI_INT, 0, MPI_COMM_WORLD);
 		}
-		for (int i=0; i<tdim[0]; i++){
-			for (int j=0; j<tdim[1]; j++) {
+		for (index_t i=0; i<tdim[0]; i++){
+			for (index_t j=0; j<tdim[1]; j++) {
 				MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 				localSizes[i][j][0] = recBuf;
 				MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
@@ -416,8 +422,8 @@ void Geometry::do_domain_decomposition()
 	if(_comm->getRank()==0) {
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Process distribution (" << _comm->getSize() << " processes in total):\n" << std::flush;
-		for(int j=tdim[1]-1; j >= 0; j--) {
-			for(int i=0; i < tdim[0]; i++) {
+		for(int j=int(tdim[1])-1; j >= 0; j--) {
+			for(index_t i=0; i < tdim[0]; i++) {
 				if (i != 0) std::cout << "\t-\t";
 				std::cout << rankDistri[i][j];
 			}
@@ -427,6 +433,9 @@ void Geometry::do_domain_decomposition()
 	}
 }
 
+/**
+Does a horizontal decomposition of the physical domain.
+*/
 void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
 	index_t np = _comm->getSize();
@@ -434,16 +443,16 @@ void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankD
 	tdim[1] = 1;
 	// allocate
 	rankDistri = new int*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		rankDistri[i] = new int[tdim[1]];
 	}
 	localSizes = new multi_index_t*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		localSizes[i] = new multi_index_t[tdim[1]];
 	}
 	// write values
-	for (int i=0; i<tdim[0]; i++){
-		for (int j=0; j<tdim[1]; j++){
+	for (index_t i=0; i<tdim[0]; i++){
+		for (index_t j=0; j<tdim[1]; j++){
 			rankDistri[i][j] = i + j*tdim[0];
 			if (i == (tdim[0]-1)){
 				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
@@ -459,36 +468,17 @@ void Geometry::horizontal_domain_decomposition(multi_index_t& tdim, int**& rankD
 	}
 
 	//add ghost cells to domains
-	/*for (int i=0; i<tdim[0]; i++) {
-		for (int j=0; j<tdim[1]; j++) {
-			// add ghost cells in x-dim
-			if (i == 0 && i == (tdim[0]-1)) {
-				// do nothing
-			} else if (i == 0 || i == (tdim[0]-1)) {
-				localSizes[i][j][0] += 1;
-			} else {
-				localSizes[i][j][0] += 2;
-			}
-
-			// add ghost cells in y-dim
-			if (j == 0 && j == (tdim[1]-1)) {
-				// do nothing
-			} else if (j == 0 || j == (tdim[1]-1)) {
-				localSizes[i][j][1] += 1;
-			} else {
-				localSizes[i][j][1] += 2; 
-			}
-		}
-	}*/
-
-	for (int i=0; i < tdim[0]; i++) {
-		for (int j = 0; j < tdim[1]; j++) {
+	for (index_t i=0; i<tdim[0]; i++) {
+		for (index_t j=0; j<tdim[1]; j++) {
 			localSizes[i][j][0] += 2;
 			localSizes[i][j][1] += 2;
 		}
 	}
 }
 
+/**
+Does a vertical decomposition of the physical domain.
+*/
 void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
 	index_t np = _comm->getSize();
@@ -496,16 +486,16 @@ void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDis
 	tdim[1] = np;
 	// allocate
 	rankDistri = new int*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		rankDistri[i] = new int[tdim[1]];
 	}
 	localSizes = new multi_index_t*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		localSizes[i] = new multi_index_t[tdim[1]];
 	}
 	// write values
-	for (int i=0; i<tdim[0]; i++){
-		for (int j=0; j<tdim[1]; j++){
+	for (index_t i=0; i<tdim[0]; i++){
+		for (index_t j=0; j<tdim[1]; j++){
 			rankDistri[i][j] = i + j*tdim[0];
 			if (i == (tdim[0]-1)){
 				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
@@ -521,39 +511,20 @@ void Geometry::vertical_domain_decomposition(multi_index_t& tdim, int**& rankDis
 	}
 
 	//add ghost cells to domains
-	/*for (int i=0; i<tdim[0]; i++) {
-		for (int j=0; j<tdim[1]; j++) {
-			// add ghost cells in x-dim
-			if (i == 0 && i == (tdim[0]-1)) {
-				// do nothing
-			} else if (i == 0 || i == (tdim[0]-1)) {
-				localSizes[i][j][0] += 1;
-			} else {
-				localSizes[i][j][0] += 2;
-			}
-
-			// add ghost cells in y-dim
-			if (j == 0 && j == (tdim[1]-1)) {
-				// do nothing
-			} else if (j == 0 || j == (tdim[1]-1)) {
-				localSizes[i][j][1] += 1;
-			} else {
-				localSizes[i][j][1] += 2; 
-			}
-		}
-	}*/
-
-	for (int i=0; i < tdim[0]; i++) {
-		for (int j = 0; j < tdim[1]; j++) {
+	for (index_t i=0; i<tdim[0]; i++) {
+		for (index_t j=0; j<tdim[1]; j++) {
 			localSizes[i][j][0] += 2;
 			localSizes[i][j][1] += 2;
 		}
 	}
 }
 
+/**
+Tries to decompose the domain in a two-dimensional fashion. To do so, the function performs a simple prime factorization of the total number of processes.
+*/
 void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const
 {
-	index_t np = _comm->getSize();
+	int np = _comm->getSize();
 	// search for a good decomposition
 	tdim[0] = np;
 	tdim[1] = 1;
@@ -575,16 +546,16 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 	}
 	// allocate
 	rankDistri = new int*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		rankDistri[i] = new int[tdim[1]];
 	}
 	localSizes = new multi_index_t*[tdim[0]];
-	for (int i=0; i<tdim[0]; i++){
+	for (index_t i=0; i<tdim[0]; i++){
 		localSizes[i] = new multi_index_t[tdim[1]];
 	}
 	// write the other values
-	for (int i=0; i<tdim[0]; i++){
-		for (int j=0; j<tdim[1]; j++){
+	for (index_t i=0; i<tdim[0]; i++){
+		for (index_t j=0; j<tdim[1]; j++){
 			rankDistri[i][j] = i + j*tdim[0];
 			if (i == (tdim[0]-1)){
 				localSizes[i][j][0] = TotalSize()[0] - int(TotalSize()[0] / tdim[0]) * (tdim[0]-1);
@@ -600,30 +571,8 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 	}
 
 	//add ghost cells to domains
-	/*for (int i=0; i<tdim[0]; i++) {
-		for (int j=0; j<tdim[1]; j++) {
-			// add ghost cells in x-dim
-			if (i == 0 && i == (tdim[0]-1)) {
-				// do nothing
-			} else if (i == 0 || i == (tdim[0]-1)) {
-				localSizes[i][j][0] += 1;
-			} else {
-				localSizes[i][j][0] += 2;
-			}
-
-			// add ghost cells in y-dim
-			if (j == 0 && j == (tdim[1]-1)) {
-				// do nothing
-			} else if (j == 0 || j == (tdim[1]-1)) {
-				localSizes[i][j][1] += 1;
-			} else {
-				localSizes[i][j][1] += 2; 
-			}
-		}
-	}*/
-
-	for (int i=0; i < tdim[0]; i++) {
-		for (int j = 0; j < tdim[1]; j++) {
+	for (index_t i=0; i<tdim[0]; i++) {
+		for (index_t j=0; j<tdim[1]; j++) {
 			localSizes[i][j][0] += 2;
 			localSizes[i][j][1] += 2;
 		}

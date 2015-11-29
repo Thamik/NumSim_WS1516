@@ -18,7 +18,7 @@ Constructs a grid with offset. Note the convention for the offset used here: The
 \param[in] verbose true if debugging information should be displayed
 */
 Grid::Grid(const Geometry* geom, const multi_real_t& offset, bool verbose)
-: _geom(geom), _offset(offset)
+: _data(NULL), _offset(offset), _geom(geom)
 {	
 	if (verbose) std::cout << "Allocating memory with size " << _geom->Size()[0] << " * " << _geom->Size()[1] << "... " << std::flush;
 	_data = new real_t[_geom->Size()[0] * _geom->Size()[1]];
@@ -47,7 +47,7 @@ Grid::~Grid()
 void Grid::Initialize(const real_t& value, bool verbose)
 {
 	if (verbose) std::cout << "Initializing: " << _geom->Size()[0]*_geom->Size()[1] << "\n" << std::flush;
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		_data[i] = value;
 	}
@@ -94,10 +94,11 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
-	if(vallu < 0)
+	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
-	else if(valro >= _geom->Size()[0]*_geom->Size()[1])
+	} else */if(valro >= _geom->Size()[0]*_geom->Size()[1]){
 		std::cout << "Warnng, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
+	}
 
 	real_t alpha = ix - x1;
 	real_t beta = iy - y1;
@@ -228,7 +229,7 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 	return res;
 }
 
-// die funktionen vdu_y und udv_x sind unklar, da in der Vorlesung nur d(uv)/dx und d(uv)/dy behandelt wurden. diese werden jetzt hier implementiert
+// The use of the functions  vdu_y and udv_x are unclear, since only d(uv)/dx and d(uv)/dy have been presented in the lecture. The last mentioned functions are implemented below.
 
 // the original donor cell methods
 /**
@@ -351,7 +352,7 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 real_t Grid::Max() const
 {
 	real_t res = _data[0];
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		if (_data[i]>res) res = _data[i];
 	}
@@ -388,7 +389,7 @@ real_t Grid::InnerMin() const
 real_t Grid::Min() const
 {
 	real_t res = _data[0];
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		if (_data[i]<res) res = _data[i];
 	}
@@ -402,7 +403,7 @@ real_t Grid::AbsMax() const
 {
 	real_t res = std::abs(_data[0]);
 	real_t temp;
-	for(int i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
+	for(index_t i=0; i<_geom->Size()[0]*_geom->Size()[1]; i++)
 	{
 		temp = std::abs(_data[i]);
 		if (temp>res) res = temp;
@@ -410,30 +411,45 @@ real_t Grid::AbsMax() const
 	return res;
 }
 
+/**
+\return the maximal value of all grids
+*/
 real_t Grid::TotalMax() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMax(Max());
 }
 
+/**
+\return the maximal value of the interior cell points of all grids
+*/
 real_t Grid::TotalInnerMax() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMax(InnerMax());
 }
 
+/**
+\return the minimal value of the interior cell points of all grids
+*/
 real_t Grid::TotalInnerMin() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMin(InnerMin());
 }
 
+/**
+\return the minimal value of all grids
+*/
 real_t Grid::TotalMin() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMin(Min());
 }
 
+/**
+\return the maximal absolute value of all grids
+*/
 real_t Grid::TotalAbsMax() const
 {
 	// this needs to be called by all processes!
@@ -545,11 +561,17 @@ real_t Grid::average_value() const
 	return avg / real_t(_geom->Size()[0] * _geom->Size()[1]);
 }
 
+/**
+\return the offset of this grid
+*/
 const multi_real_t& Grid::getOffset() const
 {
 	return _offset;
 }
 
+/**
+\return a pointer to the underlying geometry object
+*/
 const Geometry* Grid::getGeometry() const
 {
 	return _geom;

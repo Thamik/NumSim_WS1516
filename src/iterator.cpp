@@ -200,17 +200,28 @@ void InteriorIterator::Next()
 
 /* JumpingInteriorIterator */
 
+/**
+This function is the constructor of the JumpingInteriorIterator class.
+\param[in]	geom	a Geometry object of the grids for which the iterator may be used
+\param[in]	shifted	a boolean which specifies if the lower left (interior) cell of the grid, over which will be iterated, is a red or black cell (see RedOrBlackSOR)
+*/
 JumpingInteriorIterator::JumpingInteriorIterator(const Geometry* geom, bool shifted)
 : InteriorIterator(geom), _shifted(shifted)
 {
 }
 
+/**
+This function sets the position of the iterator to the first valid cell.
+*/
 void JumpingInteriorIterator::First()
 {
 	InteriorIterator::First();
 	if (_shifted) InteriorIterator::Next();
 }
 
+/**
+This function moves the iterator to the next valid cell.
+*/
 void JumpingInteriorIterator::Next()
 {
 	if ((_geom->Size()[0] % 2) == 1){

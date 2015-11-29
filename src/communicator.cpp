@@ -23,6 +23,7 @@
 Communicator::Communicator(int *argc, char ***argv, bool verbose = false)
 : _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL), _localSize(0,0)
 {
+<<<<<<< HEAD
 	if (verbose && _rank == 0) {
 		std::cout << "MPI initializing..." << std::flush;
 	}
@@ -32,6 +33,11 @@ Communicator::Communicator(int *argc, char ***argv, bool verbose = false)
 	if (verbose && _rank == 0) {
 		std::cout << "MPI initialized with " << _size << " processes.\n" << std::flush;
 	}
+=======
+	MPI_Init(argc, argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
+	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
+>>>>>>> 4b1e181729efa89d13a94b222b799cba877f61a4
 }
 
 /** Communicator destructor; finalizes MPI Environment
@@ -40,7 +46,7 @@ Communicator::~Communicator()
 {
 	MPI_Finalize();
 	if( _rankDistribution != NULL ) {
-		for(int ii = 0; ii < _tdim[0]; ii++) {
+		for(index_t ii = 0; ii < _tdim[0]; ii++) {
 			delete[] _rankDistribution[ii];
 		}
 		delete[] _rankDistribution;
@@ -135,23 +141,23 @@ void Communicator::copyBoundary(Grid *grid) const
 	}*/
 }
 
-const bool Communicator::isLeft() const
+bool Communicator::isLeft() const
 {
 	return _tidx[0] == 0;
 }
 
-const bool Communicator::isRight() const
+bool Communicator::isRight() const
 {
 	return _tidx[0] == _tdim[0] - 1;
 }
 
-const bool Communicator::isTop() const
+bool Communicator::isTop() const
 {
 	return _tidx[1] == _tdim[1] - 1;
 }
 
 
-const bool Communicator::isBottom() const
+bool Communicator::isBottom() const
 {
 	return _tidx[1] == 0;
 }
@@ -177,7 +183,7 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 
 	// delete _rankDistribution if not NULL
 	if( _rankDistribution != NULL ) {
-		for(int ii = 0; ii < _tdim[0]; ii++) {
+		for(index_t ii = 0; ii < _tdim[0]; ii++) {
 			delete[] _rankDistribution[ii];
 		}
 		delete[] _rankDistribution;
@@ -188,22 +194,22 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 	//std::cout << _rank << ": " << "start allocating..." << "\n" << std::flush;
 	// allocate _rankDistribution
 	_rankDistribution = new int*[_tdim[0]];
-	for(int ii = 0; ii < _tdim[0]; ii++) {
+	for(index_t ii = 0; ii < _tdim[0]; ii++) {
 		_rankDistribution[ii] = new int[_tdim[1]];
 	}
 
 	//std::cout << _rank << ": " << "done allocating!" << "\n" << std::flush;
 
 	// write new values in _rankDistribution
-	for(int ii = 0; ii < _tdim[0]; ii++) {
-		for(int jj = 0; jj < _tdim[1]; jj++) {
+	for(index_t ii = 0; ii < _tdim[0]; ii++) {
+		for(index_t jj = 0; jj < _tdim[1]; jj++) {
 			_rankDistribution[ii][jj] = int(rankDistri[ii][jj]);
 		}
 	}
 
 	//std::cout << _rank << ": " << "start searching for position..." << "\n" << std::flush;
-	for(int ii = 0; ii < _tdim[0]; ii++) {
-		for(int jj = 0; jj < _tdim[1]; jj++) {
+	for(index_t ii = 0; ii < _tdim[0]; ii++) {
+		for(index_t jj = 0; jj < _tdim[1]; jj++) {
 			if( _rankDistribution[ii][jj] == _rank ) {
 				_tidx[0] = ii;
 				_tidx[1] = jj;
@@ -218,10 +224,10 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 
 	// set _evenodd
 	int temp(0);
-	for (int i=0; i<_tidx[0]; i++){
+	for (index_t i=0; i<_tidx[0]; i++){
 		temp += localSizes[i][0][0];
 	}
-	for (int i=0; i<_tidx[1]; i++){
+	for (index_t i=0; i<_tidx[1]; i++){
 		temp += localSizes[0][i][1];
 	}
 	if ((temp % 2) == 0){
@@ -242,8 +248,8 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
-	real_t* sendBuff;
-	real_t* recBuff;
+	real_t* sendBuff(NULL);
+	real_t* recBuff(NULL);
 
 	//initialize boundary iterator
 	BoundaryIterator itSend(tempGeom);
@@ -308,8 +314,8 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 		}
 	}
 
-	if(!isLeft()) delete[] sendBuff;
-	if(!isRight()) delete[] recBuff;
+	if(!isLeft() && sendBuff!=NULL) delete[] sendBuff;
+	if(!isRight() && recBuff!=NULL) delete[] recBuff;
 
 	return true;
 }
@@ -320,8 +326,8 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
-	real_t* sendBuff;
-	real_t* recBuff;
+	real_t* sendBuff(NULL);
+	real_t* recBuff(NULL);
 
 	//initialize boundary iterator
 	BoundaryIterator itSend(tempGeom);
@@ -386,8 +392,8 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 		}
 	}
 
-	if(!isRight()) delete[] sendBuff;
-	if(!isLeft()) delete[] recBuff;
+	if(!isRight() && sendBuff!=NULL) delete[] sendBuff;
+	if(!isLeft() && recBuff!=NULL) delete[] recBuff;
 
 	return true;
 }
@@ -398,8 +404,8 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
-	real_t* sendBuff;
-	real_t* recBuff;
+	real_t* sendBuff(NULL);
+	real_t* recBuff(NULL);
 
 	//initialize boundary iterator
 	BoundaryIterator itSend(tempGeom);
@@ -464,8 +470,8 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 		}
 	}
 
-	if(!isTop()) delete[] sendBuff;
-	if(!isBottom()) delete[] recBuff;
+	if(!isTop() && sendBuff!=NULL) delete[] sendBuff;
+	if(!isBottom() && recBuff!=NULL) delete[] recBuff;
 
 	return true;
 }
@@ -476,8 +482,8 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 
 	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
-	real_t* sendBuff;
-	real_t* recBuff;
+	real_t* sendBuff(NULL);
+	real_t* recBuff(NULL);
 
 	//initialize boundary iterator
 	BoundaryIterator itSend(tempGeom);
@@ -543,8 +549,8 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 		}
 	}
 
-	if(!isBottom()) delete[] sendBuff;
-	if(!isTop()) delete[] recBuff;
+	if(!isBottom() && sendBuff!=NULL) delete[] sendBuff;
+	if(!isTop() && recBuff!=NULL) delete[] recBuff;
 
 	return true;
 }

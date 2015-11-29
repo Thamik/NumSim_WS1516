@@ -5,6 +5,7 @@
 #include "parameter.hpp"
 #include "solver.hpp"
 #include "communicator.hpp"
+#include "console_output.hpp"
 
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
@@ -19,20 +20,20 @@
 \param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false), _clock_counter(0)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
 	//_epslimit = 1e-4;
 	//_dtlimit = 
 
+	// construct grids
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
 	_v = new Grid(_geom, multi_real_t(-0.5,-1.0));
 	_p = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
-
 	_tmp_velocity = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_tmp_vorticity = new Grid(_geom);
 	_tmp_stream = new Grid(_geom);
@@ -40,13 +41,10 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	// Initialize Grids
 	_u->Initialize(0.0);
 	_v->Initialize(0.0);
-
 	_p->Initialize(0.0);
-
 	_F->Initialize(0.0);
 	_G->Initialize(0.0);
 	_rhs->Initialize(0.0);
-	
 	_tmp_velocity->Initialize(0.0);
 	_tmp_vorticity->Initialize(0.0);
 	_tmp_stream->Initialize(0.0);
@@ -54,18 +52,23 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	//set boundary values
 	update_boundary_values();
 
-	// TODO: is this right, anything else to initialize?
+	// construct solver
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
-	real_t omega = 2.0 / (1.0+sin(M_PI*h)); // TODO: set omega to the right value
-	//real_t omega = 1.0;
-	
+	real_t omega = 2.0 / (1.0+sin(M_PI*h));
+	//real_t omega = 1.0;	
 	_solver = new RedOrBlackSOR(_geom, omega);
+
+	// construct console clock
+	_clock = new ConsoleClock();
 }
 
 /* Destructor */
+
+/**
+The destructor of the Compute class.
+*/
 Compute::~Compute()
 {
-	// TODO: something more to delete?
 	delete _u;
 	delete _v;
 	delete _p;
@@ -78,6 +81,8 @@ Compute::~Compute()
 	delete _tmp_stream;
 	
 	delete _solver;
+
+	delete _clock;
 }
 
 /**
@@ -86,14 +91,13 @@ Afterwards, the Poisson pressure equation is solved and the velocitys are update
 \param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
 \param[in] verbose boolean if debbuging information should be printed (standard: false)
 */
-void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
+void Compute::TimeStep(bool verbose, real_t diff_time)
 {
-	// TODO: test
 	// compute dt
 	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt(); // BLOCKING
 
-	printInfo = false;
+	bool printInfo(false);
 	if (diff_time <= dt){
 		dt = diff_time;
 		printInfo = !_comm->getRank();
@@ -151,67 +155,23 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 	// print information
 	if (printInfo){
 
-		// print running clock
-		/*std::string* s = new std::string[4];
-		for (int i=0; i<8; i++){
-			switch (i){
-				case 0:
-					s[i] = " |  |  | ";
-					break;
-				case 1:
-					s[i] = "  / / /  ";
-					break;
-				case 2:
-					s[i] = "   ---   ";
-					break;
-				case 3:
-					s[i] = "\\   \\   \\";
-					break;
-			}
-		}
-		std::string clock_string = s[_clock_counter % 4];*/
+		// print running clock, next position
+		_clock->nextPos();
 
-		std::string* s = new std::string[8];
-		for (int i=0; i<8; i++){
-			switch (i){
-				case 0:
-					s[i] = " |  o    ";
-					break;
-				case 1:
-					s[i] = "  / o    ";
-					break;
-				case 2:
-					s[i] = "    o-   ";
-					break;
-				case 3:
-					s[i] = "    o   \\";
-					break;
-				case 4:
-					s[i] = "    o  | ";
-					break;
-				case 5:
-					s[i] = "    o /  ";
-					break;
-				case 6:
-					s[i] = "   -o    ";
-					break;
-				case 7:
-					s[i] = "\\   o    ";
-					break;
-			}
-		}
-		std::string clock_string = s[_clock_counter % 8];
-
+		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		//std::cout << "\x1b[A\x1b[A\x1b[A";
+
+		// the actual console output
 		std::cout << "============================================================\n";
-		// total simulated time
+
 		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %" << std::flush;
-		std::cout << "\t\t" << clock_string[0] << clock_string[1] << clock_string[2] << "\n";
-		std::cout << "Total simulated time: t = \t" << _t << "  \t seconds";
-		std::cout << "\t" << clock_string[3] << clock_string[4] << clock_string[5] << "\n";
-		// timestep
-		//std::cout << "Last timestep: dt = " << dt << "\n";
+		std::cout << "\t\t" << _clock->repr(0) << "\n";
+
+		std::cout << "Total simulated time: t = \t" << _t << "  \t seconds"; // total simulated time
+		std::cout << "\t" << _clock->repr(1) << "\n";
+
+		//std::cout << "Last timestep: dt = " << dt << "\n"; // timestep
+
 		// magnitudes of the fields
 		//std::cout << "max(F) = " << _F->TotalAbsMax() << ", max(G) = " << _G->TotalAbsMax() << ", max(rhs) = " << _rhs->TotalAbsMax() << "\n";
 		//std::cout << "max(u) = " << _u->TotalAbsMax() << ", max(v) = " << _v->TotalAbsMax() << ", max(p) = " << _p->TotalAbsMax() << "\n";
@@ -223,20 +183,12 @@ void Compute::TimeStep(bool printInfo, bool verbose, real_t diff_time)
 		} else {
 			std::cout << "(Solver is NOT converging!)    " << std::flush;
 		}
-		std::cout << "\t\t\t\t" << clock_string[6] << clock_string[7] << clock_string[8] << "\n";
+		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
 		std::cout << "============================================================\n";
 
-
-		_clock_counter++;
-
 	}
 
-	// print debug information
-	/*if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[16+18*2] << ", " << _v->Data()[16+18*2] << "\n" << std::flush;
-	if (_comm->getRank() == 3) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[16+18] << ", " << _v->Data()[16+18] << "\n" << std::flush;
-	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "a): " << _u->Data()[18*17-2] << ", " << _v->Data()[18*17-2] << "\n" << std::flush;
-	if (_comm->getRank() == 1) std::cout << "(" << _comm->getRank() << "b): " << _u->Data()[18*16-2] << ", " << _v->Data()[18*16-2] << "\n" << std::flush;*/
 }
 
 /**
@@ -285,7 +237,6 @@ The absolute velocity in the euklidean norm is calculted at the middle point of 
 */
 const Grid* Compute::GetVelocity()
 {
-	// TODO: test
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -301,8 +252,6 @@ const Grid* Compute::GetVelocity()
 */
 const Grid* Compute::GetVorticity()
 {
-	// TODO: test
-	//InteriorIterator it(_geom);
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -318,7 +267,7 @@ const Grid* Compute::GetVorticity()
 }
 
 /**
-\return pointer on the Grid containing the stream
+\return pointer on the Grid containing the stream function evaluations
 */
 const Grid* Compute::GetStream()
 {
@@ -395,7 +344,6 @@ The new velocitys are calculated and stored in the _u,_v grids (in-place
 */
 void Compute::NewVelocities(const real_t& dt)
 {
-	// TODO: test
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -411,7 +359,6 @@ The expression for F,G arrising for the Momentum equations is evaluated and stor
 */
 void Compute::MomentumEqu(const real_t& dt)
 {
-	// TODO: test
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -427,7 +374,6 @@ The Right-Hand-Side of the pressure poisson equation is calculated depending on 
 */
 void Compute::RHS(const real_t& dt)
 {
-	// TODO: test
 	InteriorIterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -452,6 +398,9 @@ real_t Compute::compute_dt() const
 	return res;
 }
 
+/**
+Update the boundary values in all grids where this is necessary.
+*/
 void Compute::update_boundary_values()
 {
 	_geom->Update_U(_u);

@@ -109,16 +109,31 @@ real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 	return totalRes/((_geom->Size()[0]-1.0) * (_geom->Size()[1]-1.0));
 }
 
+/**
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+\return		The (synchronized) total residual of all grids
+*/
 real_t Solver::synced_totalRes(const Grid* grid, const Grid* rhs) const
 {
 	return synced_totalRes_L1_averaged(grid,rhs);
 }
 
+/**
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+\return		The (synchronized) total Linf residual of all grids
+*/
 real_t Solver::synced_totalRes_Linf(const Grid* grid, const Grid* rhs) const
 {
 	return _geom->getCommunicator()->gatherMax(totalRes_Linf(grid,rhs));
 }
 
+/**
+\param[in]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+\return		The (synchronized) total L1 residual of all grids
+*/
 real_t Solver::synced_totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 {
 	return (_geom->getCommunicator()->gatherSum(totalRes_L1_averaged(grid,rhs))) / (_geom->getCommunicator()->getSize());
@@ -182,6 +197,11 @@ real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 	return totalRes(grid,rhs);
 }
 
+/**
+\param[in][out]	grid	Approximate solution
+\param[in]	rhs	Right hand side of the pressure Poisson equation
+\param[in]	it	Iterator which specifies the current position in the grid
+*/
 void SOR::erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) const
 {
 	real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
