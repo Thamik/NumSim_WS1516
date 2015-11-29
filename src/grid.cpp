@@ -41,8 +41,8 @@ Grid::~Grid()
 }
 
 /**
-/param[in] value value to be written to all grid points
-/param[in] verbose debugging output (default: false)
+\param[in] value value to be written to all grid points
+\param[in] verbose debugging output (default: false)
 */
 void Grid::Initialize(const real_t& value, bool verbose)
 {
@@ -55,7 +55,7 @@ void Grid::Initialize(const real_t& value, bool verbose)
 }
 
 /**
-/param[in] it position at which the grid should be evaluated
+\param[in] it position at which the grid should be evaluated
 */
 real_t& Grid::Cell(const Iterator& it)
 {
@@ -63,7 +63,7 @@ real_t& Grid::Cell(const Iterator& it)
 }
 
 /**
-/param[in] it position at which the grid should be evaluated
+\param[in] it position at which the grid should be evaluated
 */
 const real_t& Grid::Cell(const Iterator& it) const
 {
@@ -72,8 +72,8 @@ const real_t& Grid::Cell(const Iterator& it) const
 
 /**
 The methods first calculates the four nearest indices on the grid (with offset!) and then does a double-linear interpolation to calculate the interpolated value at the given phyical coordinates
-/param[in] pos physical position
-/return value at physical position
+\param[in] pos physical position
+\return value at physical position
 */
 real_t Grid::Interpolate(const multi_real_t& pos) const
 {
@@ -111,8 +111,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return left-sided x-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return left-sided x-difference quotient
 */
 real_t Grid::dx_l(const Iterator& it) const
 {
@@ -120,8 +120,8 @@ real_t Grid::dx_l(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return right-sided x-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return right-sided x-difference quotient
 */
 real_t Grid::dx_r(const Iterator& it) const
 {
@@ -129,8 +129,8 @@ real_t Grid::dx_r(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return left-sided y-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return left-sided y-difference quotient
 */
 real_t Grid::dy_l(const Iterator& it) const
 {
@@ -138,8 +138,8 @@ real_t Grid::dy_l(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return right-sided y-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return right-sided y-difference quotient
 */
 real_t Grid::dy_r(const Iterator& it) const
 {
@@ -148,8 +148,8 @@ real_t Grid::dy_r(const Iterator& it) const
 
 // own methods, central difference quotients
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return central x-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return central x-difference quotient
 */
 real_t Grid::dx_c(const Iterator& it) const
 {
@@ -157,8 +157,8 @@ real_t Grid::dx_c(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return central y-difference quotient
+\param[in] it position where the difference quotient should be evaluated
+\return central y-difference quotient
 */
 real_t Grid::dy_c(const Iterator& it) const
 {
@@ -166,8 +166,8 @@ real_t Grid::dy_c(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return central x-difference quotient of 2nd order
+\param[in] it position where the difference quotient should be evaluated
+\return central x-difference quotient of 2nd order
 */
 real_t Grid::dxx(const Iterator &it) const
 {
@@ -176,8 +176,8 @@ real_t Grid::dxx(const Iterator &it) const
 }
 
 /**
-/param[in] it position where the difference quotient should be evaluated
-/return central y-difference quotient of 2nd order
+\param[in] it position where the difference quotient should be evaluated
+\return central y-difference quotient of 2nd order
 */
 real_t Grid::dyy(const Iterator& it) const
 {
@@ -186,9 +186,9 @@ real_t Grid::dyy(const Iterator& it) const
 }
 
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to u*du/dx
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to u*du/dx
 */
 real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
 {
@@ -213,9 +213,9 @@ real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) co
 }*/
 
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to v*dv/dy
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to v*dv/dy
 */
 real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 {
@@ -233,9 +233,9 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 
 // the original donor cell methods
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to d(u^2)/dx
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to d(u^2)/dx
 */
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
@@ -243,9 +243,9 @@ real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 }
 
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to d(v^2)/dx
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to d(v^2)/dx
 */
 real_t Grid::DC_dvv_y(const Iterator &it, const real_t &alpha) const
 {
@@ -253,9 +253,9 @@ real_t Grid::DC_dvv_y(const Iterator &it, const real_t &alpha) const
 }
 
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to d(uv)/dx
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to d(uv)/dx
 */
 real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) const
 {
@@ -272,9 +272,9 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 }
 
 /**
-/param[in] it position where the approximation quotient should be evaluated
-/param[in] alpha control parameter
-/return difference quotient approximation to d(uv)/dy
+\param[in] it position where the approximation quotient should be evaluated
+\param[in] alpha control parameter
+\return difference quotient approximation to d(uv)/dy
 */
 real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) const
 {
@@ -347,7 +347,7 @@ real_t Grid::DC_duv_x(const Iterator &it, const real_t &alpha, const Grid* u) co
 //====================================================================================
 
 /**
-/return maximal value of the grid
+\return maximal value of the grid
 */
 real_t Grid::Max() const
 {
@@ -384,7 +384,7 @@ real_t Grid::InnerMin() const
 }
 
 /**
-/return minimal value of the grid
+\return minimal value of the grid
 */
 real_t Grid::Min() const
 {
@@ -397,7 +397,7 @@ real_t Grid::Min() const
 }
 
 /**
-/return maximal value of the grid
+\return maximal value of the grid
 */
 real_t Grid::AbsMax() const
 {
@@ -458,7 +458,7 @@ real_t Grid::TotalAbsMax() const
 
 /**
 Gives write acces directly to the data (better use Cell())
-/return pointer to the raw data
+\return pointer to the raw data
 */
 real_t* Grid::Data()
 {
@@ -468,7 +468,7 @@ real_t* Grid::Data()
 // own method
 /**
 Gives read access directly to the data (better use Cell())
-/return constant pointer to the raw data
+\return constant pointer to the raw data
 */
 const real_t* Grid::Data() const
 {
@@ -477,7 +477,7 @@ const real_t* Grid::Data() const
 
 /**
 Note that the copy is a deep copy, i.e. a completely new grid is generated here
-/return copied grid
+\return copied grid
 */
 Grid* Grid::copy() const
 {
@@ -511,7 +511,7 @@ void Grid::Out() const
 /**
 Calculates the laplacian of the data in the interior grid.
 Note, that the data on the calling grid object are overwritten!!
-/param[in] in Grid of which the laplacian method should be calculated
+\param[in] in Grid of which the laplacian method should be calculated
 */
 void Grid::Laplace(Grid* in)
 {
@@ -525,7 +525,7 @@ void Grid::Laplace(Grid* in)
 
 /**
 Debugging method: Checks the interior grid for extremly large values
-/return bool if bad entry found
+\return bool if bad entry found
 */
 bool Grid::CheckNaN() const
 {
@@ -546,7 +546,7 @@ bool Grid::CheckNaN() const
 }
 
 /**
-/return mean value
+\return mean value
 */
 real_t Grid::average_value() const
 {
