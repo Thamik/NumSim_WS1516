@@ -18,7 +18,7 @@
    *
    * \param [in] argc Number of arguments program was started with
    * \param [in] argv Arguments passed to the program on start
-   * \param [in] verbose Debug output on terminal
+   * \param [in] verbose Debug output on terminal (Default: false)
    */
 Communicator::Communicator(int *argc, char ***argv, bool verbose)
 : _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL), _localSize(0,0)
@@ -109,7 +109,12 @@ real_t Communicator::gatherMax(const real_t &val) const
 	return res;
 }
 
-void Communicator::copyBoundary(Grid *grid) const
+/** 
+   *
+   * \param [in] grid  The values to sync
+   * \param [in] verbose Debug parameter (Default: false)
+   */
+void Communicator::copyBoundary(Grid *grid, bool verbose) const
 {
 	bool success(true);
 	bool temp(true);
@@ -130,54 +135,75 @@ void Communicator::copyBoundary(Grid *grid) const
 	temp = copyBottomBoundary(grid);
 	success = success && temp;
 	
-	/*// output for debugging
-	if( success ) {
-		std::cout << "Process no. " << _rank << " copied successful!\n";
+	// output for debugging
+	if (verbose) {	
+		if( success ) {
+			std::cout << "Process no. " << _rank << " copied successful!\n";
+		}
+		else {
+			std::cout << "Copy failed!!! (Process no. " << _rank << ")\n";
+		}
 	}
-	else {
-		std::cout << "Copy failed!!! (Process no. " << _rank << ")\n";
-	}*/
 }
 
+/** \return boolean if the left boundary is a domain boundary
+*/
 bool Communicator::isLeft() const
 {
 	return _tidx[0] == 0;
 }
 
+/** \return boolean if the right boundary is a domain boundary
+*/
 bool Communicator::isRight() const
 {
 	return _tidx[0] == _tdim[0] - 1;
 }
 
+/** \return boolean if the top boundary is a domain boundary
+*/
 bool Communicator::isTop() const
 {
 	return _tidx[1] == _tdim[1] - 1;
 }
 
-
+/** \return boolean if the bottom boundary is a domain boundary
+*/
 bool Communicator::isBottom() const
 {
 	return _tidx[1] == 0;
 }
 
+/** \return rank of the current process
+*/
 const int &Communicator::getRank() const
 {
 	return _rank;
 }
 
+/** \return total number of processes
+*/
 const int &Communicator::getSize() const
 {
 	return _size;
 }
 
+/** \return size of the local grid
+*/
 multi_index_t Communicator::getLocalSize() const
 {
 	return _localSize;
 }
 
-void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes)
+/** This method should be called by the main process after doing the domain decomposition to deliver the rank distribution list, i.e. which process is assigned to which part of the grid, the dimension of the process grid and the list of local sizes to determine the evenodd variable.
+	\param[in] rankDistri Distribution of process ranks
+	\param[in] tdim Dimension of the process grid
+	\param[in] localSizes list of local grid sizes
+	\param[in] verbose Debug parameter (Default: false)
+*/
+void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, multi_index_t** localSizes, bool verbose)
 {
-	// std::cout << _rank << ": " << tdim[0] << ", " << tdim[1] << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << tdim[0] << ", " << tdim[1] << "\n" << std::flush;
 
 	// delete _rankDistribution if not NULL
 	if( _rankDistribution != NULL ) {
@@ -189,14 +215,17 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 
 	_tdim = tdim;
 
-	//std::cout << _rank << ": " << "start allocating..." << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << "start allocating..." << "\n" << std::flush;
+
 	// allocate _rankDistribution
 	_rankDistribution = new int*[_tdim[0]];
 	for(index_t ii = 0; ii < _tdim[0]; ii++) {
 		_rankDistribution[ii] = new int[_tdim[1]];
 	}
 
-	//std::cout << _rank << ": " << "done allocating!" << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << "done allocating!" << "\n" << std::flush;
+
+	if (verbose) std::cout << _rank << ": Start writing distribution values \n" << std::flush;
 
 	// write new values in _rankDistribution
 	for(index_t ii = 0; ii < _tdim[0]; ii++) {
@@ -205,7 +234,10 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 		}
 	}
 
-	//std::cout << _rank << ": " << "start searching for position..." << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << "done writing!" << "\n" << std::flush; 
+
+	if (verbose) std::cout << _rank << ": " << "start searching for position..." << "\n" << std::flush;
+
 	for(index_t ii = 0; ii < _tdim[0]; ii++) {
 		for(index_t jj = 0; jj < _tdim[1]; jj++) {
 			if( _rankDistribution[ii][jj] == _rank ) {
@@ -214,11 +246,12 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 			}
 		}
 	}
-	//std::cout << _rank << ": " << "position found!" << "\n" << std::flush;
+	
+	if (verbose) std::cout << _rank << ": " << "position found!" << "\n" << std::flush;
 
 	_localSize = localSizes[_tidx[0]][_tidx[1]];
 
-	//std::cout << _rank << ": " << "local sizes written!" << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << "local sizes written!" << "\n" << std::flush;
 
 	// set _evenodd
 	int temp(0);
@@ -234,17 +267,26 @@ void Communicator::setProcDistribution(int** rankDistri, multi_index_t tdim, mul
 		_evenodd = false;
 	}
 
-	//std::cout << _rank << ": " << "evenodd set!" << "\n" << std::flush;
+	if (verbose) std::cout << _rank << ": " << "evenodd set!" << "\n" << std::flush;
+}
+
+/** \return rank of (i,j)-cell in the process grid
+*/
+int Communicator::getRankDistribution(int i, int j) const
+{
+	return _rankDistribution[i][j];
 }
 
 
 /* Private methods */
 
+/** Sending the values of own left boundary to left neighbor and receive values from the right neighbor. This methods does check if the left and right neighbor, repectively, exists.
+	\param [in] grid values whose boundary shall be synced
+*/
 bool Communicator::copyLeftBoundary(Grid *grid) const
 {
 	int tag = 1013;
 
-	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff(NULL);
 	real_t* recBuff(NULL);
@@ -295,7 +337,6 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 	}
 	else {
 		// the process is at the left as well as at the right boundary
-		//TODO maybe output for debugging perpurse?
 	}
 
 	// Copy received data to grid
@@ -318,11 +359,13 @@ bool Communicator::copyLeftBoundary(Grid *grid) const
 	return true;
 }
 
+/** Sending the values of own right boundary to right neighbor and receive values from the left neighbor. This methods does check if the left and right neighbor, repectively, exists.
+	\param [in] grid values whose boundary shall be synced
+*/
 bool Communicator::copyRightBoundary(Grid *grid) const
 {
 	int tag = 1014;
 
-	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff(NULL);
 	real_t* recBuff(NULL);
@@ -373,7 +416,6 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 	}
 	else {
 		// the process is at the left as well as at the right boundary
-		//TODO maybe output for debugging perpurse?
 	}
 
 	// Copy received data to grid
@@ -396,11 +438,13 @@ bool Communicator::copyRightBoundary(Grid *grid) const
 	return true;
 }
 
+/** Sending the values of own top boundary to top neighbor and receive values from the bottom neighbor. This methods does check if the top and bottom neighbor, repectively, exists.
+	\param [in] grid values whose boundary shall be synced
+*/
 bool Communicator::copyTopBoundary(Grid *grid) const
 {
 	int tag = 1015;
 
-	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff(NULL);
 	real_t* recBuff(NULL);
@@ -451,7 +495,6 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 	}
 	else {
 		// the process is at the left as well as at the right boundary
-		//TODO maybe output for debugging perpurse?
 	}
 
 	// Copy received data to grid
@@ -474,11 +517,13 @@ bool Communicator::copyTopBoundary(Grid *grid) const
 	return true;
 }
 
+/** Sending the values of own bottom boundary to bottom neighbor and receive values from the top neighbor. This methods does check if the top and bottom neighbor, repectively, exists.
+	\param [in] grid values whose boundary shall be synced
+*/
 bool Communicator::copyBottomBoundary(Grid *grid) const
 {
 	int tag = 1016;
 
-	//TODO Debug
 	const Geometry* tempGeom = grid->getGeometry();
 	real_t* sendBuff(NULL);
 	real_t* recBuff(NULL);
@@ -529,8 +574,6 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	}
 	else {
 		// the process is at the left as well as at the right boundary
-		//TODO maybe output for debugging perpurse?
-		//std::cout << "process " << _rank << "is bottom and top" << std::flush;
 	}
 
 	// Copy received data to grid
@@ -551,9 +594,4 @@ bool Communicator::copyBottomBoundary(Grid *grid) const
 	if(!isTop() && recBuff!=NULL) delete[] recBuff;
 
 	return true;
-}
-
-int Communicator::getRankDistribution(int i, int j) const
-{
-	return _rankDistribution[i][j];
 }
