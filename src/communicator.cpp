@@ -14,17 +14,28 @@
 
 /* Public methods */
 
-Communicator::Communicator(int *argc, char ***argv)
+/** Communicator constructor; initializes MPI Environment
+   *
+   * \param [in] argc Number of arguments program was started with
+   * \param [in] argv Arguments passed to the program on start
+   * \param [in] verbose Debug output on terminal
+   */
+Communicator::Communicator(int *argc, char ***argv, bool verbose = false)
 : _tidx(0,0), _tdim(0,0), _rank(0), _size(0), _evenodd(false), _rankDistribution(NULL), _localSize(0,0)
 {
-	//for (int i = 0; i<*argc; i++) std::cout << (*argv)[i] << "\n" << std::flush;
-	MPI_Init(argc, argv); //TODO
+	if (verbose && _rank == 0) {
+		std::cout << "MPI initializing..." << std::flush;
+	}
+	MPI_Init(argc, argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &_rank); // determine rank of process
 	MPI_Comm_size(MPI_COMM_WORLD, &_size); // determine number of processes
-	//if (_rank == 0) std::cout << "MPI initialized with " << _size << " processes.\n" << std::flush;
-	//TODO Noch was?
+	if (verbose && _rank == 0) {
+		std::cout << "MPI initialized with " << _size << " processes.\n" << std::flush;
+	}
 }
 
+/** Communicator destructor; finalizes MPI Environment
+   */
 Communicator::~Communicator()
 {
 	MPI_Finalize();
@@ -34,26 +45,37 @@ Communicator::~Communicator()
 		}
 		delete[] _rankDistribution;
 	}
-	//TODO More to do?
 }
 
+/** Returns the position of the current process with respect to the
+   *  fields lower left corner
+   *  \return position of current process within the process grid
+   */
 const multi_index_t& Communicator::ThreadIdx() const
 {
-	//TODO Correct?
 	return _tidx;	
 }
 
+/**
+	\return x- and y- sizes of process grid
+*/
 const multi_index_t& Communicator::ThreadDim() const
 {
-	//TODO Correct?
 	return _tdim;
 }
 
+/**
+*/
 const bool &Communicator::EvenOdd() const
 {
 	return _evenodd;
 }
 
+/**  This is done by using the MPI-function MPI_Allreduce
+   *
+   * 	\param [in] val The data over which the sum is to be calculated
+   *	\return gathered summation over all processes
+   */
 real_t Communicator::gatherSum(const real_t &val) const
 {
 	real_t res(0.0);
@@ -62,6 +84,11 @@ real_t Communicator::gatherSum(const real_t &val) const
 	return res;
 }
 
+/** This is done by using the MPI-function MPI_Allreduce
+   *
+   * \param [in] val The data over which to find the minimum
+   * \return gathered minimum over all processes
+   */
 real_t Communicator::gatherMin(const real_t &val) const
 {
 	real_t res(0.0);

@@ -24,49 +24,28 @@
 //------------------------------------------------------------------------------
 class Communicator {
 public:
-  /** Communicator constructor; initializes MPI Environment
-   *
-   * \param [in] argc Number of arguments program was started with
-   * \param [in] argv Arguments passed to the program on start
-   */
-  Communicator(int *argc, char ***argv);
+  /// Constructor
+  Communicator(int *argc, char ***argv, bool verbose);
 
-  /** Communicator destructor; finalizes MPI Environment
-   */
+  /// Destructor
   ~Communicator();
 
-  /** Returns the position of the current process with respect to the
-   *  fields lower left corner
-   */
+  /// requests the position of the current process
   const multi_index_t &ThreadIdx() const;
 
-  /** Returns the way the domain is partitioned among all processes
-   */
+  /// Returns the way the domain is partitioned among all processes
   const multi_index_t &ThreadDim() const;
 
-  /** Returns whether this process is a red or a black field
-   */
+  /// Returns whether this process is a red or a black field
   const bool &EvenOdd() const;
 
-  /** Gets the sum of all values and distributes the result among all
-   *  processes
-   *
-   * \param [in] val The data over which the sum is to be calculated
-   */
+  /// Gets the sum of all values and distributes the result among all processes
   real_t gatherSum(const real_t &val) const;
 
-  /** Finds the minimum of the values and distributes the result among
-   *  all processes
-   *
-   * \param [in] val The data over which to find the minimum
-   */
+  /// Finds the minimum of the values and distributes the result among all processes
   real_t gatherMin(const real_t &val) const;
 
-  /** Finds the maximum of the values and distributes the result among
-   *  all processes
-   *
-   * \param [in] val The data over which to find the maximum
-   */
+  /// Finds the maximum of the values and distributes the result among all processes
   real_t gatherMax(const real_t &val) const;
 
   /** Synchronizes ghost layer
