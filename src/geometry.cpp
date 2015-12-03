@@ -26,8 +26,7 @@ Geometry::Geometry()
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0) //standard values
-//: _comm(comm), _size(32,32), _bsize(32,32), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _velocity(0.0,0.0), _pressure(1.0)
+: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(NULL), _bval_u(NULL), _bval_v(NULL), _bval_p(NULL) //standard values
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
@@ -35,69 +34,278 @@ Geometry::Geometry(Communicator *comm)
 }
 
 /**
-The geometry for the actual problem is given in the file in path file.
-\param[in] file file path
-\param[in] verbose printing debugging information
+The destructor of the Geometry class.
 */
-void Geometry::Load(const char *file, bool verbose)
+Geometry::~Geometry()
 {
-for (int i_rank=0; i_rank<_comm->getSize(); i_rank++){
-if(i_rank == _comm->getRank()){ // read the files sequentially
+	if (_flags != NULL) delete[] _flags;
+	if (_bval_u != NULL) delete[] _bval_u;
+	if (_bval_v != NULL) delete[] _bval_v;
+	if (_bval_p != NULL) delete[] _bval_p;
+}
 
-	if (verbose && _comm->getRank()==0){
-		std::cout << "Loading geometry file from path " << file << " ...\n";
-	}
-	std::string temp_string;
-	std::ifstream infile;
-	infile.open(file);
-	if (!infile.is_open()){
-		std::cout << "Warning: geometry file could not be read!\n";
-		continue;
-	}
-	for(index_t i=1;i<=7;i++)
-	{
-		getline(infile,temp_string);
-		switch(i)
-		{
-			case 1:
-				_bsize[0] = atoi(temp_string.c_str());
-				break;
-			case 2:
-				_bsize[1] = atoi(temp_string.c_str());
-				break;
-			case 3:
-				_blength[0] = atof(temp_string.c_str());
-				break;
-			case 4:
-				_blength[1] = atof(temp_string.c_str());
-				break;
-			case 5:
-				_velocity[0] = atof(temp_string.c_str());
-				break;
-			case 6:
-				_velocity[1] = atof(temp_string.c_str());
-				break;
-			case 7:
-				_pressure = atof(temp_string.c_str());
-				break;
-		}
-	}
-	infile.close();
-	//set_meshwidth(); // update _h
-	//if (verbose){
+void Geometry::load_domain_partitioning(const char* file)
+{
+	/*
+		expects file = nullptr, if file not assigned as command line argument
+	*/
+
+	// variables where the information is stored
+	index_t bsizeX, bsizeY;
+	real_t blengthX, blengthY;
+	char* flags;
+	real_t* bvu;
+	real_t* bvv;
+	real_t* bvp;
+
 	if (_comm->getRank() == 0){
+		// on the master, load file and do partitioning
+		char* total_flags;
+		real_t* total_bvu;
+		real_t* total_bvv;
+		real_t* total_bvp;
+
+		bool read = (file != nullptr);
+
+		std::ifstream infile;
+		if (read){
+			infile.open(file);
+			std::cout << "Loading geometry file from path " << file << " ...\n";
+			if (!infile.is_open()){
+				std::cout << "Warning: geometry file could not be read!\n";
+				read = false;
+				infile.close();
+			}
+		}
+
+		if (!read){
+			// set default values
+			bsizeX = _bsize[0];
+			bsizeY = _bsize[1];
+			blengthX = _blength[0];
+			blengthY = _blength[1];
+		} else {
+			// read from file
+			infile >> bsizeX;
+			infile >> bsizeY;
+			infile >> blengthX;
+			infile >> blengthY;
+		}
+
+		// allocate fields
+		total_flags = new char[(bsizeX+2) * (bsizeY+2)];
+		total_bvu = new real_t[(bsizeX+2) * (bsizeY+2)];
+		total_bvv = new real_t[(bsizeX+2) * (bsizeY+2)];
+		total_bvp = new real_t[(bsizeX+2) * (bsizeY+2)];
+
+		// TODO: better!
+		infile.get(); // try to read one more character
+		infile.peek(); // eof here?
+		bool b_eof = infile.eof();
+		infile.unget();
+
+		if (!read || b_eof){
+			// set default values: driven cavity
+			index_t ival;
+			for (index_t i=0; i<bsizeX+2; i++){
+				for (index_t j=0; j<bsizeY+2; j++){
+					ival = j * (bsizeX+2) + i;
+					if (j==bsizeY+1) {
+						// upper boundary
+						total_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+						total_bvu[ival] = 1.0;
+						total_bvv[ival] = 0.0;
+						total_bvp[ival] = 0.0;
+					} else if (j==0 || i==0 || i==bsizeX+1){
+						// lower, left or right boundary
+						total_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+						total_bvu[ival] = 0.0;
+						total_bvv[ival] = 0.0;
+						total_bvp[ival] = 0.0;
+					}
+				}
+			}
+		} else {
+			// read from file
+			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
+				infile >> total_flags[i];
+			}
+			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
+				infile >> total_bvu[i];
+			}
+			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
+				infile >> total_bvv[i];
+			}
+			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
+				infile >> total_bvp[i];
+			}
+		}
+
+		// close file if necessary
+		if (read){
+			infile.close();
+		}
+
+		//std::cout << "Geometry file reading completed!" << std::endl;
+
+		// send and store simple geometry information
+		MPI_Bcast(&bsizeX, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&bsizeY, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&blengthX, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&blengthY, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		_bsize[0] = bsizeX;
+		_bsize[1] = bsizeY;
+		_blength[0] = blengthX;
+		_blength[1] = blengthY;
+
+		// console output
 		std::cout << "--------------------------------------------------\n";
-		std::cout << "Geometry configuration read from file:\n";
+		std::cout << "Geometry configuration:\n";
 		std::cout << "Total Size\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
 		std::cout << "Total Length\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
-		std::cout << "Velocity\t=\t(" << _velocity[0] << ", " << _velocity[1] << ")\n";
-		std::cout << "Pressure\t=\t" << _pressure << "\n";
 		std::cout << "--------------------------------------------------\n";
+
+		// domain partitioning
+		multi_index_t tdim;
+		int** rankDistri;
+		multi_index_t** localSizes;
+		do_domain_decomposition(tdim, rankDistri, localSizes);
+
+		// compute indices of corner points
+		multi_index_t** cornerPoints;
+		cornerPoints = new multi_index_t*[tdim[0]];
+		for (index_t i=0; i<tdim[0]; i++){
+			cornerPoints[i] = new multi_index_t[tdim[1]];
+		}
+
+		for (index_t i=0; i<tdim[0]; i++){
+			for (index_t j=0; j<tdim[1]; j++){
+				if (i==0 && j==0){
+					cornerPoints[i][j] = multi_index_t(0,0);
+				} else if (j==0){
+					cornerPoints[i][j][0] = cornerPoints[i-1][j][0] + localSizes[i-1][j][0] - 2;
+					cornerPoints[i][j][1] = cornerPoints[i-1][j][1];
+				} else {
+					cornerPoints[i][j][0] = cornerPoints[i][j-1][0];
+					cornerPoints[i][j][1] = cornerPoints[i][j-1][1] + localSizes[i][j-1][1] - 2;
+				}
+			}
+		}
+
+		// send information
+		char* sendBuf_flags;
+		real_t* sendBuf_u;
+		real_t* sendBuf_v;
+		real_t* sendBuf_p;
+		for (index_t i=0; i<tdim[0]; i++){
+			for (index_t j=0; j<tdim[1]; j++){
+
+				index_t buflen = localSizes[i][j][0] * localSizes[i][j][1];
+
+				if (rankDistri[i][j] == 0){
+					flags = new char[buflen];
+					bvu = new real_t[buflen];
+					bvv = new real_t[buflen];
+					bvp = new real_t[buflen];
+					// on master, write to own local storage
+					for (index_t n=0; n<localSizes[i][j][0]; n++){
+						for (index_t m=0; m<localSizes[i][j][1]; m++){
+							index_t totind = (m+cornerPoints[i][j][1])*bsizeX + (n+cornerPoints[i][j][0]);
+							flags[m*localSizes[i][j][0]+n] = total_flags[totind];
+							bvu[m*localSizes[i][j][0]+n] = total_bvu[totind];
+							bvv[m*localSizes[i][j][0]+n] = total_bvv[totind];
+							bvp[m*localSizes[i][j][0]+n] = total_bvp[totind];
+						}
+					}
+				} else {
+					sendBuf_flags = new char[buflen];
+					sendBuf_u = new real_t[buflen];
+					sendBuf_v = new real_t[buflen];
+					sendBuf_p = new real_t[buflen];
+					for (index_t n=0; n<localSizes[i][j][0]; n++){
+						for (index_t m=0; m<localSizes[i][j][1]; m++){
+							index_t totind = (m+cornerPoints[i][j][1])*bsizeX + (n+cornerPoints[i][j][0]);
+							sendBuf_flags[m*localSizes[i][j][0]+n] = total_flags[totind];
+							sendBuf_u[m*localSizes[i][j][0]+n] = total_bvu[totind];
+							sendBuf_v[m*localSizes[i][j][0]+n] = total_bvv[totind];
+							sendBuf_p[m*localSizes[i][j][0]+n] = total_bvp[totind];
+						}
+					}
+					
+					MPI_Send(sendBuf_flags, buflen, MPI_CHAR, rankDistri[i][j], 0, MPI_COMM_WORLD);
+					MPI_Send(sendBuf_u, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
+					MPI_Send(sendBuf_v, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
+					MPI_Send(sendBuf_p, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
+
+					delete[] sendBuf_flags;
+					delete[] sendBuf_u;
+					delete[] sendBuf_v;
+					delete[] sendBuf_p;
+				}
+
+			}
+		}
+
+		// delete domain data
+		for (index_t i=0; i<tdim[0]; i++){
+			delete[] rankDistri[i];
+		}
+		delete[] rankDistri;
+		for (index_t i=0; i<tdim[0]; i++){
+			delete[] localSizes[i];
+		}
+		delete[] localSizes;
+		for (index_t i=0; i<tdim[0]; i++){
+			delete[] cornerPoints[i];
+		}
+		delete[] cornerPoints;
+
+	} else {
+		// not on the master, receive information
+
+		// simple geometry information
+		MPI_Bcast(&bsizeX, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&bsizeY, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&blengthX, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&blengthY, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		_bsize[0] = bsizeX;
+		_bsize[1] = bsizeY;
+		_blength[0] = blengthX;
+		_blength[1] = blengthY;
+
+		// domain partitioning (receive data)
+		// does the same as "do_domain_decomposition(multi_index_t(0,0), nullptr, nullptr);"
+		int** dummya;
+		multi_index_t** dummyb;
+		multi_index_t dummyc;
+		do_domain_decomposition(dummyc, dummya, dummyb);
+
+		// allocate
+		index_t buflen = _size[0] * _size[1];
+		flags = new char[buflen];
+		bvu = new real_t[buflen];
+		bvv = new real_t[buflen];
+		bvp = new real_t[buflen];
+
+		// receive complex geometry data
+		MPI_Recv(flags, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(bvu, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(bvv, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(bvp, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
 	}
 
-}
-MPI_Barrier(MPI_COMM_WORLD);
-}
+	// dump the information in this Geometry object (both on master and other processes)
+	if (_flags != nullptr) delete[] _flags;
+	if (_bval_u != nullptr) delete[] _bval_u;
+	if (_bval_v != nullptr) delete[] _bval_v;
+	if (_bval_p != nullptr) delete[] _bval_p;
+	_flags = flags;
+	_bval_u = bvu;
+	_bval_v = bvv;
+	_bval_p = bvp;
+
+	// dont deleting local storage, because the member pointer not point to this data
 
 }
 
@@ -321,22 +529,15 @@ This function updates the local geometry data stored in this object, using the l
 */
 void Geometry::update_values()
 {
-	//std::cout << "Geometry: update values!\n" << std::flush;
 	set_meshwidth();
-	//std::cout << "Geometry: " << _size[0] << ", " << _size[1] << ", " << _bsize[0] << ", " << _bsize[1] << ", " << _h[0] << ", " << _h[1] << "\n" << std::flush;
 }
 
 /**
 Does the domain decomposition on the master process and broadcasts the resulting information, concerning the process distribution, to all other processes.
 */
-void Geometry::do_domain_decomposition()
+void Geometry::do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes)
 {
-	multi_index_t tdim;
-	int** rankDistri;
-	multi_index_t** localSizes;
 	if (_comm->getRank() == 0) {
-		//std::cout << "Domain decomposition...\n" << std::flush;
-
 		// horizontal decomposition
 		//horizontal_domain_decomposition(tdim, rankDistri, localSizes);
 		// vertical decomposition
@@ -345,19 +546,14 @@ void Geometry::do_domain_decomposition()
 		rect_domain_decomposition(tdim, rankDistri, localSizes);
 
 		// send information
-		//std::cout << "Broadcasting domain decomposition information...\n" << std::flush;
 		int sendBuf(tdim[0]);
 		MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		sendBuf = tdim[1];
 		MPI_Bcast(&sendBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
-		//std::cout << "First broadcasting completed.\n" << std::flush;
-
 		for (index_t i=0; i<tdim[0]; i++){
 			MPI_Bcast(rankDistri[i], tdim[1], MPI_INT, 0, MPI_COMM_WORLD);
 		}
-
-		//std::cout << "Second broadcasting completed.\n" << std::flush;
 
 		for (index_t i=0; i<tdim[0]; i++){
 			for (index_t j=0; j<tdim[1]; j++) {
@@ -368,7 +564,6 @@ void Geometry::do_domain_decomposition()
 			}
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
-		//std::cout << "All broadcasting completed.\n" << std::flush;
 	} else {
 		// receive information
 		int recBuf(0);
@@ -376,8 +571,6 @@ void Geometry::do_domain_decomposition()
 		tdim[0] = recBuf;
 		MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		tdim[1] = recBuf;
-
-		//std::cout << "Recieved tdim: " << tdim[0] << ", " << tdim[1] << "\n" << std::flush;
 
 		// allocate
 		rankDistri = new int*[tdim[0]];
@@ -398,13 +591,10 @@ void Geometry::do_domain_decomposition()
 				localSizes[i][j][0] = recBuf;
 				MPI_Bcast(&recBuf, 1, MPI_INT, 0, MPI_COMM_WORLD);
 				localSizes[i][j][1] = recBuf;
-				//std::cout << "Recieved localSizes[i][j]: " << localSizes[i][j][0] << ", " << localSizes[i][j][1] << "\n" << std::flush;
 			}
 		}
 		MPI_Barrier(MPI_COMM_WORLD);
 	}
-
-	//std::cout << "Process no. " << _comm->getRank() << " is still working (1)!!\n" << std::flush;
 
 	_bsize[0] += 2;
 	_bsize[1] += 2;
@@ -412,12 +602,8 @@ void Geometry::do_domain_decomposition()
 	// write to communicator
 	_comm->setProcDistribution(rankDistri, tdim, localSizes);
 
-	//std::cout << "Process no. " << _comm->getRank() << " is still working (2)!!\n" << std::flush;
-
 	// update geometry values
 	update_values();
-
-	//std::cout << "Process " << _comm->getRank() << ": left(" << is_global_boundary(BoundaryIterator::boundaryLeft) << "), right(" << is_global_boundary(BoundaryIterator::boundaryRight) << "), top(" << is_global_boundary(BoundaryIterator::boundaryTop) << "), bottom(" << is_global_boundary(BoundaryIterator::boundaryBottom) << ")\n" << std::flush;
 
 	if(_comm->getRank()==0) {
 		std::cout << "--------------------------------------------------\n";

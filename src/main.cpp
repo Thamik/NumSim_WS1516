@@ -88,12 +88,10 @@ int main(int argc, char **argv) {
 		param.Load(param_file.c_str(), VERBOSE);
 	}
 	if (geom_file.compare("") != 0){
-		// the string is not empty, try to load the data
-		geom.Load(geom_file.c_str(), VERBOSE);
+		geom.load_domain_partitioning(geom_file.c_str());
+	} else {
+		geom.load_domain_partitioning(nullptr);
 	}
-
-	// do domain decomposition on master and send information to all other processes
-	geom.do_domain_decomposition();
 
 	// Create the fluid solver
 	if (VERBOSE) std::cout << "Creating the fluid solver..." << std::flush;

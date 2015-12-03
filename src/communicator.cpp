@@ -53,7 +53,7 @@ Communicator::~Communicator()
    */
 const multi_index_t& Communicator::ThreadIdx() const
 {
-	return _tidx;	
+	return _tidx;
 }
 
 /**

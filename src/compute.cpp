@@ -121,7 +121,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	index_t iteration(0);
 	while (true){
 		// one solver cycle is done here, alternating red or black
-		if ((iteration % 2) == 0){
+		if ((iteration % 2) == (_comm->EvenOdd() ? 1 : 0)){
 			residual = _solver->RedCycle(_p, _rhs);
 		} else {
 			residual = _solver->BlackCycle(_p, _rhs);

@@ -38,9 +38,9 @@ public:
   //      u=0, v=0
   Geometry();
   Geometry(Communicator *comm);
+	~Geometry();
 
-  /// Loads a geometry from a file
-  void Load(const char *file, bool verbose = false);
+	void load_domain_partitioning(const char* file);
 
   /// Returns the number of cells in each dimension
   const multi_index_t &Size() const;
@@ -66,25 +66,31 @@ public:
 	/// Updates the local geometry data
 	void update_values();
 
-	/// Does the domain decomposition and distributes the resulting data
-	void do_domain_decomposition();
-
 private:
-  Communicator *_comm;
+	/// Communicator
+	Communicator *_comm;
 
-  /// size of the grid
-  multi_index_t _size;
-  multi_index_t _bsize; // total size
-  /// physical length of the domain
-  multi_real_t _length;
-  multi_real_t _blength; // total length
-  /// meshwidth
-  multi_real_t _h;
+	/// size of the grid
+	multi_index_t _size;
+	multi_index_t _bsize; // total size
+	/// physical length of the domain
+	multi_real_t _length;
+	multi_real_t _blength; // total length
+	/// meshwidth
+	multi_real_t _h;
 
-  /// velocity
-  multi_real_t _velocity;
-  /// pressure
-  real_t _pressure;
+	// flag field and boundary values
+	/* flags:
+		00000000 = 	fluid
+		0000***1 = 	obstacle/boundary, with the following conditions:
+		      ^		0/1 = u dirichlet/neumann boundary
+		     ^		0/1 = v dirichlet/neumann boundary
+		    ^		0/1 = p dirichlet/neumann boundary
+	*/
+	char* _flags;
+	real_t* _bval_u;
+	real_t* _bval_v;
+	real_t* _bval_p;
 
 	// own method
 	/// sets the meshwidth
@@ -97,6 +103,9 @@ private:
 	void horizontal_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
 	void vertical_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
 	void rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes) const;
+
+	/// Does the domain decomposition and distributes the resulting data
+	void do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, multi_index_t**& localSizes);
 	
 };
 //------------------------------------------------------------------------------
