@@ -172,8 +172,7 @@ public:
 
 private:
   bool _shifted;
-}
-
+};
 
 //------------------------------------------------------------------------------
 /// New JumpingInteriorIterator for General Geometries

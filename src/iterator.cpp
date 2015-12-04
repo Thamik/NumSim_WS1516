@@ -325,8 +325,7 @@ void BoundaryIterator::Next()
 
 //------------------------------------------------------------------------------
 // InteriorIteratorGG
-
-void InteriorIteratorGG::InteriorIteratorGG(const Geometry* geom) 
+InteriorIteratorGG::InteriorIteratorGG(const Geometry* geom) 
 : InteriorIterator(geom)
 {
 }
@@ -339,14 +338,14 @@ void InteriorIteratorGG::First()
 void InteriorIteratorGG::Next()
 {
 	InteriorIterator::Next();
-	while (geom->isObstacle(this)) {
+	while (_geom->isObstacle(*this)) {
 		InteriorIterator::Next();
 	}
 }
 
 //------------------------------------------------------------------------------
 // InteriorIteratorGG
-void JumpingInteriorIteratorGG::JumpingInteriorIteratorGG(const Geometry* geom, bool shifted)
+JumpingInteriorIteratorGG::JumpingInteriorIteratorGG(const Geometry* geom, bool shifted)
 : JumpingInteriorIterator(geom, shifted)
 {
 }
@@ -359,14 +358,14 @@ void JumpingInteriorIteratorGG::First()
 void JumpingInteriorIteratorGG::Next()
 {
 	JumpingInteriorIterator::Next();
-	while (geom->isObstacle(this)) {
+	while (_geom->isObstacle(*this)) {
 		JumpingInteriorIterator::Next();
 	}
 }
 
 //------------------------------------------------------------------------------
 // BoundaryIteratorGG
-void BoundaryIteratorGG::BoundaryIteratorGG(const Geometry* geom)
+BoundaryIteratorGG::BoundaryIteratorGG(const Geometry* geom)
 : Iterator(geom)
 {
 }
@@ -379,7 +378,7 @@ void BoundaryIteratorGG::First()
 void BoundaryIteratorGG::Next()
 {
 	Iterator::Next();
-	while (!geom->isObstacle(this)) {
+	while (!_geom->isObstacle(*this)) {
 		Iterator::Next();
 	}
 
