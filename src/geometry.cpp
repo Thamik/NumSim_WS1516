@@ -500,7 +500,31 @@ void Geometry::UpdateGG_U(Grid *u) const
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
 		if(isNeumannBoundaryU(it)) {
-			//TODO: Implement Neumann boundary conditions
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					u->Cell(it) = u->Cell(it.Left()) + _h[0]*bvalU(it);
+				} else if (!isObstacle(it.Right())) {
+					u->Cell(it) = u->Cell(it.Right()) - _h[0]*bvalU(it);
+				} else {
+					if (!isObstacle(it.Top())) {
+						u->Cell(it) = u->Cell(it.Top()) - _h[1]*bvalU(it);
+					} else if (!isObstacle(it.Down())) {
+						u->Cell(it) = u->Cell(it.Down()) + _h[1]*bvalU(it);
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					u->Cell(it) = u->Cell(it.Left()) + _h[0]*bvalU(it);
+				} else if (!isObstacle(it.Right())) {
+					u->Cell(it) = u->Cell(it.Right()) - _h[0]*bvalU(it);
+				}
+			}
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
@@ -510,9 +534,9 @@ void Geometry::UpdateGG_U(Grid *u) const
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
+					u->Cell(it.Right()) = bvalU(it);
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
-					u->Cell(it.Right()) = bvalU(it);
 				} else {
 					if (!isObstacle(it.Top())) {
 						u->Cell(it) = 2.0*bvalU(it) - u->Cell(it.Top());
@@ -524,9 +548,9 @@ void Geometry::UpdateGG_U(Grid *u) const
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
+					u->Cell(it.Right()) = bvalU(it);
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
-					u->Cell(it.Right()) = bvalU(it);
 				}
 			}
 		}
@@ -535,12 +559,143 @@ void Geometry::UpdateGG_U(Grid *u) const
 
 void Geometry::UpdateGG_V(Grid *v) const
 {
+	BoundaryIteratorGG it(this);
+	it.First();
 
+	while(it.Valid()) {
+ 		// check where the fluid is
+		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
+		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
+		if(isNeumannBoundaryU(it)) {
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalU(it);
+				} else if (!isObstacle(it.Right())) {
+					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalU(it);
+				} else {
+					if (!isObstacle(it.Top())) {
+						v->Cell(it) = v->Cell(it.Top()) - _h[1]*bvalU(it);
+					} else if (!isObstacle(it.Down())) {
+						v->Cell(it) = v->Cell(it.Down()) + _h[1]*bvalU(it);
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalU(it);
+				} else if (!isObstacle(it.Right())) {
+					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalU(it);
+				}
+			}
+		} else {
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
+				} else if (!isObstacle(it.Right())) {
+					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
+				} else {
+					if (!isObstacle(it.Top())) {
+						v->Cell(it) = bvalV(it);
+					} else if (!isObstacle(it.Down())) {
+						v->Cell(it) = bvalV(it);
+						v->Cell(it.Right()) = bvalV(it);
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
+				} else if (!isObstacle(it.Right())) {
+					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
+				}
+			}
+		}
+	}
 }
 
 void Geometry::UpdateGG_P(Grid *p) const
 {
+	BoundaryIteratorGG it(this);
+	it.First();
 
+	while(it.Valid()) {
+ 		// check where the fluid is
+		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
+		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
+		if(isNeumannBoundaryU(it)) {
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					if (!isObstacle(it.Top())) {
+						p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Left()) + _h[0]*bvalP(it));
+					} else if (!isObstacle(it.Down())) {
+						p->Cell(it) = 0.5*(p->Cell(it.Down()) + _h[1]*bvalP(it) + p->Cell(it.Left()) + _h[0]*bvalP(it));
+					}
+				} else if (!isObstacle(it.Right())) {
+					if (!isObstacle(it.Top())) {
+						p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+					} else if (!isObstacle(it.Down())) {
+						p->Cell(it) = 0.5*(p->Cell(it.Down()) + _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+					}
+				} else {
+					if (!isObstacle(it.Top())) {
+						p->Cell(it) = p->Cell(it.Top()) - _h[1]*bvalP(it);
+					} else if (!isObstacle(it.Down())) {
+						p->Cell(it) = p->Cell(it.Down()) + _h[1]*bvalP(it);
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					p->Cell(it) = p->Cell(it.Left()) + _h[0]*bvalP(it);
+				} else if (!isObstacle(it.Right())) {
+					p->Cell(it) = p->Cell(it.Right()) - _h[0]*bvalP(it);
+				}
+			}
+		} else {
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					if (!isObstacle(it.Top())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Top()));
+					else if (!isObstacle(it.Down())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Down()));
+				} else if (!isObstacle(it.Right())) {
+					if (!isObstacle(it.Top())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Top()));
+					else if (!isObstacle(it.Down())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Down()));
+				} else {
+					if (!isObstacle(it.Top())) {
+						p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Top());
+					} else if (!isObstacle(it.Down())) {
+						p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Down());
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Left());
+				} else if (!isObstacle(it.Right())) {
+					p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Right());
+				}
+			}
+		}
+	}
 }
 
 // own method
