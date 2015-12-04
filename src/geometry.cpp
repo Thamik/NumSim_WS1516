@@ -504,13 +504,13 @@ void Geometry::UpdateGG_U(Grid *u) const
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
-			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down()) {
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
-				} else if (!isObstacle(it.Right()) {
+				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
 					u->Cell(it.Right()) = bvalU(it);
 				} else {
