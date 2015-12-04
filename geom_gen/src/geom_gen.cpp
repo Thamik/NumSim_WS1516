@@ -210,7 +210,7 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 	}
 }
 
-void karmanVortexStreet(double alpha, double xlength, double ylength, double pressureLeft, double pressureRight)
+void karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
 {
-
+	
 }

@@ -22,7 +22,7 @@ public:
 	/// Constructs geometry data for the flow over a staircase in a pipe
 	void flowOverAStep(double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
 
-	void karmanVortexStreet(double alpha, double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
+	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
 
 private:
 	int _bSizeX, _bSizeY;
