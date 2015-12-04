@@ -128,7 +128,9 @@ void Geometry::load_domain_partitioning(const char* file)
 		} else {
 			// read from file
 			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
-				infile >> total_flags[i];
+				int tempint(0);
+				infile >> tempint;
+				total_flags[i] = char(tempint);
 			}
 			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
 				infile >> total_bvu[i];
