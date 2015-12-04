@@ -38,10 +38,10 @@ The destructor of the Geometry class.
 */
 Geometry::~Geometry()
 {
-	if (_flags != NULL) delete[] _flags;
-	if (_bval_u != NULL) delete[] _bval_u;
-	if (_bval_v != NULL) delete[] _bval_v;
-	if (_bval_p != NULL) delete[] _bval_p;
+	if (_flags != nullptr) delete[] _flags;
+	if (_bval_u != nullptr) delete[] _bval_u;
+	if (_bval_v != nullptr) delete[] _bval_v;
+	if (_bval_p != nullptr) delete[] _bval_p;
 }
 
 void Geometry::load_domain_partitioning(const char* file)
@@ -53,10 +53,10 @@ void Geometry::load_domain_partitioning(const char* file)
 	// variables where the information is stored
 	index_t bsizeX, bsizeY;
 	real_t blengthX, blengthY;
-	char* flags;
-	real_t* bvu;
-	real_t* bvv;
-	real_t* bvp;
+	char* flags(nullptr);
+	real_t* bvu(nullptr);
+	real_t* bvv(nullptr);
+	real_t* bvp(nullptr);
 
 	if (_comm->getRank() == 0){
 		// on the master, load file and do partitioning
@@ -300,10 +300,16 @@ void Geometry::load_domain_partitioning(const char* file)
 	if (_bval_u != nullptr) delete[] _bval_u;
 	if (_bval_v != nullptr) delete[] _bval_v;
 	if (_bval_p != nullptr) delete[] _bval_p;
-	_flags = flags;
-	_bval_u = bvu;
-	_bval_v = bvv;
-	_bval_p = bvp;
+
+	if (flags == nullptr || bvu == nullptr || bvv == nullptr || bvp == nullptr){
+		// safety check, if all fields are initialized
+		std::cout << "Warning: An error did occur while loading the geometry data. Uninitialized field!\n" << std::flush;
+	} else {
+		_flags = flags;
+		_bval_u = bvu;
+		_bval_v = bvv;
+		_bval_p = bvp;
+	}
 
 	// dont deleting local storage, because the member pointer not point to this data
 
@@ -763,4 +769,41 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 			localSizes[i][j][1] += 2;
 		}
 	}
+}
+
+// Getter functions for the complex geometry data
+bool Geometry::isObstacle(const Iterator& it) const
+{
+	return (_flags[it.Value()] >> 0) & 1;
+}
+
+bool Geometry::isNeumannBoundaryU(const Iterator& it) const
+{
+	return (_flags[it.Value()] >> 1) & 1;
+}
+
+bool Geometry::isNeumannBoundaryV(const Iterator& it) const
+{
+	return (_flags[it.Value()] >> 2) & 1;
+}
+
+bool Geometry::isNeumannBoundaryP(const Iterator& it) const
+{
+	return (_flags[it.Value()] >> 3) & 1;
+}
+
+// Getter functions for the boundary data
+const real_t& Geometry::bvalU(const Iterator& it) const
+{
+	return _bval_u[it.Value()];
+}
+
+const real_t& Geometry::bvalV(const Iterator& it) const
+{
+	return _bval_v[it.Value()];
+}
+
+const real_t& Geometry::bvalP(const Iterator& it) const
+{
+	return _bval_p[it.Value()];
 }

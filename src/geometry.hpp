@@ -72,6 +72,11 @@ public:
 	bool isNeumannBoundaryV(const Iterator& it) const;
 	bool isNeumannBoundaryP(const Iterator& it) const;
 
+	// Getter functions for the boundary data
+	const real_t& bvalU(const Iterator& it) const;
+	const real_t& bvalV(const Iterator& it) const;
+	const real_t& bvalP(const Iterator& it) const;
+
 private:
 	/// Communicator
 	Communicator *_comm;
