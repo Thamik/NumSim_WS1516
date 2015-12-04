@@ -373,6 +373,14 @@ BoundaryIteratorGG::BoundaryIteratorGG(const Geometry* geom)
 void BoundaryIteratorGG::First()
 {
 	Iterator::First();
+
+	// if the first is an interior obstacle cell, go on until one of the neighboring cells is fluid
+	bool interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
+
+	while (interior) {
+		Iterator::Next();
+		interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
+	}
 }
 
 void BoundaryIteratorGG::Next()
@@ -382,4 +390,11 @@ void BoundaryIteratorGG::Next()
 		Iterator::Next();
 	}
 
+	// if the current field is an interior obstacle cell, go on until one of the neighboring cells is fluid
+	bool interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
+
+	while (interior) {
+		Iterator::Next();
+		interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
+	}
 }
