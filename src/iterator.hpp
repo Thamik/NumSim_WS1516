@@ -160,7 +160,8 @@ public:
 
 //------------------------------------------------------------------------------
 /// New JumpingInteriorIterator for General Geometries
-class JumpingInteriorIteratorGG : public InteriorIteratorGG {
+class JumpingInteriorIteratorGG : public JumpingInteriorIterator {
+public:
   /// Constructs a new JumpingInteriorIteratorGG
   JumpingInteriorIteratorGG(const Geometry* geom, bool shifted);
 
@@ -168,6 +169,23 @@ class JumpingInteriorIteratorGG : public InteriorIteratorGG {
   virtual void First();
   /// Goes to the next element of the iterator, disables it if position is end
   virtual void Next();
+
+private:
+  bool _shifted;
 }
+
+
+//------------------------------------------------------------------------------
+/// New JumpingInteriorIterator for General Geometries
+class BoundaryIteratorGG : public Iterator {
+public:
+  /// Construct a new InteriorIterator
+  BoundaryIteratorGG(const Geometry* geom);
+
+  /// Sets the iterator to the first element
+  virtual void First();
+  /// Goes to the next element of the iterator, disables it if position is end
+  virtual void Next();
+};
 //------------------------------------------------------------------------------
 #endif // __ITERATOR_HPP
