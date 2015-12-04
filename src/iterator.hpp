@@ -143,5 +143,31 @@ private:
 	// left = 1, right = 2, bottom = 3, top = 4
 	// 0 = unset
 };
+
+//------------------------------------------------------------------------------
+/// New InteriorIterator for General Geometries
+class InteriorIteratorGG : public InteriorIterator {
+public:
+  /// Construct a new InteriorIterator
+  InteriorIteratorGG(const Geometry* geom);
+
+  /// Sets the iterator to the first element
+  virtual void First();
+  /// Goes to the next element of the iterator, disables it if position is end
+  virtual void Next();
+};
+
+
+//------------------------------------------------------------------------------
+/// New JumpingInteriorIterator for General Geometries
+class JumpingInteriorIteratorGG : public InteriorIteratorGG {
+  /// Constructs a new JumpingInteriorIteratorGG
+  JumpingInteriorIteratorGG(const Geometry* geom, bool shifted);
+
+  /// Sets the iterator to the first element
+  virtual void First();
+  /// Goes to the next element of the iterator, disables it if position is end
+  virtual void Next();
+}
 //------------------------------------------------------------------------------
 #endif // __ITERATOR_HPP

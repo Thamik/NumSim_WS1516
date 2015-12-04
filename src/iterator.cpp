@@ -321,3 +321,22 @@ void BoundaryIterator::Next()
 		_value = temp;
 	}
 }
+
+
+//------------------------------------------------------------------------------
+// InteriorIteratorGG
+
+void InteriorIteratorGG::InteriorIteratorGG(const Geometry* geom) 
+: InteriorIterator(geom)
+{
+}
+
+void InteriorIteratorGG::First()
+{
+	InteratorIterator::First();
+}
+
+void InteriorIteratorGG::Next()
+{
+	
+}
