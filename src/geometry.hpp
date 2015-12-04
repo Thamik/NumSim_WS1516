@@ -66,6 +66,12 @@ public:
 	/// Updates the local geometry data
 	void update_values();
 
+	// Getter functions for the complex geometry data
+	bool isObstacle(const Iterator& it) const;
+	bool isNeumannBoundaryU(const Iterator& it) const;
+	bool isNeumannBoundaryV(const Iterator& it) const;
+	bool isNeumannBoundaryP(const Iterator& it) const;
+
 private:
 	/// Communicator
 	Communicator *_comm;
