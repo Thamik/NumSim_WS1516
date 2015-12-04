@@ -116,8 +116,16 @@ void GeometryGenerator::initZero()
 	}
 }
 
+void GeometryGenerator::autoBalance()
+{
+	// TODO
+}
+
 void GeometryGenerator::drivenCavity()
 {
+	// assure that all values are initialized with zero
+	initZero();
+
 	int ival(0);
 	for (int i=0; i<_bSizeX; i++){
 		for (int j=0; j<_bSizeY; j++){
@@ -137,4 +145,72 @@ void GeometryGenerator::drivenCavity()
 			}
 		}
 	}
+}
+
+void GeometryGenerator::pipeFlow(double xlength, double ylength, double pressureLeft, double pressureRight)
+{
+	// assure that all values are initialized with zero
+	initZero();
+
+	setLength(xlength, ylength);
+	
+	int ival(0);
+	for (int i=0; i<_bSizeX; i++){
+		for (int j=0; j<_bSizeY; j++){
+			ival = j * (_bSizeX) + i;
+			if (j==_bSizeY-1) {
+				// upper boundary
+				_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+			} else if (j==0){
+				// lower boundary
+				_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+			} else if (i==0){
+				// left boundary
+				_flags[ival] = 1 | 1<<1 | 1<<2; // dirichlet condition for p, neumann for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = pressureLeft;
+			} else if (i==_bSizeX-1){
+				// right boundary
+				_flags[ival] = 1 | 1<<1 | 1<<2; // dirichlet condition for p, neumann for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = pressureRight;
+			}
+		}
+	}
+}
+
+void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pressureLeft, double pressureRight)
+{
+	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
+	
+	double stepLength = ylength/2.0;
+	int stepSizeX = int(_bSizeX * stepLength/_bLengthX);
+	int stepSizeY = int(_bSizeY * stepLength/_bLengthY);
+
+	// set all cells that describe the step
+	int ival(0);
+	for (int i=0; i<stepSizeX; i++){
+		for (int j=0; j<stepSizeY; j++){
+			ival = j * (_bSizeX) + i;
+
+			// set NO-SLIP conditions
+			_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+			_bvu[ival] = 0.0;
+			_bvv[ival] = 0.0;
+			_bvp[ival] = 0.0;
+		}
+	}
+}
+
+void karmanVortexStreet(double alpha, double xlength, double ylength, double pressureLeft, double pressureRight)
+{
+
 }
