@@ -403,11 +403,11 @@ Update the boundary values in all grids where this is necessary.
 */
 void Compute::update_boundary_values()
 {
-	_geom->Update_U(_u);
-	_geom->Update_V(_v);
+	_geom->UpdateGG_U(_u);
+	_geom->UpdateGG_V(_v);
 
-	_geom->Update_U(_F);
-	_geom->Update_V(_G);
+	_geom->UpdateGG_U(_F);
+	_geom->UpdateGG_V(_G);
 }
 
 void Compute::sync_FG()
