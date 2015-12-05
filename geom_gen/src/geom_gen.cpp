@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <math.h>
+#include <algorithm> // std::min, std::max
 
 /**
 The default constructor of the GeometryGenerator class.
@@ -107,6 +108,15 @@ void GeometryGenerator::writeToFile(const char* filename)
 	outfile.close();
 }
 
+void GeometryGenerator::print() const
+{
+	std::cout << "==================================================\n";
+	std::cout << "GeomGen: Geometry configuration:\n";
+	std::cout << "Total size, without ghost cells: (" << _bSizeX-2 << ", " << _bSizeY-2 << ")\n";
+	std::cout << "Total length: (" << _bLengthX << ", " << _bLengthY << ")\n";
+	std::cout << "==================================================\n" << std::flush;
+}
+
 void GeometryGenerator::initZero()
 {
 	for (int i=0; i<_bSizeX*_bSizeY; i++){
@@ -117,9 +127,67 @@ void GeometryGenerator::initZero()
 	}
 }
 
+bool GeometryGenerator::isObstacle(int ival) const
+{
+	return _flags[ival] & 1;
+}
+
+bool GeometryGenerator::isObstacle(int x, int y) const
+{
+	return isObstacle(y * (_bSizeX) + x);
+}
+
+void GeometryGenerator::setNoSlip(int x, int y)
+{
+	set(x,y,1,0,0,1,0.0,0.0,0.0);
+}
+
+void GeometryGenerator::set(int x, int y, bool obstacle, bool condu, bool condv, bool condp, double valu, double valv, double valp)
+{
+	char flag = char(obstacle) | (char(condu) << 1) | (char(condv) << 2) | (char(condp) << 3);
+
+	set(x,y,flag,valu,valv,valp);
+}
+
+void GeometryGenerator::set(int x, int y, char flag, double valu, double valv, double valp)
+{
+	int ival = y * (_bSizeX) + x;
+	_flags[ival] = flag;
+	_bvu[ival] = valu;
+	_bvv[ival] = valv;
+	_bvp[ival] = valp;
+}
+
 void GeometryGenerator::autoBalance()
 {
 	// TODO
+}
+
+void GeometryGenerator::fixSingleCells()
+{
+	// iterate over all interior cells and check for problems
+	int ival(0);
+	for (int i=1; i<_bSizeX-1; i++){
+		for (int j=1; j<_bSizeY-1; j++){
+			ival = j * (_bSizeX) + i;
+			
+			if (isObstacle(i,j) && ((!isObstacle(i-1,j) && !isObstacle(i+1,j)) || (!isObstacle(i,j-1) && !isObstacle(i,j+1)))){
+				// critical cell
+
+				// fix: add 3 points in L-form around this cell
+				char flag = _flags[ival];
+				double valu = _bvu[ival];
+				double valv = _bvv[ival];
+				double valp = _bvp[ival];
+				// right cell
+				set(i+1,j,flag,valu,valv,valp);
+				// lower cell
+				set(i,j-1,flag,valu,valv,valp);
+				// lower right cell
+				set(i+1,j-1,flag,valu,valv,valp);
+			}
+		}
+	}
 }
 
 void GeometryGenerator::drivenCavity()
@@ -214,12 +282,63 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 void GeometryGenerator::karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
 {
 	// assume that ylength is greater or equal to xlength
-	if (ylength<xlength){
-		std::cout << "Warning: Karman Vortex Street geometry could not be constructed. ylength < xlength!" << std::endl;
+	if (xlength<ylength){
+		std::cout << "Warning: Karman Vortex Street geometry could not be constructed. xlength < ylength!" << std::endl;
+		return;
 	}
 
 	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
 
 	double length = ylength/2.0;
+
+	// set all cells that describe the obstacle that causes the vortex street
+	int cellsX = int(round(2.0*length/xlength * _bSizeX));
+	int cellsY = int(round(2.0*length/ylength * _bSizeY));
+	cellsX = std::min(cellsX, _bSizeX);
+	cellsY = std::min(cellsY, _bSizeY);
+
+	int ival(0);
+	double xPos(0.0);
+	double yPos(0.0);
+	for (int i=0; i<cellsX; i++){
+		for (int j=0; j<cellsY; j++){
+			ival = j * (_bSizeX) + i;
+			xPos = double(i)/double(_bSizeX-1) * xlength;
+			yPos = double(j)/double(_bSizeY-1) * ylength;
+
+			if (isInsideObstacle(alpha, width, length, length, length, xPos, yPos)){
+				// set NO-SLIP conditions
+				_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+			}
+
+		}
+	}
+
+	fixSingleCells();
 	
+}
+
+bool GeometryGenerator::isInsideObstacle(double alpha, double width, double length, double x0, double y0, double x, double y) const
+{
+	double a1 = sin(alpha);
+	double a2 = -cos(alpha);
+	double b1 = cos(alpha);
+	double b2 = sin(alpha);
+	double c = x0 - x;
+	double d = y0 - y;
+
+	// solve linear equation system (two-dimensional)
+	double s = 1/(a1*b2-b1*a2) * (-a2*c + a1*d);
+	//double t = 1/(a1*b2-b1*a2) * (-b2*c + b1*d);
+
+	double proj1 = s*b1 + x;
+	double proj2 = s*b2 + y;
+
+	double distance_length = sqrt( pow(proj1-x,2.0) + pow(proj2-y,2.0) );
+	double distance_width = sqrt( pow(proj1-x0,2.0) + pow(proj2-y0,2.0) );
+
+	return (distance_length <= length/2.0) && (distance_width <= width/2.0);
 }

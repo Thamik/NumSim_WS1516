@@ -13,16 +13,20 @@ public:
 
 	void writeToFile(const char* filename=nullptr);
 
+	void print() const;
+
 	void autoBalance();
+
+	void fixSingleCells();
 
 	/// Constructs geometry data for the driven cavity problem
 	void drivenCavity();
 	/// Constructs geometry data for a simple pipe flow
-	void pipeFlow(double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
+	void pipeFlow(double xlength=6.0, double ylength=1.0, double pressureLeft=2.0, double pressureRight=1.0);
 	/// Constructs geometry data for the flow over a staircase in a pipe
-	void flowOverAStep(double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
+	void flowOverAStep(double xlength=6.0, double ylength=1.0, double pressureLeft=2.0, double pressureRight=1.0);
 
-	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=2, double pressureRight=1);
+	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=2.0, double pressureRight=1.0);
 
 private:
 	int _bSizeX, _bSizeY;
@@ -35,5 +39,15 @@ private:
 	double* _bvv;
 	double* _bvp;
 
+	bool isObstacle(int ival) const;
+	bool isObstacle(int x, int y) const;
+
+	void setNoSlip(int x, int y);
+	void set(int x, int y, bool obstacle, bool condu, bool condv, bool condp, double valu, double valv, double valp);
+	void set(int x, int y, char flag, double valu, double valv, double valp);
+
 	void initZero();
+
+	// help function for the computation of the Kalman vortex street
+	bool isInsideObstacle(double alpha, double width, double length, double x0, double y0, double x, double y) const;
 };

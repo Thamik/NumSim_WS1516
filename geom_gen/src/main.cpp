@@ -1,16 +1,81 @@
 #include <iostream>
+#include <stdlib.h>     /* atof */
+
+#define _USE_MATH_DEFINES // to get pi via M_PI
+#include <math.h>
 
 #include "geom_gen.hpp"
 
 int main(int argc, char** argv){
 
+	// read command line arguments
+	int sizeX(-1);
+	int sizeY(-1);
+	/* geom_type:
+	 * 1 = driven cavity
+	 * 2 = pipe flow
+	 * 3 = flow over a step
+	 * 4 = karman vortex street
+	 */
+	int geom_type(-1);
+	double alpha(M_PI/4.0);
+	
+	for (int i=0; i<argc; i++){
+		switch (i){
+			case 0:
+				// this argument is the name of the executable
+				break;
+			case 1:
+				sizeX = atoi(argv[i]);
+				break;
+			case 2:
+				sizeY = atoi(argv[i]);
+				break;
+			case 3:
+				geom_type = atoi(argv[i]);
+				break;
+			case 4:
+				// read alpha (used in the Karman vortex street)
+				alpha = atof(argv[i]);
+				break;
+			default:
+				std::cout << "Warning: too much command line arguments!\n" << std::flush;
+		}
+	}
+
 	GeometryGenerator geom_gen;
 
-	geom_gen.setSize(60,10);
-	//geom_gen.drivenCavity();
-	//geom_gen.pipeFlow();
-	geom_gen.flowOverAStep();
+	if (sizeX > 0 && sizeY > 0){
+		// set the read size
+		geom_gen.setSize(sizeX, sizeY);
+	} else {
+		// set the default size
+		geom_gen.setSize(60,10);
+	}
 
+	switch (geom_type){
+		case 1:
+			geom_gen.drivenCavity();
+			break;
+		case 2:
+			geom_gen.pipeFlow();
+			break;
+		case 3:
+			geom_gen.flowOverAStep();
+			break;
+		case 4:
+			geom_gen.karmanVortexStreet(alpha);
+			break;
+		case -1:
+			// default case: no console input
+			geom_gen.drivenCavity();
+			break;
+		default:
+			std::cout << "Warning: Unknown geometry type! Using default..." << std::endl;
+			geom_gen.drivenCavity();
+	}
+
+	geom_gen.print();
 	geom_gen.writeToFile("../data/complex_default.geom");
 
 }
