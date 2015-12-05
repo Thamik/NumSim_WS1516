@@ -212,5 +212,13 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 
 void karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
 {
+	// assume that ylength is greater or equal to xlength
+	if (ylength<xlength){
+		std::cout << "Warning: Karman Vortex Street geometry could not be constructed. ylength < xlength!" << std::endl;
+	}
+
+	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
+
+	double length/2.0;
 	
 }
