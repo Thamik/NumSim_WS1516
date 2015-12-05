@@ -82,6 +82,8 @@ public:
 	const real_t& bvalV(const Iterator& it) const;
 	const real_t& bvalP(const Iterator& it) const;
 
+	void output_flags() const;
+
 private:
 	/// Communicator
 	Communicator *_comm;

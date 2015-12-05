@@ -412,19 +412,25 @@ void Compute::update_boundary_values()
 
 void Compute::sync_FG()
 {
-	_comm->copyBoundary(_F);
-	_comm->copyBoundary(_G);
+	if (_comm->getSize() > 1) {
+		_comm->copyBoundary(_F);
+		_comm->copyBoundary(_G);
+	}
 }
 
 void Compute::sync_uv()
 {
-	_comm->copyBoundary(_u);
-	_comm->copyBoundary(_v);
+	if (_comm->getSize() > 1) {
+		_comm->copyBoundary(_u);
+		_comm->copyBoundary(_v);
+	}
 }
 
 void Compute::sync_p()
 {
-	_comm->copyBoundary(_p);
+	if (_comm->getSize() > 1) {
+		_comm->copyBoundary(_p);
+	}
 }
 
 void Compute::sync_all()

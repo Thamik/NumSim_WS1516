@@ -212,7 +212,7 @@ void Geometry::load_domain_partitioning(const char* file)
 					// on master, write to own local storage
 					for (index_t n=0; n<localSizes[i][j][0]; n++){
 						for (index_t m=0; m<localSizes[i][j][1]; m++){
-							index_t totind = (m+cornerPoints[i][j][1])*bsizeX + (n+cornerPoints[i][j][0]);
+							index_t totind = (m+cornerPoints[i][j][1])*_bsize[0] + (n+cornerPoints[i][j][0]);
 							flags[m*localSizes[i][j][0]+n] = total_flags[totind];
 							bvu[m*localSizes[i][j][0]+n] = total_bvu[totind];
 							bvv[m*localSizes[i][j][0]+n] = total_bvv[totind];
@@ -226,7 +226,7 @@ void Geometry::load_domain_partitioning(const char* file)
 					sendBuf_p = new real_t[buflen];
 					for (index_t n=0; n<localSizes[i][j][0]; n++){
 						for (index_t m=0; m<localSizes[i][j][1]; m++){
-							index_t totind = (m+cornerPoints[i][j][1])*bsizeX + (n+cornerPoints[i][j][0]);
+							index_t totind = (m+cornerPoints[i][j][1])*_bsize[0] + (n+cornerPoints[i][j][0]);
 							sendBuf_flags[m*localSizes[i][j][0]+n] = total_flags[totind];
 							sendBuf_u[m*localSizes[i][j][0]+n] = total_bvu[totind];
 							sendBuf_v[m*localSizes[i][j][0]+n] = total_bvv[totind];
@@ -314,7 +314,9 @@ void Geometry::load_domain_partitioning(const char* file)
 	}
 
 	// dont deleting local storage, because the member pointer not point to this data
-
+	
+	// output for debugging purpurse	
+	output_flags();
 }
 
 /**
@@ -501,9 +503,9 @@ void Geometry::UpdateGG_U(Grid *u) const
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
 		if(isNeumannBoundaryU(it)) {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
@@ -527,14 +529,14 @@ void Geometry::UpdateGG_U(Grid *u) const
 			}
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
-					u->Cell(it.Right()) = bvalU(it);
+					u->Cell(it.Left()) = bvalU(it);
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
 				} else {
@@ -548,12 +550,13 @@ void Geometry::UpdateGG_U(Grid *u) const
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
-					u->Cell(it.Right()) = bvalU(it);
+					u->Cell(it.Left()) = bvalU(it);
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
 				}
 			}
 		}
+		it.Next();
 	}
 }
 
@@ -566,37 +569,37 @@ void Geometry::UpdateGG_V(Grid *v) const
  		// check where the fluid is
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
-		if(isNeumannBoundaryU(it)) {
+		if(isNeumannBoundaryV(it)) {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
-					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalU(it);
+					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalV(it);
 				} else if (!isObstacle(it.Right())) {
-					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalU(it);
+					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalV(it);
 				} else {
 					if (!isObstacle(it.Top())) {
-						v->Cell(it) = v->Cell(it.Top()) - _h[1]*bvalU(it);
+						v->Cell(it) = v->Cell(it.Top()) - _h[1]*bvalV(it);
 					} else if (!isObstacle(it.Down())) {
-						v->Cell(it) = v->Cell(it.Down()) + _h[1]*bvalU(it);
+						v->Cell(it) = v->Cell(it.Down()) + _h[1]*bvalV(it);
 					}
 				}
 			} else if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
-					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalU(it);
+					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalV(it);
 				} else if (!isObstacle(it.Right())) {
-					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalU(it);
+					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalV(it);
 				}
 			}
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
@@ -608,7 +611,7 @@ void Geometry::UpdateGG_V(Grid *v) const
 						v->Cell(it) = bvalV(it);
 					} else if (!isObstacle(it.Down())) {
 						v->Cell(it) = bvalV(it);
-						v->Cell(it.Right()) = bvalV(it);
+						v->Cell(it.Down()) = bvalV(it);
 					}
 				}
 			} else if (leftright) {
@@ -620,6 +623,7 @@ void Geometry::UpdateGG_V(Grid *v) const
 				}
 			}
 		}
+		it.Next();
 	}
 }
 
@@ -632,11 +636,12 @@ void Geometry::UpdateGG_P(Grid *p) const
  		// check where the fluid is
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
-		if(isNeumannBoundaryU(it)) {
+		if(isNeumannBoundaryP(it)) {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in pN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in pN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
@@ -668,9 +673,10 @@ void Geometry::UpdateGG_P(Grid *p) const
 			}
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
-				std::cout << "Warning: The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << "Warning in pD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
-				std::cout << "Warning: The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+				std::cout << "Warning in pD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
@@ -695,6 +701,7 @@ void Geometry::UpdateGG_P(Grid *p) const
 				}
 			}
 		}
+		it.Next();
 	}
 }
 
@@ -1003,12 +1010,15 @@ bool Geometry::isNeumannBoundaryV(const Iterator& it) const
 
 bool Geometry::isNeumannBoundaryP(const Iterator& it) const
 {
+	//bool boundary((_flags[it.Value()] >> 3) & 1);
+	//if (_comm->getRank() == 1) std::cout << "Boundary Value for P(" << _comm->getRank() << "): " << boundary << " Position: " << it.Pos()[0] << ", " << it.Pos()[1] << std::endl;
 	return (_flags[it.Value()] >> 3) & 1;
 }
 
 // Getter functions for the boundary data
 const real_t& Geometry::bvalU(const Iterator& it) const
 {
+	// std::cout << "Position: " << it.Pos()[0] << ", " << it.Pos()[1] << "| bval_u: " << _bval_u[it.Value()] << std::endl;
 	return _bval_u[it.Value()];
 }
 
@@ -1021,3 +1031,60 @@ const real_t& Geometry::bvalP(const Iterator& it) const
 {
 	return _bval_p[it.Value()];
 }
+
+
+void Geometry::output_flags() const
+{
+	fprintf(stderr,"====================Output of Flags====================\n");
+	Iterator it(this);
+	it.First();
+	while (it.Valid()) {
+		fprintf(stderr,"%i ", int(_flags[it.Value()]));
+		if(it.Right().Value() == it.Value())
+			fprintf(stderr,"\n");
+		it.Next();
+	}
+	fprintf(stderr,"====================End of Output!====================\n\n");
+
+	fprintf(stderr,"====================Output of U====================\n");
+	Iterator it1(this);
+	it1.First();
+	while (it1.Valid()) {
+		fprintf(stderr,"%.2f ", _bval_u[it1.Value()]);
+		if(it1.Right().Value() == it1.Value())
+			fprintf(stderr,"\n");
+		it1.Next();
+	}
+	fprintf(stderr,"====================End of Output!====================\n\n");
+
+	fprintf(stderr,"====================Output of V====================\n");
+	Iterator it2(this);
+	it2.First();
+	while (it2.Valid()) {
+		fprintf(stderr,"%.2f ", _bval_v[it2.Value()]);
+		if(it2.Right().Value() == it2.Value())
+			fprintf(stderr,"\n");
+		it2.Next();
+	}
+	fprintf(stderr,"====================End of Output!====================\n\n");
+
+	fprintf(stderr,"====================Output of P====================\n");
+	Iterator it3(this);
+	it3.First();
+	while (it3.Valid()) {
+		fprintf(stderr,"%.2f ", _bval_p[it3.Value()]);
+		if(it3.Right().Value() == it3.Value())
+			fprintf(stderr,"\n");
+		it3.Next();
+	}
+	fprintf(stderr,"====================End of Output!====================\n\n");
+}
+
+/*void Geometry::output_flags() const
+{
+	for (int i = 0; i < _bsize[0]*_bsize[1]; i++)
+	{
+		std::cout << int(_flags[i]) << " " << std::flush;
+	}
+	std::cout << std::endl;
+}*/

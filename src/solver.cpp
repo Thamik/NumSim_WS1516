@@ -81,7 +81,7 @@ This function return the total Linf residual of the approximate solution in grid
 real_t Solver::totalRes_Linf(const Grid* grid, const Grid* rhs) const
 {
 	real_t totalRes(0.0);
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		totalRes = std::max(totalRes, localRes(it,grid,rhs));
@@ -100,7 +100,7 @@ This function return the averaged L1 residual of the approximate solution in gri
 real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 {
 	real_t totalRes(0.0);
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		totalRes += localRes(it,grid,rhs);
@@ -148,7 +148,7 @@ void Solver::delete_average(Grid* grid) const
 	// compute the average value
 	real_t avg = grid->average_value();
 
-	Iterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		grid->Cell(it) -= avg;
@@ -186,7 +186,7 @@ This method executes a SOR solver cycle on the given grid and returns the total 
 */
 real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		erase_local_residual(grid,rhs,it);
@@ -212,9 +212,9 @@ void SOR::erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) 
 
 	// set one cell to zero (the alternative to deleting the pressure average)
 	//if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
-	if (it.Value()==((_geom->TotalSize()[0]*_geom->TotalSize()[1])/2)+_geom->TotalSize()[0]/2){
+	/*if (it.Value()==((_geom->TotalSize()[0]*_geom->TotalSize()[1])/2)+_geom->TotalSize()[0]/2){
 		grid->Cell(it) = 0.0;
-	}
+	}*/
 }
 
 // SOR Cycle, Neumann boundary conditions included
@@ -286,14 +286,14 @@ Performs a red cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::RedCycle(Grid* grid, const Grid* rhs) const
 {
-	JumpingInteriorIterator it(_geom, false);
+	JumpingInteriorIteratorGG it(_geom, false);
 	it.First();
 	while (it.Valid()){
 		erase_local_residual(grid,rhs,it);
 		it.Next();
 	}
 	// update the pressure boundary values
-	_geom->Update_P(grid);
+	_geom->UpdateGG_P(grid);
 	return synced_totalRes(grid,rhs);
 }
 
@@ -304,14 +304,14 @@ Performs a black cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::BlackCycle(Grid* grid, const Grid* rhs) const
 {
-	JumpingInteriorIterator it(_geom, true);
+	JumpingInteriorIteratorGG it(_geom, true);
 	it.First();
 	while (it.Valid()){
 		erase_local_residual(grid,rhs,it);
 		it.Next();
 	}
 	// update the pressure boundary values
-	_geom->Update_P(grid);
+	_geom->UpdateGG_P(grid);
 	return synced_totalRes(grid,rhs);
 }
 
@@ -346,7 +346,7 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 {
 	// TODO: implement the update of the boundary pressure data
 	Grid* cpy = grid->copy();
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		grid->Cell(it) = 1.0/(-2.0/pow(_geom->Mesh()[0],2.0) - 2.0/pow(_geom->Mesh()[1],2.0)) * (rhs->Cell(it) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Left()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Right()) - 1.0/pow(_geom->Mesh()[1],2.0) * cpy->Cell(it.Top()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Down()));
@@ -389,7 +389,7 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 	real_t dt = 0.000001;
 	Grid* cpy = grid->copy();
 	for (int i=0; i<=10; i++){
-		InteriorIterator it(_geom);
+		InteriorIteratorGG it(_geom);
 		it.First();
 		while (it.Valid()){
 			grid->Cell(it) += dt * (cpy->dxx(it)+cpy->dyy(it) - rhs->Cell(it));

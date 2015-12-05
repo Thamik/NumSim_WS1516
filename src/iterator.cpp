@@ -1,5 +1,6 @@
 #include "iterator.hpp"
 #include "geometry.hpp"
+#include "communicator.hpp"
 
 #include <iostream>
 
@@ -344,7 +345,7 @@ void InteriorIteratorGG::Next()
 }
 
 //------------------------------------------------------------------------------
-// InteriorIteratorGG
+// JumpingInteriorIteratorGG
 JumpingInteriorIteratorGG::JumpingInteriorIteratorGG(const Geometry* geom, bool shifted)
 : JumpingInteriorIterator(geom, shifted)
 {
@@ -353,6 +354,8 @@ JumpingInteriorIteratorGG::JumpingInteriorIteratorGG(const Geometry* geom, bool 
 void JumpingInteriorIteratorGG::First()
 {
 	JumpingInteriorIterator::First();
+
+	if (_geom->isObstacle(*this)) JumpingInteriorIteratorGG::Next();
 }
 
 void JumpingInteriorIteratorGG::Next()
@@ -361,6 +364,7 @@ void JumpingInteriorIteratorGG::Next()
 	while (_geom->isObstacle(*this)) {
 		JumpingInteriorIterator::Next();
 	}
+	// if (this->Valid()) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -376,25 +380,18 @@ void BoundaryIteratorGG::First()
 
 	// if the first is an interior obstacle cell, go on until one of the neighboring cells is fluid
 	bool interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
-
-	while (interior) {
-		Iterator::Next();
-		interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
-	}
+	if (interior || !_geom->isObstacle(*this)) BoundaryIteratorGG::Next();
 }
 
 void BoundaryIteratorGG::Next()
 {
-	Iterator::Next();
-	while (!_geom->isObstacle(*this)) {
+	bool interior;
+	do {
 		Iterator::Next();
-	}
-
-	// if the current field is an interior obstacle cell, go on until one of the neighboring cells is fluid
-	bool interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
-
-	while (interior) {
-		Iterator::Next();
+		if (!this->Valid()) break;
+		// if the current field is an interior obstacle cell, go on until one of the neighboring cells is fluid
 		interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
-	}
+	} while(!_geom->isObstacle(*this) || interior);
+
+	// if(_geom->getCommunicator()->getRank() == 1) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
 }
