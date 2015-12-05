@@ -46,6 +46,8 @@ public:
   const multi_index_t &Size() const;
   /// Returns the total number of cells in each dimension
   const multi_index_t &TotalSize() const;
+	/// Returns the total offset of this subdomain
+	const multi_index_t& TotalOffset() const;
   /// Returns the length of the domain
   const multi_real_t &Length() const;
   /// Returns the total length of the domain
@@ -91,6 +93,8 @@ private:
 	/// size of the grid
 	multi_index_t _size;
 	multi_index_t _bsize; // total size
+	/// the total offset
+	multi_index_t _total_offset;
 	/// physical length of the domain
 	multi_real_t _length;
 	multi_real_t _blength; // total length

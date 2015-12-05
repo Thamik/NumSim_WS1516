@@ -26,7 +26,7 @@ Geometry::Geometry()
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
+: _comm(comm), _size(128,128), _bsize(128,128), _total_offset(0,0), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
@@ -57,6 +57,8 @@ void Geometry::load_domain_partitioning(const char* file)
 	real_t* bvu(nullptr);
 	real_t* bvv(nullptr);
 	real_t* bvp(nullptr);
+	index_t totalOffsetX(0);
+	index_t totalOffsetY(0);
 
 	if (_comm->getRank() == 0){
 		// on the master, load file and do partitioning
@@ -205,6 +207,9 @@ void Geometry::load_domain_partitioning(const char* file)
 				index_t buflen = localSizes[i][j][0] * localSizes[i][j][1];
 
 				if (rankDistri[i][j] == 0){
+					totalOffsetX = cornerPoints[i][j][0];
+					totalOffsetY = cornerPoints[i][j][1];
+
 					flags = new char[buflen];
 					bvu = new real_t[buflen];
 					bvv = new real_t[buflen];
@@ -220,6 +225,9 @@ void Geometry::load_domain_partitioning(const char* file)
 						}
 					}
 				} else {
+					MPI_Send(&(cornerPoints[i][j][0]), 1, MPI_INT, rankDistri[i][j], 0, MPI_COMM_WORLD);
+					MPI_Send(&(cornerPoints[i][j][1]), 1, MPI_INT, rankDistri[i][j], 0, MPI_COMM_WORLD);
+
 					sendBuf_flags = new char[buflen];
 					sendBuf_u = new real_t[buflen];
 					sendBuf_v = new real_t[buflen];
@@ -276,11 +284,14 @@ void Geometry::load_domain_partitioning(const char* file)
 		_blength[1] = blengthY;
 
 		// domain partitioning (receive data)
-		// does the same as "do_domain_decomposition(multi_index_t(0,0), nullptr, nullptr);"
+		// does something like "do_domain_decomposition(multi_index_t(0,0), nullptr, nullptr);"
 		int** dummya;
 		multi_index_t** dummyb;
 		multi_index_t dummyc;
 		do_domain_decomposition(dummyc, dummya, dummyb);
+
+		MPI_Recv(&totalOffsetX, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&totalOffsetY, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
 		// allocate
 		index_t buflen = _size[0] * _size[1];
@@ -313,12 +324,15 @@ void Geometry::load_domain_partitioning(const char* file)
 		_bval_p = bvp;
 	}
 
-	// dont deleting local storage, because the member pointer not point to this data
+	_total_offset[0] = totalOffsetX;
+	_total_offset[1] = totalOffsetY;
+
+	// dont delete local storage, because the member pointer points to this data
 	
 	// output for debugging purpurse	
 	//output_flags();
 
-	std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << ")\n" << std::flush;
+	std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << "), total offset: (" << _total_offset[0] << ", " << _total_offset[1] << ")\n" << std::flush;
 }
 
 /**
@@ -332,6 +346,11 @@ const multi_index_t& Geometry::Size() const
 const multi_index_t& Geometry::TotalSize() const
 {
 	return _bsize;
+}
+
+const multi_index_t& Geometry::TotalOffset() const
+{
+	return _total_offset;
 }
 
 /**

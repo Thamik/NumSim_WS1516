@@ -147,7 +147,7 @@ void VTK::Init(const char *path) {
         char *fName = &filename[4];
         fprintf(_masterHandle,
                 "<Piece Extent=\"%i %i %i %i %i %i\" Source=\"%s\"/>\n",
-                x * (_fieldsize[0] - 2), (x + 1) * (_fieldsize[0] - 2),
+                x * (_fieldsize[0] - 2), (x + 1) * (_fieldsize[0] - 2),  // this assumes equal fieldsizes! bug!
                 y * (_fieldsize[1] - 2), (y + 1) * (_fieldsize[1] - 2), 0, 0,
                 fName);
         ++procCtr;
