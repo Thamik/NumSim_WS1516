@@ -344,7 +344,7 @@ The new velocitys are calculated and stored in the _u,_v grids (in-place
 */
 void Compute::NewVelocities(const real_t& dt)
 {
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_r(it);
@@ -359,7 +359,7 @@ The expression for F,G arrising for the Momentum equations is evaluated and stor
 */
 void Compute::MomentumEqu(const real_t& dt)
 {
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
@@ -374,7 +374,7 @@ The Right-Hand-Side of the pressure poisson equation is calculated depending on 
 */
 void Compute::RHS(const real_t& dt)
 {
-	InteriorIterator it(_geom);
+	InteriorIteratorGG it(_geom);
 	it.First();
 	while (it.Valid()){
 		_rhs->Cell(it) = 1.0/dt * (_F->dx_l(it) + _G->dy_l(it));

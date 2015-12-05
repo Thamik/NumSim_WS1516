@@ -88,15 +88,24 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t y1 = floor(iy);
 	index_t y2 = ceil(iy);
 
+	index_t x = round(ix);
+	index_t y = round(iy);
+
 	//calculate values
 	index_t vallu = x1 + y1*_geom->Size()[0];
 	index_t valru = x2 + y1*_geom->Size()[0];
 	index_t vallo = x1 + y2*_geom->Size()[0];	
 	index_t valro = x2 + y2*_geom->Size()[0];
 
+	index_t val = x + y*_geom->Size()[0];
+
+	//return _data[val]; //TODO Remove
+	if (_geom->isObstacle(Iterator(_geom, val))) return 0.0;
+
 	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
-	} else */if(valro >= _geom->Size()[0]*_geom->Size()[1]){
+	} else */
+	if(valro >= _geom->Size()[0]*_geom->Size()[1]){
 		std::cout << "Warnng, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
 	}
 

@@ -334,6 +334,8 @@ InteriorIteratorGG::InteriorIteratorGG(const Geometry* geom)
 void InteriorIteratorGG::First()
 {
 	InteriorIterator::First();
+
+	if (_geom->isObstacle(*this)) InteriorIteratorGG::Next();
 }
 
 void InteriorIteratorGG::Next()
@@ -364,7 +366,7 @@ void JumpingInteriorIteratorGG::Next()
 	while (_geom->isObstacle(*this)) {
 		JumpingInteriorIterator::Next();
 	}
-	// if (this->Valid()) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
+	// if (this->Pos()[0] <= 7 && this->Pos()[1] <= 7) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
 }
 
 //------------------------------------------------------------------------------
@@ -393,5 +395,5 @@ void BoundaryIteratorGG::Next()
 		interior = _geom->isObstacle(this->Left()) && _geom->isObstacle(this->Right()) && _geom->isObstacle(this->Top()) && _geom->isObstacle(this->Down());
 	} while(!_geom->isObstacle(*this) || interior);
 
-	// if(_geom->getCommunicator()->getRank() == 1) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
+	// std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
 }
