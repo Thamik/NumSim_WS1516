@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <math.h>
 
 /**
 The default constructor of the GeometryGenerator class.
@@ -192,8 +193,8 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
 	
 	double stepLength = ylength/2.0;
-	int stepSizeX = int(_bSizeX * stepLength/_bLengthX);
-	int stepSizeY = int(_bSizeY * stepLength/_bLengthY);
+	int stepSizeX = int(round(_bSizeX * stepLength/_bLengthX));
+	int stepSizeY = int(round(_bSizeY * stepLength/_bLengthY));
 
 	// set all cells that describe the step
 	int ival(0);
@@ -210,7 +211,7 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 	}
 }
 
-void karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
+void GeometryGenerator::karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
 {
 	// assume that ylength is greater or equal to xlength
 	if (ylength<xlength){
@@ -219,6 +220,6 @@ void karmanVortexStreet(double alpha, double width, double xlength, double yleng
 
 	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
 
-	double length/2.0;
+	double length = ylength/2.0;
 	
 }
