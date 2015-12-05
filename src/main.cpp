@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
 	if (VERBOSE) std::cout << "Creating the VTK generator..." << std::flush;
 	// use offset as the domain shift
 	multi_real_t offset;
-	offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2));
+	offset[0] = comm.ThreadIdx()[0] * (geom.Mesh()[0] * (double)(geom.Size()[0] - 2)); // here is a bug, the sizes of the subdomains are not equal!
 	offset[1] = comm.ThreadIdx()[1] * (geom.Mesh()[1] * (double)(geom.Size()[1] - 2));
 	VTK vtk(geom.Mesh(), geom.Size(), geom.TotalSize(), offset, comm.getRank(), comm.getSize(), comm.ThreadDim());
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;

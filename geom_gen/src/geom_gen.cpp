@@ -9,10 +9,10 @@
 The default constructor of the GeometryGenerator class.
 */
 GeometryGenerator::GeometryGenerator()
-: _bSizeX(128), _bSizeY(128), _bLengthX(1.0), _bLengthY(1.0), _filename(nullptr), _flags(nullptr), _bvu(nullptr), _bvv(nullptr), _bvp(nullptr)
+: _bSizeX(1), _bSizeY(1), _totalCells(10000), _bLengthX(1.0), _bLengthY(1.0), _filename(nullptr), _flags(nullptr), _bvu(nullptr), _bvv(nullptr), _bvp(nullptr)
 {
-	setSize(_bSizeX, _bSizeY);
 	setLength(_bLengthX, _bLengthY);
+	setTotalSize(_totalCells);
 	drivenCavity();
 }
 
@@ -35,6 +35,7 @@ void GeometryGenerator::setSize(int x, int y)
 {
 	_bSizeX = x+2;
 	_bSizeY = y+2;
+	_totalCells = _bSizeX *_bSizeY;
 	// delete memory if necessary
 	if (_flags != nullptr) delete _flags;
 	if (_bvu != nullptr) delete _bvu;
@@ -47,6 +48,12 @@ void GeometryGenerator::setSize(int x, int y)
 	_bvp = new double[_bSizeX * _bSizeY];
 	// initialize fields with zero
 	initZero();
+}
+
+void GeometryGenerator::setTotalSize(int n)
+{
+	_totalCells = n;
+	autoBalance();
 }
 
 void GeometryGenerator::setLength(double x, double y)
@@ -160,7 +167,14 @@ void GeometryGenerator::set(int x, int y, char flag, double valu, double valv, d
 
 void GeometryGenerator::autoBalance()
 {
-	// TODO
+	// try to choose the size in x- and y-direction such that the problem
+	// is more balanced and the total number of cells is being conserved
+	if (_totalCells <= 0) _totalCells = _bSizeX * _bSizeY;
+
+	_bSizeX = int(round( sqrt(_bLengthX/_bLengthY * _totalCells) ));
+	_bSizeY = int(round( sqrt(_bLengthY/_bLengthX * _totalCells) ));
+
+	setSize(_bSizeX, _bSizeY);
 }
 
 void GeometryGenerator::fixSingleCells()
@@ -192,6 +206,9 @@ void GeometryGenerator::fixSingleCells()
 
 void GeometryGenerator::drivenCavity()
 {
+	// auto balance the number of cells in each dimension
+	autoBalance();
+
 	// assure that all values are initialized with zero
 	initZero();
 
@@ -218,10 +235,13 @@ void GeometryGenerator::drivenCavity()
 
 void GeometryGenerator::pipeFlow(double xlength, double ylength, double pressureLeft, double pressureRight)
 {
+	setLength(xlength, ylength);
+
+	// auto balance the number of cells in each dimension
+	autoBalance();
+
 	// assure that all values are initialized with zero
 	initZero();
-
-	setLength(xlength, ylength);
 	
 	int ival(0);
 	for (int i=0; i<_bSizeX; i++){

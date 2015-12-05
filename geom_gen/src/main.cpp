@@ -9,8 +9,7 @@
 int main(int argc, char** argv){
 
 	// read command line arguments
-	int sizeX(-1);
-	int sizeY(-1);
+	int totalSize(-1);
 	/* geom_type:
 	 * 1 = driven cavity
 	 * 2 = pipe flow
@@ -26,15 +25,12 @@ int main(int argc, char** argv){
 				// this argument is the name of the executable
 				break;
 			case 1:
-				sizeX = atoi(argv[i]);
+				totalSize = atoi(argv[i]);
 				break;
 			case 2:
-				sizeY = atoi(argv[i]);
-				break;
-			case 3:
 				geom_type = atoi(argv[i]);
 				break;
-			case 4:
+			case 3:
 				// read alpha (used in the Karman vortex street)
 				alpha = atof(argv[i]);
 				break;
@@ -45,12 +41,12 @@ int main(int argc, char** argv){
 
 	GeometryGenerator geom_gen;
 
-	if (sizeX > 0 && sizeY > 0){
+	if (totalSize > 0){
 		// set the read size
-		geom_gen.setSize(sizeX, sizeY);
+		geom_gen.setTotalSize(totalSize);
 	} else {
 		// set the default size
-		geom_gen.setSize(60,10);
+		geom_gen.setTotalSize(10000);
 	}
 
 	switch (geom_type){

@@ -20,13 +20,13 @@ Constructs a Geometry object with standart values<br>
 - physical y-length: 1 
 */
 Geometry::Geometry()
-: Geometry(NULL) // TODO: is there a nicer way?
+: Geometry(nullptr) // TODO: is there a nicer way?
 {
 	std::cout << "Warning: Geometry Constructor: no communicator given!\n" << std::flush;
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(NULL), _bval_u(NULL), _bval_v(NULL), _bval_p(NULL) //standard values
+: _comm(comm), _size(128,128), _bsize(128,128), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
@@ -47,7 +47,7 @@ Geometry::~Geometry()
 void Geometry::load_domain_partitioning(const char* file)
 {
 	/*
-		expects file = nullptr, if file not assigned as command line argument
+		expects file = nullptr, if file not assigned as the command line argument
 	*/
 
 	// variables where the information is stored
@@ -316,7 +316,9 @@ void Geometry::load_domain_partitioning(const char* file)
 	// dont deleting local storage, because the member pointer not point to this data
 	
 	// output for debugging purpurse	
-	output_flags();
+	//output_flags();
+
+	std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << ")\n" << std::flush;
 }
 
 /**
@@ -983,7 +985,7 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 		}
 	}
 
-	//add ghost cells to domains
+	// add ghost cells to domains
 	for (index_t i=0; i<tdim[0]; i++) {
 		for (index_t j=0; j<tdim[1]; j++) {
 			localSizes[i][j][0] += 2;

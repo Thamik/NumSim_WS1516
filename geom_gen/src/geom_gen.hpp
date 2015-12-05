@@ -8,14 +8,12 @@ public:
 	GeometryGenerator();
 	~GeometryGenerator();
 
-	void setSize(int x, int y);
+	void setTotalSize(int n);
 	void setLength(double x, double y);
 
 	void writeToFile(const char* filename=nullptr);
 
 	void print() const;
-
-	void autoBalance();
 
 	void fixSingleCells();
 
@@ -30,6 +28,7 @@ public:
 
 private:
 	int _bSizeX, _bSizeY;
+	int _totalCells;
 	double _bLengthX, _bLengthY;
 
 	std::string* _filename;
@@ -39,14 +38,18 @@ private:
 	double* _bvv;
 	double* _bvp;
 
+	void setSize(int x, int y);
+
+	void autoBalance();
+
+	void initZero();
+
 	bool isObstacle(int ival) const;
 	bool isObstacle(int x, int y) const;
 
 	void setNoSlip(int x, int y);
 	void set(int x, int y, bool obstacle, bool condu, bool condv, bool condp, double valu, double valv, double valp);
 	void set(int x, int y, char flag, double valu, double valv, double valp);
-
-	void initZero();
 
 	// help function for the computation of the Kalman vortex street
 	bool isInsideObstacle(double alpha, double width, double length, double x0, double y0, double x, double y) const;
