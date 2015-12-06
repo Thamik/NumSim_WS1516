@@ -17,6 +17,10 @@
 
 #include "communicator.hpp"
 #include "vtk.hpp"
+
+// used for initialization (to know the sizes and offsets of all subdomains on the master process)
+#include "geometry.hpp"
+
 #include <cstring>
 #include <cstdio>
 //------------------------------------------------------------------------------
@@ -43,7 +47,11 @@ VTK::VTK(const multi_real_t &h, const multi_index_t &fieldsize,
 
 //------------------------------------------------------------------------------
 
-void VTK::Init(const char *path) {
+//void VTK::Init(const char *path) {
+
+// fix: (different local sizes)
+void VTK::Init(const char* path, const Geometry* geom){
+
   // Init may only be done once
   if (_handle)
     return;
@@ -78,7 +86,9 @@ void VTK::Init(const char *path) {
   multi_index_t shift;
   shift[0] = _rank % _fieldDims[0];
   shift[1] = _rank / _fieldDims[0];
-  fprintf(_handle, "<RectilinearGrid WholeExtent=\"%i %i %i %i %i %i\""
+
+	// this is wrong for different local sizes of the subdomains
+  /*fprintf(_handle, "<RectilinearGrid WholeExtent=\"%i %i %i %i %i %i\""
                    " GhostLevel=\"0\">\n",
           shift[0] * (_fieldsize[0] - 2), (shift[0] + 1) * (_fieldsize[0] - 2),
           shift[1] * (_fieldsize[1] - 2), (shift[1] + 1) * (_fieldsize[1] - 2),
@@ -87,6 +97,19 @@ void VTK::Init(const char *path) {
   fprintf(_handle, "<Piece Extent=\"%i %i %i %i %i %i\">\n",
           shift[0] * (_fieldsize[0] - 2), (shift[0] + 1) * (_fieldsize[0] - 2),
           shift[1] * (_fieldsize[1] - 2), (shift[1] + 1) * (_fieldsize[1] - 2),
+          (DIM == 3 ? _fieldsize[2] - 1 : 0),
+          (DIM == 3 ? _fieldsize[2] - 1 : 0));*/
+
+	// different local sizes fix
+  fprintf(_handle, "<RectilinearGrid WholeExtent=\"%i %i %i %i %i %i\""
+                   " GhostLevel=\"0\">\n",
+          geom->TotalOffset()[0], geom->TotalOffset()[0] + (_fieldsize[0] - 2),
+          geom->TotalOffset()[1], geom->TotalOffset()[1] + (_fieldsize[1] - 2),
+          (DIM == 3 ? _fieldsize[2] - 1 : 0),
+          (DIM == 3 ? _fieldsize[2] - 1 : 0));
+  fprintf(_handle, "<Piece Extent=\"%i %i %i %i %i %i\">\n",
+          geom->TotalOffset()[0], geom->TotalOffset()[0] + (_fieldsize[0] - 2),
+          geom->TotalOffset()[1], geom->TotalOffset()[1] + (_fieldsize[1] - 2),
           (DIM == 3 ? _fieldsize[2] - 1 : 0),
           (DIM == 3 ? _fieldsize[2] - 1 : 0));
 
@@ -145,11 +168,20 @@ void VTK::Init(const char *path) {
         filename = new char[flength];
         sprintf(filename, "%s_%05i_%04i.vtr", path, _cnt, procCtr);
         char *fName = &filename[4];
-        fprintf(_masterHandle,
+
+        /*fprintf(_masterHandle,
                 "<Piece Extent=\"%i %i %i %i %i %i\" Source=\"%s\"/>\n",
                 x * (_fieldsize[0] - 2), (x + 1) * (_fieldsize[0] - 2),  // this assumes equal fieldsizes! bug!
                 y * (_fieldsize[1] - 2), (y + 1) * (_fieldsize[1] - 2), 0, 0,
+                fName);*/
+
+	// fix
+	fprintf(_masterHandle,
+                "<Piece Extent=\"%i %i %i %i %i %i\" Source=\"%s\"/>\n",
+                geom->Offset(x,y)[0], geom->Offset(x,y)[0] + geom->LocalSize(x,y)[0] - 2,
+                geom->Offset(x,y)[1], geom->Offset(x,y)[1] + geom->LocalSize(x,y)[1] - 2, 0, 0,
                 fName);
+
         ++procCtr;
         delete[] filename;
       }

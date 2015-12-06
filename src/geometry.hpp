@@ -42,6 +42,11 @@ public:
 
 	void load_domain_partitioning(const char* file);
 
+	/// Returns the offset of the (i,j) subdomain
+	const multi_index_t& Offset(index_t i, index_t j) const;
+	/// Returns the local size of the (i,j) subdomain
+	const multi_index_t& LocalSize(index_t i, index_t j) const;
+
   /// Returns the number of cells in each dimension
   const multi_index_t &Size() const;
   /// Returns the total number of cells in each dimension
@@ -95,6 +100,13 @@ private:
 	multi_index_t _bsize; // total size
 	/// the total offset
 	multi_index_t _total_offset;
+
+	/// the offset of all cells
+	multi_index_t** _offsets; // careful: the values are only valid on rank 0 (master process), otherwise undefined!
+
+	/// the local sizes of all cells
+	multi_index_t** _localSizes; // careful: the values are only valid on rank 0 (master process), otherwise undefined!
+
 	/// physical length of the domain
 	multi_real_t _length;
 	multi_real_t _blength; // total length

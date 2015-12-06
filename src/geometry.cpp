@@ -26,7 +26,7 @@ Geometry::Geometry()
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _total_offset(0,0), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
+: _comm(comm), _size(128,128), _bsize(128,128), _total_offset(0,0), _offsets(nullptr), _localSizes(nullptr), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
@@ -42,6 +42,20 @@ Geometry::~Geometry()
 	if (_bval_u != nullptr) delete[] _bval_u;
 	if (_bval_v != nullptr) delete[] _bval_v;
 	if (_bval_p != nullptr) delete[] _bval_p;
+
+	if (_offsets != nullptr){
+		for (index_t i=0; i<_comm->ThreadDim()[0]; i++){
+			delete[] _offsets[i];
+		}
+		delete[] _offsets;
+	}
+
+	if (_localSizes != nullptr){
+		for (index_t i=0; i<_comm->ThreadDim()[0]; i++){
+			delete[] _localSizes[i];
+		}
+		delete[] _localSizes;
+	}
 }
 
 void Geometry::load_domain_partitioning(const char* file)
@@ -261,14 +275,21 @@ void Geometry::load_domain_partitioning(const char* file)
 			delete[] rankDistri[i];
 		}
 		delete[] rankDistri;
-		for (index_t i=0; i<tdim[0]; i++){
+
+		// dont delete localSizes data, it is stored in the rank 0 geometry object
+		/*for (index_t i=0; i<tdim[0]; i++){
 			delete[] localSizes[i];
 		}
-		delete[] localSizes;
-		for (index_t i=0; i<tdim[0]; i++){
+		delete[] localSizes;*/
+		_localSizes = localSizes;
+
+		// dont delete cornerPoints data, it is stored in the rank 0 geometry object
+		/*for (index_t i=0; i<tdim[0]; i++){
 			delete[] cornerPoints[i];
 		}
-		delete[] cornerPoints;
+		delete[] cornerPoints;*/
+		// store it
+		_offsets = cornerPoints;
 
 	} else {
 		// not on the master, receive information
@@ -331,8 +352,7 @@ void Geometry::load_domain_partitioning(const char* file)
 	
 	// output for debugging purpurse	
 	//output_flags();
-
-	std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << "), total offset: (" << _total_offset[0] << ", " << _total_offset[1] << ")\n" << std::flush;
+	//std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << "), total offset: (" << _total_offset[0] << ", " << _total_offset[1] << ")\n" << std::flush;
 }
 
 /**
@@ -351,6 +371,26 @@ const multi_index_t& Geometry::TotalSize() const
 const multi_index_t& Geometry::TotalOffset() const
 {
 	return _total_offset;
+}
+
+const multi_index_t& Geometry::Offset(index_t i, index_t j) const
+{
+	if (_comm->getRank() != 0){
+		// the data is undefined!
+		std::cout << "Warning: Geometry: Offset data is undefined on non-master process!\n" << std::flush;
+	} else {
+		return _offsets[i][j];
+	}
+}
+
+const multi_index_t& Geometry::LocalSize(index_t i, index_t j) const
+{
+	if (_comm->getRank() != 0){
+		// the data is undefined!
+		std::cout << "Warning: Geometry: LocalSize data is undefined on non-master process!\n" << std::flush;
+	} else {
+		return _localSizes[i][j];
+	}
 }
 
 /**

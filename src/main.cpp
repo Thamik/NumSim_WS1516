@@ -183,7 +183,12 @@ int main(int argc, char **argv) {
 		if (VERBOSE) std::cout << "Creating VTK files..." << std::flush;
 		// Note that when using VTK module as it is you first have to write cell
 		// information, then call SwitchToPointData(), and then write point data.
-		vtk.Init("VTK/field");
+
+		//vtk.Init("VTK/field");
+
+		// different local sizes fix:
+		vtk.Init("VTK/field", &geom);
+
 		vtk.AddRank();
 		vtk.AddCellField("Cell Velocity", comp.GetU(), comp.GetV());
 		vtk.SwitchToPointData();

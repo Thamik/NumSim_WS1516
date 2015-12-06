@@ -164,10 +164,14 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		// the actual console output
 		std::cout << "============================================================\n";
 
-		std::cout << "Progress: \t\t\t" << _t / _param->Tend() * 100.0 << "\t %" << std::flush;
+		std::cout << "Progress: \t\t\t";
+		printf("%.2f", _t / _param->Tend() * 100.0);
+		std::cout << "\t %" << std::flush;
 		std::cout << "\t\t" << _clock->repr(0) << "\n";
 
-		std::cout << "Total simulated time: t = \t" << _t << "  \t seconds"; // total simulated time
+		std::cout << "Total simulated time: t = \t";
+		printf("%.2f", _t);
+		std::cout << "  \t seconds"; // total simulated time
 		std::cout << "\t" << _clock->repr(1) << "\n";
 
 		//std::cout << "Last timestep: dt = " << dt << "\n"; // timestep

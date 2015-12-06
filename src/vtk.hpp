@@ -70,7 +70,10 @@ public:
    *
    * \param [in] path   Path where to store the file
    */
-  void Init(const char *path);
+  //void Init(const char *path);
+
+	// different local sizes fix:
+	void Init(const char* path, const Geometry* geom);
 
   /** Closes parallel vtk output; writing both, slave files and master file
    *  if rank == 0
