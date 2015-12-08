@@ -713,7 +713,8 @@ void Geometry::UpdateGG_P(Grid *p) const
 					}
 				} else if (!isObstacle(it.Right())) {
 					if (!isObstacle(it.Top())) {
-						p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+						//p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+						p->Cell(it) = 0.0;
 					} else if (!isObstacle(it.Down())) {
 						p->Cell(it) = 0.5*(p->Cell(it.Down()) + _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
 					}
@@ -1056,7 +1057,9 @@ void Geometry::rect_domain_decomposition(multi_index_t& tdim, int**& rankDistri,
 // Getter functions for the complex geometry data
 bool Geometry::isObstacle(const Iterator& it) const
 {
-	return (_flags[it.Value()] >> 0) & 1;
+	//return (_flags[it.Value()] >> 0) & 1;
+	return _flags[it.Value()] & 1;
+
 }
 
 bool Geometry::isNeumannBoundaryU(const Iterator& it) const
