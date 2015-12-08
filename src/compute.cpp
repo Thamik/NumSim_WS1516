@@ -190,8 +190,20 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "Last timestep: dt = " << dt << "\n"; // timestep
 
 		// magnitudes of the fields
-		std::cout << "max(F) = " << _F->TotalAbsMax() << ", \tmax(G) = " << _G->TotalAbsMax() << ", \tmax(rhs) = " << _rhs->TotalAbsMax() << "   \n";
-		std::cout << "max(u) = " << _u->TotalAbsMax() << ", \tmax(v) = " << _v->TotalAbsMax() << ", \tmax(p) = " << _p->TotalAbsMax() << "   \n";
+		std::cout << "max(F) = ";
+		printf("%7.4f", _F->TotalAbsMax());
+		std::cout << ", \tmax(G) = ";
+		printf("%7.4f", _G->TotalAbsMax());
+		std::cout << ", \tmax(rhs) = ";
+		printf("%7.4f", _rhs->TotalAbsMax());
+		std::cout << "   \n";
+		std::cout << "max(u) = ";
+		printf("%7.4f", _u->TotalAbsMax());
+		std::cout << ", \tmax(v) = ";
+		printf("%7.4f", _v->TotalAbsMax());
+		std::cout << ", \tmax(p) = ";
+		printf("%7.4f", _p->TotalAbsMax());
+		std::cout << "   \n";
 		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 

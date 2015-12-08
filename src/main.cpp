@@ -116,7 +116,19 @@ int main(int argc, char **argv) {
 	/*visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1);*/
 
 	// set window position automatically fix
-	visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
+	index_t winMaxX = 1000;
+	index_t winMaxY = 600;
+	index_t winSizeX, winSizeY;
+	if (geom.TotalLength()[0]/double(winMaxX) >= geom.TotalLength()[1]/double(winMaxY)){
+		winSizeX = winMaxX;
+		winSizeY = int(round(winSizeX * geom.TotalLength()[1] / geom.TotalLength()[0]));
+	} else {
+		winSizeY = winMaxY;
+		winSizeX = int(round(winSizeY * geom.TotalLength()[0] / geom.TotalLength()[1]));
+	}
+	index_t sizeX = int(round(winSizeX * geom.Size()[0] / double(geom.TotalSize()[0])));
+	index_t sizeY = int(round(winSizeY * geom.Size()[1] / double(geom.TotalSize()[1])));
+	visu.Init(sizeX, sizeY, comm.getRank() + 1, comm.ThreadIdx(), comm.ThreadDim());
 
 	if (VERBOSE) std::cout << "Done.\n" << std::flush;
 #endif // USE_DEBUG_VISU
