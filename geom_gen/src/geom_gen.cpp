@@ -297,6 +297,8 @@ void GeometryGenerator::flowOverAStep(double xlength, double ylength, double pre
 			_bvp[ival] = 0.0;
 		}
 	}
+
+	std::cout << pressureLeft << ", " << pressureRight << "\n" << std::flush;
 }
 
 void GeometryGenerator::karmanVortexStreet(double alpha, double width, double xlength, double ylength, double pressureLeft, double pressureRight)
