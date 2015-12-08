@@ -13,7 +13,7 @@
 The constructor of the Parameter class. Constructs a default parameter set.
 */
 Parameter::Parameter(Communicator* comm)
-: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _comm(comm) // standard parameter
+: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _itermin(0), _comm(comm) // standard parameter
 {
 	// First time parameter values (see exercise 1, page 7 below)
 	_dt = 0.2;
@@ -64,9 +64,12 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 				_itermax = atoi(temp_string.c_str());
 				break;
 			case 7:
-				_dt = atof(temp_string.c_str());
+				_itermin = atoi(temp_string.c_str());
 				break;
 			case 8:
+				_dt = atof(temp_string.c_str());
+				break;
+			case 9:
 				_tend = atof(temp_string.c_str());
 				break;
 		}
@@ -82,6 +85,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "Epsilon\t\t=\t" << _eps << "\n";
 		std::cout << "Tau\t\t=\t" << _tau << "\n";
 		std::cout << "Itermax\t\t=\t" << _itermax << "\n";
+		std::cout << "Itermin\t\t=\t" << _itermin << "\n";
 		std::cout << "dt\t\t=\t" << _dt << "\n";
 		std::cout << "tend\t\t=\t" << _tend << "\n";
 		std::cout << "--------------------------------------------------\n";
@@ -145,6 +149,11 @@ Getter function for the maximum number of iterations.
 const index_t& Parameter::IterMax() const
 {
 	return _itermax;
+}
+
+const index_t& Parameter::IterMin() const
+{
+	return _itermin;
 }
 
 /**

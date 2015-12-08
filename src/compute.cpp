@@ -131,14 +131,17 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		iteration++;
 
-		if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
-			//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
-			_solver_converging = false;
-			break;
-		} else if (residual < _epslimit){
-			//if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " iterations. Residual: " << residual << "\n";
-			_solver_converging = true;
-			break;
+		if (iteration >= _param->IterMin()){
+			// check for edge condition
+			if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
+				//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+				_solver_converging = false;
+				break;
+			} else if (residual < _epslimit){
+				//if (_comm->getRank()==0) std::cout << "Solver converged after " << iteration << " iterations. Residual: " << residual << "\n";
+				_solver_converging = true;
+				break;
+			}
 		}
 	}
 	

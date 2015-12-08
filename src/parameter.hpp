@@ -37,6 +37,9 @@ public:
   const real_t &Dt() const;
   const real_t &Tend() const;
   const index_t &IterMax() const;
+
+	const index_t& IterMin() const;
+
   const real_t &Eps() const;
   const real_t &Tau() const;
 
@@ -49,6 +52,8 @@ private:
   real_t _eps; // tolerance for pressure iteration
   real_t _tau; // safety factor time step size
   index_t _itermax; // maximum number of iterations
+
+	index_t _itermin; // minimum number of iterations
 
 	Communicator* _comm;
 };
