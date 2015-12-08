@@ -341,8 +341,11 @@ void InteriorIteratorGG::First()
 void InteriorIteratorGG::Next()
 {
 	InteriorIterator::Next();
+	//Iterator::Next();
 	while (_geom->isObstacle(*this)) {
 		InteriorIterator::Next();
+		//Iterator::Next();
+		if (!this->Valid()) break;
 	}
 }
 
@@ -365,6 +368,7 @@ void JumpingInteriorIteratorGG::Next()
 	JumpingInteriorIterator::Next();
 	while (_geom->isObstacle(*this)) {
 		JumpingInteriorIterator::Next();
+		if (!this->Valid()) break;
 	}
 	// if (this->Pos()[0] <= 7 && this->Pos()[1] <= 7) std::cout << "Position: " << this->Pos()[0] << ", " << this->Pos()[1] << std::endl;
 }

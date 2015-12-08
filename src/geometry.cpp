@@ -661,26 +661,27 @@ void Geometry::UpdateGG_V(Grid *v) const
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
+			} else if (leftright) {
 				//either at the top or the bottom cell is fluid
-				if (!isObstacle(it.Left())) {
-					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
-				} else if (!isObstacle(it.Right())) {
-					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
+				if (!isObstacle(it.Top())) {
+					v->Cell(it) = bvalV(it);
+				} else if (!isObstacle(it.Down())) {
+					v->Cell(it) = bvalV(it);
+					v->Cell(it.Down()) = bvalV(it);
 				} else {
-					if (!isObstacle(it.Top())) {
-						v->Cell(it) = bvalV(it);
-					} else if (!isObstacle(it.Down())) {
-						v->Cell(it) = bvalV(it);
-						v->Cell(it.Down()) = bvalV(it);
+					if (!isObstacle(it.Left())) {
+						v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
+					} else if (!isObstacle(it.Right())) {
+						v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
 					}
 				}
-			} else if (leftright) {
+			} else if (topdown) {
 				// the corner cases don't have to be considered as they were already consider above!
-				if (!isObstacle(it.Left())) {
-					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
-				} else if (!isObstacle(it.Right())) {
-					v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
+				if (!isObstacle(it.Top())) {
+					v->Cell(it) = bvalV(it);
+				} else if (!isObstacle(it.Down())) {
+					v->Cell(it) = bvalV(it);
+					v->Cell(it.Down()) = bvalV(it);
 				}
 			}
 		}
