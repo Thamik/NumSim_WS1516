@@ -362,3 +362,54 @@ bool GeometryGenerator::isInsideObstacle(double alpha, double width, double leng
 
 	return (distance_length <= length/2.0) && (distance_width <= width/2.0);
 }
+
+
+
+void GeometryGenerator::testCase1()
+{
+	double xlength = 6.0;
+	double ylength = 1.0;
+	double alpha = 0.0;
+	double pressureRight = 0.0;
+	double pressureLeft = 1.0;
+	double width = 0.5;
+	
+	// assume that ylength is greater or equal to xlength
+	if (xlength<ylength){
+		std::cout << "Warning: Karman Vortex Street geometry could not be constructed. xlength < ylength!" << std::endl;
+		return;
+	}
+
+	pipeFlow(xlength, ylength, pressureLeft, pressureRight);
+
+	double length = ylength/2.0;
+
+	// set all cells that describe the obstacle that causes the vortex street
+	int cellsX = int(round(2.0*length/xlength * _bSizeX));
+	int cellsY = int(round(2.0*length/ylength * _bSizeY));
+	cellsX = std::min(cellsX, _bSizeX);
+	cellsY = std::min(cellsY, _bSizeY);
+
+	int ival(0);
+	double xPos(0.0);
+	double yPos(0.0);
+	for (int i=0; i<_bSizeX; i++){
+		for (int j=0; j<cellsY; j++){
+			ival = j * (_bSizeX) + i;
+			xPos = double(i)/double(_bSizeX-1) * xlength;
+			yPos = double(j)/double(_bSizeY-1) * ylength;
+
+			if (isInsideObstacle(alpha, width, length, length+2.0, length, xPos, yPos)){
+				// set NO-SLIP conditions
+				_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+			}
+
+		}
+	}
+
+	fixSingleCells();
+	
+}

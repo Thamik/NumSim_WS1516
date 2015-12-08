@@ -62,6 +62,9 @@ int main(int argc, char** argv){
 		case 4:
 			geom_gen.karmanVortexStreet(alpha);
 			break;
+		case 5:
+			geom_gen.testCase1();
+			break;
 		case -1:
 			// default case: no console input
 			geom_gen.drivenCavity();

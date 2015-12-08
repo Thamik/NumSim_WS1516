@@ -351,6 +351,7 @@ void Geometry::load_domain_partitioning(const char* file)
 	// dont delete local storage, because the member pointer points to this data
 	
 	// output for debugging purpurse	
+	if(_comm->getRank() == 0) testIterator();
 	//output_flags();
 	//std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << "), total offset: (" << _total_offset[0] << ", " << _total_offset[1] << ")\n" << std::flush;
 }
@@ -553,7 +554,7 @@ void Geometry::Update_P(Grid *p) const
 /*==================================================================
 New Update Methods for General Geometry (GG)
 ==================================================================*/
-void Geometry::UpdateGG_U(Grid *u) const
+/*void Geometry::UpdateGG_U(Grid *u) const
 {
 	BoundaryIteratorGG it(this);
 	it.First();
@@ -567,19 +568,6 @@ void Geometry::UpdateGG_U(Grid *u) const
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
-				//either at the top or the bottom cell is fluid
-				if (!isObstacle(it.Left())) {
-					u->Cell(it) = u->Cell(it.Left()) + _h[0]*bvalU(it);
-				} else if (!isObstacle(it.Right())) {
-					u->Cell(it) = u->Cell(it.Right()) - _h[0]*bvalU(it);
-				} else {
-					if (!isObstacle(it.Top())) {
-						u->Cell(it) = u->Cell(it.Top()) - _h[1]*bvalU(it);
-					} else if (!isObstacle(it.Down())) {
-						u->Cell(it) = u->Cell(it.Down()) + _h[1]*bvalU(it);
-					}
-				}
 			} else if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
@@ -587,6 +575,19 @@ void Geometry::UpdateGG_U(Grid *u) const
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = u->Cell(it.Right()) - _h[0]*bvalU(it);
 				}
+			} else if (topdown) {
+				//either at the top or the bottom cell is fluid
+				//if (!isObstacle(it.Left())) {
+				//	u->Cell(it) = u->Cell(it.Left()) + _h[0]*bvalU(it);
+				//} else if (!isObstacle(it.Right())) {
+				//	u->Cell(it) = u->Cell(it.Right()) - _h[0]*bvalU(it);
+				//} else {
+					if (!isObstacle(it.Top())) {
+						u->Cell(it) = u->Cell(it.Top()) - _h[1]*bvalU(it);
+					} else if (!isObstacle(it.Down())) {
+						u->Cell(it) = u->Cell(it.Down()) + _h[1]*bvalU(it);
+					}
+				//}
 			}
 		} else {
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
@@ -637,17 +638,17 @@ void Geometry::UpdateGG_V(Grid *v) const
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
-				if (!isObstacle(it.Left())) {
-					v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalV(it);
-				} else if (!isObstacle(it.Right())) {
-					v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalV(it);
-				} else {
+				//if (!isObstacle(it.Left())) {
+				//	v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalV(it);
+				//} else if (!isObstacle(it.Right())) {
+				//	v->Cell(it) = v->Cell(it.Right()) - _h[0]*bvalV(it);
+				//} else {
 					if (!isObstacle(it.Top())) {
 						v->Cell(it) = v->Cell(it.Top()) - _h[1]*bvalV(it);
 					} else if (!isObstacle(it.Down())) {
 						v->Cell(it) = v->Cell(it.Down()) + _h[1]*bvalV(it);
 					}
-				}
+				//}
 			} else if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
@@ -765,6 +766,101 @@ void Geometry::UpdateGG_P(Grid *p) const
 		}
 		it.Next();
 	}
+}*/
+
+void Geometry::updateAll(Grid* u, Grid* v, Grid* p) const
+{
+	BoundaryIteratorGG it(this);
+	it.First();
+
+	while (it.Valid()) {
+		if (!isObstacle(it.Left()) && !isObstacle(it.Top())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				u->Cell(it.Left()) = 0.0;
+				v->Cell(it) = 0.0;
+				p->Cell(it) = (p->Cell(it.Left()) + p->Cell(it.Top()))/2.0;
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else if (!isObstacle(it.Left()) && !isObstacle(it.Down())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				u->Cell(it.Left()) = 0.0;
+				v->Cell(it) = 0.0;
+				v->Cell(it.Down()) = 0.0;
+				p->Cell(it) = (p->Cell(it.Left()) + p->Cell(it.Down()))/2.0;
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else if (!isObstacle(it.Right()) && !isObstacle(it.Top())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				v->Cell(it) = 0.0;
+				p->Cell(it) = (p->Cell(it.Right()) + p->Cell(it.Top()))/2.0;
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else if (!isObstacle(it.Right()) && !isObstacle(it.Down())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				v->Cell(it) = 0.0;
+				v->Cell(it.Down()) = 0.0;
+				p->Cell(it) = (p->Cell(it.Right()) + p->Cell(it.Down()))/2.0;
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else if (!isObstacle(it.Right())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				v->Cell(it) = -v->Cell(it.Right());
+				p->Cell(it) = p->Cell(it.Right());
+			} else if (_flags[it.Value()] == 7) {
+				u->Cell(it) = u->Cell(it.Right());
+				v->Cell(it) = v->Cell(it.Right());
+				p->Cell(it) = 1.0;
+			}
+		} else if (!isObstacle(it.Left())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = 0.0;
+				u->Cell(it.Left()) = 0.0;
+				v->Cell(it) = -v->Cell(it.Left());
+				p->Cell(it) = p->Cell(it.Left());
+			} else if (_flags[it.Value()] == 7) {
+				u->Cell(it) = u->Cell(it.Left());
+				v->Cell(it) = v->Cell(it.Left());
+				p->Cell(it) = 0.0;
+			}
+		} else if (!isObstacle(it.Top())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = -u->Cell(it.Top());
+				v->Cell(it) = 0.0;
+				p->Cell(it) = p->Cell(it.Top());
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else if (!isObstacle(it.Down())) {
+			if (_flags[it.Value()] == 9) {
+				u->Cell(it) = -u->Cell(it.Down());
+				v->Cell(it) = 0.0;
+				v->Cell(it.Down()) = 0.0;
+				p->Cell(it) = p->Cell(it.Down());
+			} else if (_flags[it.Value()] == 7) {
+				std::cout << "Warning" << std::endl;
+			}
+		} else {
+			std::cout << "Warning" << std::endl;
+		}
+		it.Next();
+	}
+}
+
+void Geometry::UpdateGG_P(Grid *p) const
+{
+	Grid* tmp1 = new Grid(this);
+	Grid* tmp2 = new Grid(this);
+
+	updateAll(tmp1, tmp2, p);
 }
 
 // own method
@@ -1152,3 +1248,44 @@ void Geometry::output_flags() const
 	}
 	std::cout << std::endl;
 }*/
+
+void Geometry::testIterator() const
+{
+	Grid* tmp = new Grid(this);
+	tmp->Initialize(0.0);
+
+	/*InteriorIteratorGG it1(this);
+	it1.First();
+
+	while(it1.Valid()) {
+		tmp->Cell(it1) += 1;
+		it1.Next();
+	}
+
+	BoundaryIteratorGG it2(this);
+	it2.First();
+
+	while(it2.Valid()) {
+		tmp->Cell(it2) += 2;
+		it2.Next();
+	}*/
+
+	JumpingInteriorIteratorGG it1(this, true);
+	it1.First();
+
+	while(it1.Valid()) {
+		tmp->Cell(it1) += 1;
+		it1.Next();
+	}
+
+	JumpingInteriorIteratorGG it2(this, false);
+	it2.First();
+
+	while(it2.Valid()) {
+		tmp->Cell(it2) += 2;
+		it2.Next();
+	}
+
+	tmp->Out();
+	delete tmp;	
+}

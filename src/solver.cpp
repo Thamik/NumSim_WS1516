@@ -210,6 +210,11 @@ void SOR::erase_local_residual(Grid* grid, const Grid* rhs, const Iterator& it) 
 	real_t corr = (hx*hy)/(2.0*(hx + hy)) * ( grid->dxx(it) + grid->dyy(it) - rhs->Cell(it) );
 	grid->Cell(it) += _omega * corr;
 
+	/*if (grid->Cell(it) < -0.2) {
+		std::cout << it.Pos()[0] << ", " << it.Pos()[1] << std::endl;
+		std::cout << rhs->Cell(it) << std::endl;
+	}*/
+
 	// set one cell to zero (the alternative to deleting the pressure average)
 	//if (it.Value()==((_geom->Size()[0]*_geom->Size()[1])/2)+_geom->Size()[0]/2){
 	/*if (it.Value()==((_geom->TotalSize()[0]*_geom->TotalSize()[1])/2)+_geom->TotalSize()[0]/2){

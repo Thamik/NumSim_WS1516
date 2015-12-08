@@ -271,6 +271,7 @@ The absolute velocity in the euklidean norm is calculted at the middle point of 
 */
 const Grid* Compute::GetVelocity()
 {
+	return _rhs; //TODO REMOVE!!!!
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -412,6 +413,7 @@ void Compute::RHS(const real_t& dt)
 	it.First();
 	while (it.Valid()){
 		_rhs->Cell(it) = 1.0/dt * (_F->dx_l(it) + _G->dy_l(it));
+		//_rhs->Cell(it) = 1.0/dt * (_F->dx_c(it) + _G->dy_c(it));
 		it.Next();
 	}
 	//_solver->delete_average(_rhs);
@@ -437,11 +439,14 @@ Update the boundary values in all grids where this is necessary.
 */
 void Compute::update_boundary_values()
 {
-	_geom->UpdateGG_U(_u);
-	_geom->UpdateGG_V(_v);
+	//_geom->UpdateGG_U(_u);
+	//_geom->UpdateGG_V(_v);
 
-	_geom->UpdateGG_U(_F);
-	_geom->UpdateGG_V(_G);
+	//_geom->UpdateGG_U(_F);
+	//_geom->UpdateGG_V(_G);
+
+	_geom->updateAll(_u, _v, _p);
+	_geom->updateAll(_F, _G, _p);
 }
 
 void Compute::sync_FG()
