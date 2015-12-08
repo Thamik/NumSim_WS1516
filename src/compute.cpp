@@ -160,6 +160,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -174,14 +175,6 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "  \t seconds"; // total simulated time
 		std::cout << "\t" << _clock->repr(1) << "\n";
 
-		//std::cout << "Last timestep: dt = " << dt << "\n"; // timestep
-
-		// magnitudes of the fields
-		//std::cout << "max(F) = " << _F->TotalAbsMax() << ", max(G) = " << _G->TotalAbsMax() << ", max(rhs) = " << _rhs->TotalAbsMax() << "\n";
-		//std::cout << "max(u) = " << _u->TotalAbsMax() << ", max(v) = " << _v->TotalAbsMax() << ", max(p) = " << _p->TotalAbsMax() << "\n";
-		
-		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
-
 		if (_solver_converging){
 			std::cout << "(Solver is converging.)        " << std::flush;
 		} else {
@@ -189,8 +182,25 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		}
 		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
+		std::cout << "Last residual: " << residual << ", \tno. iterations: " << iteration << "     \n"; // residual
+
+		std::cout << "Last timestep: dt = " << dt << "\n"; // timestep
+
+		// magnitudes of the fields
+		std::cout << "max(F) = " << _F->TotalAbsMax() << ", \tmax(G) = " << _G->TotalAbsMax() << ", \tmax(rhs) = " << _rhs->TotalAbsMax() << "   \n";
+		std::cout << "max(u) = " << _u->TotalAbsMax() << ", \tmax(v) = " << _v->TotalAbsMax() << ", \tmax(p) = " << _p->TotalAbsMax() << "   \n";
+		
+		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
+
 		std::cout << "============================================================\n";
 
+	} else {
+		_F->TotalAbsMax();
+		_G->TotalAbsMax();
+		_rhs->TotalAbsMax();
+		_u->TotalAbsMax();
+		_v->TotalAbsMax();
+		_p->TotalAbsMax();
 	}
 
 }

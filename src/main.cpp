@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 #endif // USE_DEBUG_VISU
 
 	// prepare console output
-	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << std::flush;
+	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << "\n\n\n\n" << std::flush;
 
 	// initialize the wanted time steps
 	real_t next_wanted_time(param.Dt());
