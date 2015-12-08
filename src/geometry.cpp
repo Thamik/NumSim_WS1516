@@ -351,7 +351,8 @@ void Geometry::load_domain_partitioning(const char* file)
 	// dont delete local storage, because the member pointer points to this data
 	
 	// output for debugging purpurse	
-	if(_comm->getRank() == 0) testIterator();
+	//if(_comm->getRank() == 0) testIterator();
+
 	//output_flags();
 	//std::cout << "Rank: " << _comm->getRank() << ", total size: (" << _bsize[0] << ", " << _bsize[1] << "), " << "local size: (" << _size[0] << ", " << _size[1] << "), total offset: (" << _total_offset[0] << ", " << _total_offset[1] << ")\n" << std::flush;
 }
@@ -861,6 +862,9 @@ void Geometry::UpdateGG_P(Grid *p) const
 	Grid* tmp2 = new Grid(this);
 
 	updateAll(tmp1, tmp2, p);
+
+	delete tmp1;
+	delete tmp2;
 }
 
 // own method
