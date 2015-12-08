@@ -98,9 +98,10 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	index_t valro = x2 + y2*_geom->Size()[0];
 
 	index_t val = x + y*_geom->Size()[0];
+	return _data[val];
 
 	//return _data[val]; //TODO Remove
-	if (_geom->isObstacle(Iterator(_geom, val))) return 0.0;
+	// if (_geom->isObstacle(Iterator(_geom, val))) return 0.0;
 
 	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;

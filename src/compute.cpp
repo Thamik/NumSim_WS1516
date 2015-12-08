@@ -144,6 +144,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 			}
 		}
 	}
+	_geom->UpdateGG_P(_p);
 	
 	// compute new velocitys u, v...
 	NewVelocities(dt);
