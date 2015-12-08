@@ -57,6 +57,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	real_t omega = 2.0 / (1.0+sin(M_PI*h));
 	//real_t omega = 1.0;	
 	_solver = new RedOrBlackSOR(_geom, omega);
+	//_solver = new JacobiSolver(_geom);
 
 	// construct console clock
 	_clock = new ConsoleClock();
@@ -126,6 +127,9 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		} else {
 			residual = _solver->BlackCycle(_p, _rhs);
 		}
+
+		// for Jacobi solvers
+		//residual = _solver->Cycle(_p, _rhs);
 
 		sync_p();
 

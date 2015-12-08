@@ -342,7 +342,7 @@ This method executes a Jacobi solver cycle on the given grid and returns the tot
 
 \return 	The total residual of the approximate solution in grid after the solver cycle
 */
-real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
+/*real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 {
 	// TODO: implement the update of the boundary pressure data
 	Grid* cpy = grid->copy();
@@ -355,6 +355,21 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 	}
 	delete cpy;
 	return totalRes(grid,rhs);
+}*/
+// the parallel version
+real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
+{
+	Grid* cpy = grid->copy();
+	InteriorIteratorGG it(_geom);
+	it.First();
+	while (it.Valid()){
+		grid->Cell(it) = 1.0/(-2.0/pow(_geom->Mesh()[0],2.0) - 2.0/pow(_geom->Mesh()[1],2.0)) * (rhs->Cell(it) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Left()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Right()) - 1.0/pow(_geom->Mesh()[1],2.0) * cpy->Cell(it.Top()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Down()));
+
+		it.Next();
+	}
+	delete cpy;
+	_geom->UpdateGG_P(grid);
+	return synced_totalRes(grid,rhs);
 }
 
 //------------------------------------------------------------------------------
