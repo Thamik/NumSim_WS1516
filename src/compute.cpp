@@ -196,9 +196,17 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		}
 		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
-		std::cout << "Last residual: " << currentResidual/currentNoTimeSteps << ", \tno. iterations: " << currentIterations/currentNoTimeSteps << "     \n"; // residual
+		std::cout << "Last residual: res = ";
+		printf("%10.4f", currentResidual/currentNoTimeSteps);
+		std::cout << ",    \tno. iterations: ";
+		printf("%7i", int(currentIterations/currentNoTimeSteps));
+		std::cout << "     \n"; // residual
 
-		std::cout << "Last timestep: dt = " << currentTime/currentNoTimeSteps << ", \tno. timesteps: " << currentNoTimeSteps << "\n"; // timestep
+		std::cout << "Last timestep: dt =  ";
+		printf("%10.4f", currentTime/currentNoTimeSteps);
+		std::cout << ",    \tno. timesteps:  ";
+		printf("%7i", int(currentNoTimeSteps));
+		std::cout << "     \n"; // timestep
 		currentResidual = 0.0;
 		currentNoTimeSteps = 0.0;
 		currentIterations = 0.0;
