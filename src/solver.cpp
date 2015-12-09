@@ -116,7 +116,8 @@ real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 */
 real_t Solver::synced_totalRes(const Grid* grid, const Grid* rhs) const
 {
-	return synced_totalRes_L1_averaged(grid,rhs);
+	//return synced_totalRes_L1_averaged(grid,rhs);
+	return synced_totalRes_Linf(grid,rhs);
 }
 
 /**

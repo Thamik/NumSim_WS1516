@@ -71,10 +71,10 @@ public:
   void Update_P(Grid *p) const;
 
 	// New update methods
-	//void UpdateGG_U(Grid *u) const;
-	//void UpdateGG_V(Grid *v) const;
+	void UpdateGG_U(Grid *u) const;
+	void UpdateGG_V(Grid *v) const;
 	void UpdateGG_P(Grid *p) const;
-		void updateAll(Grid *u, Grid *v, Grid *p) const;
+	//	void updateAll(Grid *u, Grid *v, Grid *p) const;
 
 	/// Updates the local geometry data
 	void update_values();

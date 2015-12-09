@@ -40,7 +40,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "Warning: parameter file could not be read!\n";
 		continue;
 	}
-	for(int i=1;i<=8;i++)
+	for(int i=1;i<=9;i++)
 	{
 		getline(infile,temp_string);
 		switch(i)

@@ -160,6 +160,12 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	//update total time
 	_t += dt;
 
+	//update infos
+	currentIterations += iteration;
+	currentTime += dt;
+	currentNoTimeSteps++;
+	currentResidual += residual;
+
 	// print information
 	if (printInfo){
 
@@ -190,9 +196,13 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		}
 		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
-		std::cout << "Last residual: " << residual << ", \tno. iterations: " << iteration << "     \n"; // residual
+		std::cout << "Last residual: " << currentResidual/currentNoTimeSteps << ", \tno. iterations: " << currentIterations/currentNoTimeSteps << "     \n"; // residual
 
-		std::cout << "Last timestep: dt = " << dt << "\n"; // timestep
+		std::cout << "Last timestep: dt = " << currentTime/currentNoTimeSteps << ", \tno. timesteps: " << currentNoTimeSteps << "\n"; // timestep
+		currentResidual = 0.0;
+		currentNoTimeSteps = 0.0;
+		currentIterations = 0.0;
+		currentTime = 0.0;
 
 		// magnitudes of the fields
 		std::cout << "max(F) = ";
@@ -271,7 +281,7 @@ The absolute velocity in the euklidean norm is calculted at the middle point of 
 */
 const Grid* Compute::GetVelocity()
 {
-	return _rhs; //TODO REMOVE!!!!
+	//return _rhs; //TODO REMOVE!!!!
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -439,14 +449,14 @@ Update the boundary values in all grids where this is necessary.
 */
 void Compute::update_boundary_values()
 {
-	//_geom->UpdateGG_U(_u);
-	//_geom->UpdateGG_V(_v);
+	_geom->UpdateGG_U(_u);
+	_geom->UpdateGG_V(_v);
 
-	//_geom->UpdateGG_U(_F);
-	//_geom->UpdateGG_V(_G);
+	_geom->UpdateGG_U(_F);
+	_geom->UpdateGG_V(_G);
 
-	_geom->updateAll(_u, _v, _p);
-	_geom->updateAll(_F, _G, _p);
+	//_geom->updateAll(_u, _v, _p);
+	//_geom->updateAll(_F, _G, _p);
 }
 
 void Compute::sync_FG()

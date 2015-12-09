@@ -116,6 +116,11 @@ private:
 
 	/// the console clock
 	ConsoleClock* _clock;
+
+	real_t currentNoTimeSteps = 0.0;
+	real_t currentTime = 0.0;
+	real_t currentIterations = 0.0;
+	real_t currentResidual = 0.0;
 	
 };
 //------------------------------------------------------------------------------

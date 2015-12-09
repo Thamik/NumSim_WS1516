@@ -555,7 +555,7 @@ void Geometry::Update_P(Grid *p) const
 /*==================================================================
 New Update Methods for General Geometry (GG)
 ==================================================================*/
-/*void Geometry::UpdateGG_U(Grid *u) const
+void Geometry::UpdateGG_U(Grid *u) const
 {
 	BoundaryIteratorGG it(this);
 	it.First();
@@ -767,9 +767,9 @@ void Geometry::UpdateGG_P(Grid *p) const
 		}
 		it.Next();
 	}
-}*/
+}
 
-void Geometry::updateAll(Grid* u, Grid* v, Grid* p) const
+/*void Geometry::updateAll(Grid* u, Grid* v, Grid* p) const
 {
 	BoundaryIteratorGG it(this);
 	it.First();
@@ -865,7 +865,7 @@ void Geometry::UpdateGG_P(Grid *p) const
 
 	delete tmp1;
 	delete tmp2;
-}
+}*/
 
 // own method
 /**
