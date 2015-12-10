@@ -2,7 +2,10 @@
 
 #include <iostream>
 #include <fstream>
+
+#define _USE_MATH_DEFINES // to get pi via M_PI
 #include <math.h>
+
 #include <algorithm> // std::min, std::max
 
 /**
@@ -414,4 +417,26 @@ void GeometryGenerator::testCase1()
 
 	fixSingleCells();
 	
+}
+
+void GeometryGenerator::testCase2()
+{
+	double xlength = 6.0;
+	double ylength = 1.0;
+	double alpha = M_PI/4.0;
+	double pressureRight = 0.0;
+	double pressureLeft = 0.0;
+	double width = 0.1;
+
+	karmanVortexStreet(alpha, width, xlength, ylength, pressureLeft, pressureRight);
+
+	// set the left boundary to an inflow boundary
+	int ival(0);
+	for (int j=0; j<_bSizeY; j++){
+		ival = j * (_bSizeX) + 0;
+		_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+		_bvu[ival] = 1.0;
+		_bvv[ival] = 0.0;
+		_bvp[ival] = 0.0;
+	}
 }

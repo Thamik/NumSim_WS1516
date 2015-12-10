@@ -26,6 +26,8 @@ public:
 
 	void testCase1();
 
+	void testCase2();
+
 	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=2.0, double pressureRight=1.0);
 
 private:
