@@ -460,8 +460,10 @@ void Compute::update_boundary_values()
 	_geom->UpdateGG_U(_u);
 	_geom->UpdateGG_V(_v);
 
-	_geom->UpdateGG_U(_F);
-	_geom->UpdateGG_V(_G);
+	//_geom->UpdateGG_U(_F);
+	//_geom->UpdateGG_V(_G);
+	_geom->UpdateGG_F(_F,_u);
+	_geom->UpdateGG_G(_G,_v);
 
 	//_geom->updateAll(_u, _v, _p);
 	//_geom->updateAll(_F, _G, _p);
