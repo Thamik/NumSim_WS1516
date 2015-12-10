@@ -769,6 +769,38 @@ void Geometry::UpdateGG_P(Grid *p) const
 	}
 }
 
+void Geometry::UpdateGG_F(Grid* F, Grid* u) const
+{
+	BoundaryIteratorGG it(this);
+	it.First();
+
+	while(it.Valid()) {
+		if (!isObstacle(it.Left())) {
+			F->Cell(it.Left()) = u->Cell(it.Left());
+			F->Cell(it) = u->Cell(it);
+		} else {
+			F->Cell(it) = u->Cell(it);
+		}
+		it.Next();
+	}
+}
+
+void Geometry::UpdateGG_G(Grid* G, Grid* v) const
+{
+	BoundaryIteratorGG it(this);
+	it.First();
+
+	while(it.Valid()) {
+		if (!isObstacle(it.Down())) {
+			G->Cell(it.Down()) = v->Cell(it.Down());
+			G->Cell(it) = v->Cell(it);
+		} else {
+			G->Cell(it) = v->Cell(it);
+		}
+		it.Next();
+	}
+}
+
 /*void Geometry::updateAll(Grid* u, Grid* v, Grid* p) const
 {
 	BoundaryIteratorGG it(this);
