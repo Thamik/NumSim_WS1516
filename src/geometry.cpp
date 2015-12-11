@@ -608,8 +608,10 @@ void Geometry::UpdateGG_U(Grid *u) const
 				} else {
 					if (!isObstacle(it.Top())) {
 						u->Cell(it) = 2.0*bvalU(it) - u->Cell(it.Top());
+						u->Cell(it.Left()) = 2.0*bvalU(it.Left()) - u->Cell(it.Left().Top());
 					} else if (!isObstacle(it.Down())) {
 						u->Cell(it) = 2.0*bvalU(it) - u->Cell(it.Down());
+						u->Cell(it.Left()) = 2.0*bvalU(it.Left()) - u->Cell(it.Left().Down());
 					}
 				}
 			} else if (leftright) {
@@ -670,15 +672,16 @@ void Geometry::UpdateGG_V(Grid *v) const
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Top())) {
 					v->Cell(it) = bvalV(it);
-					//v->Cell(it) = 0.0; // TODO: Remove!
 				} else if (!isObstacle(it.Down())) {
 					v->Cell(it) = bvalV(it);
 					v->Cell(it.Down()) = bvalV(it);
 				} else {
 					if (!isObstacle(it.Left())) {
 						v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Left());
+						v->Cell(it.Down()) = 2.0*bvalV(it.Down()) - v->Cell(it.Down().Left());
 					} else if (!isObstacle(it.Right())) {
 						v->Cell(it) = 2.0*bvalV(it) - v->Cell(it.Right());
+						v->Cell(it.Down()) = 2.0*bvalV(it.Down()) - v->Cell(it.Down().Right());
 					}
 				}
 			} else if (topdown) {

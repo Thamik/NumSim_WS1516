@@ -122,14 +122,14 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	}
 	printInfo = !_comm->getRank();
 
-	if (dt < 0){
+	/*if (dt < 0){
 		std::cout << "Fatal error! Compute::TimeStep(): negative timestep!" << std::endl;
 		throw std::runtime_error("compute: negative timestep");
 	} else if (dt < 1e-7){
 		std::cout << "Warning! Compute::TimeStep(): very small timestep!" << std::endl;
 	} else if (dt > 1){
 		std::cout << "Warning! Compute::TimeStep(): very large timestep!" << std::endl;
-	}
+	}*/
 
 	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
@@ -182,7 +182,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		if (iteration >= _param->IterMin()){
 			// check for edge condition
 			if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
-				if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+				//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 				_solver_converging = false;
 				break;
 			} else if (residual < _epslimit){
