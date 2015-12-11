@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
 #endif // USE_DEBUG_VISU
 
 	// prepare console output
-	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << "\n\n\n\n" << std::flush;
+	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << "\n\n\n\n\n\n" << std::flush;
 
 	// initialize the wanted time steps
 	real_t next_wanted_time(param.Dt());
@@ -217,10 +217,16 @@ int main(int argc, char **argv) {
 
 		next_wanted_time += param.Dt();
 		bool keep_running(true);
-		while (keep_running){
+
+		//while (keep_running){
+		for (int i=0; i<1; i++){
+
 			difference_time = next_wanted_time - comp.GetTime(); // time difference to the next timestep for vtk and visu
-			comp.TimeStep(VERBOSE, difference_time);
-			if (comp.GetTime() >= (next_wanted_time - 1e-10)){
+
+			comp.TimeStep(VERBOSE, 1000.0);
+			//comp.TimeStep(VERBOSE, difference_time);
+
+			if (comp.GetTime() >= (next_wanted_time - 1e-3)){
 				// the next wanted timestep is achieved
 				keep_running = false;
 			}

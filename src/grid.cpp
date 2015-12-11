@@ -59,6 +59,9 @@ void Grid::Initialize(const real_t& value, bool verbose)
 */
 real_t& Grid::Cell(const Iterator& it)
 {
+	if (it.Value() >= _geom->Size()[0] * _geom->Size()[1]){
+		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds!\n";
+	}
 	return _data[it.Value()];
 }
 
@@ -67,6 +70,9 @@ real_t& Grid::Cell(const Iterator& it)
 */
 const real_t& Grid::Cell(const Iterator& it) const
 {
+	if (it.Value() >= _geom->Size()[0] * _geom->Size()[1]){
+		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds!\n";
+	}
 	return _data[it.Value()];
 }
 
@@ -99,9 +105,8 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 
 	index_t val = x + y*_geom->Size()[0];
 
-	//return _data[val]; //TODO Remove
 	if (_geom->isObstacle(Iterator(_geom, val))) return 0.0;
-	//return _data[val];
+	//return _data[val]; // use this line, if you want to see the values cell-wise
 
 	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
@@ -212,14 +217,61 @@ real_t Grid::DC_udu_x(const Iterator& it, const real_t& alpha) const
 	return res;
 }
 
+/*real_t Grid::DC_udu_x(const Iterator &it, const real_t &alpha) const
+{
+    real_t u_m = this->Cell(it);         // u_i,j   = u_middle
+    real_t u_l = this->Cell(it.Left());  // u_i-1,j = u_left
+    real_t u_r = this->Cell(it.Right()); // u_i+1,j = u_right
+
+    // script 3.2.4 (page 24)
+    real_t part1 = ((u_m + u_r) * 0.5 * (u_m + u_r) * 0.5 - (u_l + u_m) * 0.5 * (u_l + u_m) * 0.5) / _geom->Mesh()[0];
+    real_t part2 = (std::abs(u_m + u_r) * 0.5 * (u_m - u_r) * 0.5 - std::abs(u_l + u_m) * 0.5 * (u_l - u_m) * 0.5) / _geom->Mesh()[0];
+
+    return part1 + alpha * part2;
+}*/
+
 /*real_t Grid::DC_vdu_y(const Iterator& it, const real_t& alpha, const Grid* v) const
 {
 	// TODO
-}
+}*/
 
-real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) const
+/*real_t Grid::DC_vdu_y(const Iterator &it, const real_t &alpha, const Grid *v) const
+{
+    real_t u_m = this->Cell(it);
+    real_t u_t = this->Cell(it.Top());
+    real_t u_d = this->Cell(it.Down());
+    real_t v_m = v->Cell(it);
+    real_t v_r = v->Cell(it.Right());
+    real_t v_d = v->Cell(it.Down());
+    real_t v_rd = v->Cell(it.Right().Down());
+
+    // script 3.2.4 (page 24)
+    real_t part1 = ((v_m + v_r) * 0.5 * (u_m + u_t) * 0.5 - (v_d + v_rd) * 0.5 * (u_d + u_m) * 0.5) / _geom->Mesh()[1];
+    real_t part2 = (std::abs(v_m + v_r) * 0.5 * (u_m - u_t) * 0.5 - std::abs(v_d + v_rd) * 0.5 * (u_d - u_m) * 0.5) / _geom->Mesh()[1];
+
+    return part1 + alpha * part2;
+}*/
+
+/*real_t Grid::DC_udv_x(const Iterator& it, const real_t& alpha, const Grid* u) const
 {
 	// TODO
+}*/
+
+/*real_t Grid::DC_udv_x(const Iterator &it, const real_t &alpha, const Grid *u) const
+{
+    real_t v_m = this->Cell(it);
+    real_t v_r = this->Cell(it.Right());
+    real_t v_l = this->Cell(it.Left());
+    real_t u_m = u->Cell(it);
+    real_t u_t = u->Cell(it.Top());
+    real_t u_l = u->Cell(it.Left());
+    real_t u_lt = u->Cell(it.Left().Top());
+
+    // with script 3.2.4 (page 24)
+    real_t part1 = ((u_m + u_t) * 0.5 * (v_m + v_r) * 0.5 - (u_l + u_lt) * 0.5 * (v_l + v_m) * 0.5) / _geom->Mesh()[0];
+    real_t part2 = (std::abs(u_m + u_t) * 0.5 * (v_m - v_r) * 0.5 - std::abs(u_l + u_lt) * 0.5 * (v_l - v_m) * 0.5) / _geom->Mesh()[0];
+
+    return part1 + alpha * part2;
 }*/
 
 /**
@@ -238,6 +290,20 @@ real_t Grid::DC_vdv_y(const Iterator& it, const real_t& alpha) const
 	res *= 0.5;
 	return res;
 }
+
+/*real_t Grid::DC_vdv_y(const Iterator &it, const real_t &alpha) const
+{
+    real_t v_m = this->Cell(it);        // v_i,j   = v_middle
+    real_t v_d = this->Cell(it.Down()); // v_i,j-1 = v_down
+    real_t v_t = this->Cell(it.Top());  // v_i,j+1 = v_top
+
+    // with script 3.2.4 (page 24)
+    real_t part1 = ((v_m + v_t) * 0.5 * (v_m + v_t) * 0.5 - (v_d + v_m) * 0.5 * (v_d + v_m) * 0.5) / _geom->Mesh()[0];
+    real_t part2 = (std::abs(v_m + v_t) * 0.5 * (v_m - v_t) * 0.5 - std::abs(v_d + v_m) * 0.5 * (v_d - v_m) * 0.5) / _geom->Mesh()[0];
+
+    return part1 + alpha * part2;
+}*/
+
 
 // The use of the functions  vdu_y and udv_x are unclear, since only d(uv)/dx and d(uv)/dy have been presented in the lecture. The last mentioned functions are implemented below.
 
@@ -302,7 +368,7 @@ real_t Grid::DC_duv_y(const Iterator &it, const real_t &alpha, const Grid* v) co
 
 
 //============================================================================================
-//discretization of the convective terms without Donor Cell Method (just for testing purporse)
+//discretization of the convective terms without Donor Cell Method (just for testing purporses)
 /*
 real_t Grid::DC_duu_x(const Iterator &it, const real_t &alpha) const
 {
@@ -510,7 +576,8 @@ void Grid::Out() const
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()) {
-		fprintf(stderr,"%i ",int(Cell(it)));
+		//fprintf(stderr,"%i ",int(Cell(it)));
+		fprintf(stderr,"%f ",Cell(it));
 		if(it.Right().Value() == it.Value())
 			fprintf(stderr,"\n");
 		it.Next();

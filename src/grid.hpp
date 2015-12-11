@@ -67,10 +67,10 @@ public:
 
   /// Computes u*du/dx with the donor cell method
   real_t DC_udu_x(const Iterator &it, const real_t &alpha) const;
-/*  /// Computes v*du/dy with the donor cell method
-  real_t DC_vdu_y(const Iterator &it, const real_t &alpha, const Grid *v) const;
+  /// Computes v*du/dy with the donor cell method
+  //real_t DC_vdu_y(const Iterator &it, const real_t &alpha, const Grid *v) const;
   /// Computes u*dv/dx with the donor cell method
-  real_t DC_udv_x(const Iterator &it, const real_t &alpha, const Grid *u) const; */
+  //real_t DC_udv_x(const Iterator &it, const real_t &alpha, const Grid *u) const;
   /// Computes v*dv/dy with the donor cell method
   real_t DC_vdv_y(const Iterator &it, const real_t &alpha) const;
 

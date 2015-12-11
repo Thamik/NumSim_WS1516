@@ -11,6 +11,8 @@
 #include <algorithm>    // std::min
 #include <iostream>	// std::cout
 
+#include <math.h>
+
 /* Public methods */
 
 /* Constructor */
@@ -20,7 +22,7 @@
 \param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _geom(geom), _param(param), _comm(comm), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
@@ -38,6 +40,11 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_tmp_vorticity = new Grid(_geom);
 	_tmp_stream = new Grid(_geom);
 
+	_p_old = new Grid(_geom, multi_real_t(-0.5,-0.5));
+	_rhs_old = new Grid(_geom);
+	_F_old = new Grid(_geom);
+	_G_old = new Grid(_geom);
+
 	// Initialize Grids
 	_u->Initialize(0.0);
 	_v->Initialize(0.0);
@@ -48,6 +55,11 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_tmp_velocity->Initialize(0.0);
 	_tmp_vorticity->Initialize(0.0);
 	_tmp_stream->Initialize(0.0);
+
+	_p_old->Initialize(0.0);
+	_rhs_old->Initialize(0.0);
+	_F_old->Initialize(0.0);
+	_G_old->Initialize(0.0);
 
 	//set boundary values
 	update_boundary_values();
@@ -80,6 +92,11 @@ Compute::~Compute()
 	delete _tmp_velocity;
 	delete _tmp_vorticity;
 	delete _tmp_stream;
+
+	delete _p_old;
+	delete _rhs_old;
+	delete _F_old;
+	delete _G_old;
 	
 	delete _solver;
 
@@ -103,10 +120,25 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		dt = diff_time;
 		printInfo = !_comm->getRank();
 	}
-	//printInfo = !_comm->getRank();
+	printInfo = !_comm->getRank();
+
+	if (dt < 0){
+		std::cout << "Fatal error! Compute::TimeStep(): negative timestep!" << std::endl;
+		throw std::runtime_error("compute: negative timestep");
+	} else if (dt < 1e-7){
+		std::cout << "Warning! Compute::TimeStep(): very small timestep!" << std::endl;
+	} else if (dt > 1){
+		std::cout << "Warning! Compute::TimeStep(): very large timestep!" << std::endl;
+	}
 
 	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
 	
+	// for debugging issues
+	delete _F_old;
+	delete _G_old;
+	_F_old = _F->copy();
+	_G_old = _G->copy();
+
 	// compute F, G...
 	MomentumEqu(dt);
 	update_boundary_values(); //update boundary values
@@ -114,8 +146,20 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	// ...and sync them
 	sync_FG(); // BLOCKING
 
+	// for debugging issues
+	delete _rhs_old;
+	_rhs_old = _rhs->copy();
+
 	// compute rhs
 	RHS(dt);
+
+	//_geom->UpdateGG_P(_p);
+
+	//update_boundary_values(); // debug
+
+	// for debugging issues
+	delete _p_old;
+	_p_old = _p->copy();
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -138,7 +182,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		if (iteration >= _param->IterMin()){
 			// check for edge condition
 			if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
-				//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
+				if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 				_solver_converging = false;
 				break;
 			} else if (residual < _epslimit){
@@ -149,6 +193,10 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		}
 	}
 	_geom->UpdateGG_P(_p);
+
+	update_boundary_values(); // debug
+
+	check_for_incontinuities();
 	
 	// compute new velocitys u, v...
 	NewVelocities(dt);
@@ -156,6 +204,8 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 	// ...and sync them
 	sync_uv(); // BLOCKING
+
+	update_boundary_values(); // debug
 
 	//update total time
 	_t += dt;
@@ -174,7 +224,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -229,6 +279,17 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "   \n";
 		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
+
+		std::cout << "diff(F) = ";
+		printf("%10.7f", _diff_F);
+		std::cout << ", \tdiff(G) = ";
+		printf("%10.7f", _diff_G);
+		std::cout << std::endl;
+		std::cout << "diff(p) = ";
+		printf("%10.7f", _diff_p);
+		std::cout << ", \tdiff(rhs) = ";
+		printf("%10.7f", _diff_rhs);
+		std::cout << std::endl;
 
 		std::cout << "============================================================\n";
 
@@ -417,6 +478,7 @@ void Compute::MomentumEqu(const real_t& dt)
 	while (it.Valid()){
 		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
 		_G->Cell(it) = _v->Cell(it) + dt * ( 1.0/_param->Re() * (_v->dxx(it) + _v->dyy(it)) - _v->DC_dvv_y(it,_param->Alpha()) - _v->DC_duv_x(it,_param->Alpha(),_u) );
+
 		it.Next();
 	}
 }
@@ -432,6 +494,7 @@ void Compute::RHS(const real_t& dt)
 	while (it.Valid()){
 		_rhs->Cell(it) = 1.0/dt * (_F->dx_l(it) + _G->dy_l(it));
 		//_rhs->Cell(it) = 1.0/dt * (_F->dx_c(it) + _G->dy_c(it));
+
 		it.Next();
 	}
 	//_solver->delete_average(_rhs);
@@ -460,13 +523,10 @@ void Compute::update_boundary_values()
 	_geom->UpdateGG_U(_u);
 	_geom->UpdateGG_V(_v);
 
-	//_geom->UpdateGG_U(_F);
-	//_geom->UpdateGG_V(_G);
-	_geom->UpdateGG_F(_F,_u);
-	_geom->UpdateGG_G(_G,_v);
-
-	//_geom->updateAll(_u, _v, _p);
-	//_geom->updateAll(_F, _G, _p);
+	_geom->UpdateGG_U(_F);
+	_geom->UpdateGG_V(_G);
+	//_geom->UpdateGG_F(_F,_u);
+	//_geom->UpdateGG_G(_G,_v);
 }
 
 void Compute::sync_FG()
@@ -497,4 +557,64 @@ void Compute::sync_all()
 	sync_FG();
 	sync_uv();
 	sync_p();
+}
+
+void Compute::check_for_incontinuities()
+{
+	real_t diff_p(0.0);
+	InteriorIteratorGG it(_geom);
+	it.First();
+	while (it.Valid()){
+		diff_p += std::abs(_p->Cell(it) - _p_old->Cell(it));
+		it.Next();
+	}
+	diff_p /= _geom->Size()[0] * _geom->Size()[1];
+
+	_diff_p = diff_p;
+	if (diff_p > 0.2 && _t > 0.1){
+//		for (int i=0; i<10; i++) std::cout << "Warning: Incontinuity (P) detected! Diff: " << diff_p << std::endl;
+	}
+
+	real_t diff_rhs = 0.0;
+	InteriorIteratorGG it2(_geom);
+	it2.First();
+	while (it2.Valid()){
+		diff_rhs += std::abs(_rhs->Cell(it2) - _rhs_old->Cell(it2));
+		it2.Next();
+	}
+	diff_rhs /= _geom->Size()[0] * _geom->Size()[1];
+
+	_diff_rhs = diff_rhs;
+	if (diff_rhs > 0.2 && _t > 0.1){
+//		for (int i=0; i<10; i++) std::cout << "Warning: Incontinuity (RHS) detected! Diff: " << diff_rhs << std::endl;
+	}
+
+	real_t diff_F = 0.0;
+	InteriorIteratorGG it3(_geom);
+	it3.First();
+	while (it3.Valid()){
+		diff_F += std::abs(_F->Cell(it3) - _F_old->Cell(it3));
+		it3.Next();
+	}
+	diff_F /= _geom->Size()[0] * _geom->Size()[1];
+
+	_diff_F = diff_F;
+	if (diff_F > 0.2 && _t > 0.1){
+//		for (int i=0; i<10; i++) std::cout << "Warning: Incontinuity (F) detected! Diff: " << diff_F << std::endl;
+	}
+
+	real_t diff_G = 0.0;
+	InteriorIteratorGG it4(_geom);
+	it4.First();
+	while (it4.Valid()){
+		diff_G += std::abs(_G->Cell(it4) - _G_old->Cell(it4));
+		it4.Next();
+	}
+	diff_G /= _geom->Size()[0] * _geom->Size()[1];
+
+	_diff_G = diff_G;
+	if (diff_G > 0.2 && _t > 0.1){
+//		for (int i=0; i<10; i++) std::cout << "Warning: Incontinuity (G) detected! Diff: " << diff_G << std::endl;
+	}
+
 }

@@ -8,6 +8,8 @@
 #include <string>
 #include <stdlib.h>     /* atof */
 
+//#include <math.h>
+
 #include <mpi.h>
 
 /* public methods */
@@ -602,6 +604,7 @@ void Geometry::UpdateGG_U(Grid *u) const
 					u->Cell(it.Left()) = bvalU(it);
 				} else if (!isObstacle(it.Right())) {
 					u->Cell(it) = bvalU(it);
+					//u->Cell(it) = 0.0; // TODO: Remove
 				} else {
 					if (!isObstacle(it.Top())) {
 						u->Cell(it) = 2.0*bvalU(it) - u->Cell(it.Top());
@@ -667,6 +670,7 @@ void Geometry::UpdateGG_V(Grid *v) const
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Top())) {
 					v->Cell(it) = bvalV(it);
+					//v->Cell(it) = 0.0; // TODO: Remove!
 				} else if (!isObstacle(it.Down())) {
 					v->Cell(it) = bvalV(it);
 					v->Cell(it.Down()) = bvalV(it);
@@ -678,7 +682,7 @@ void Geometry::UpdateGG_V(Grid *v) const
 					}
 				}
 			} else if (topdown) {
-				// the corner cases don't have to be considered as they were already consider above!
+				// the corner cases don't have to be considered as they were already considered above!
 				if (!isObstacle(it.Top())) {
 					v->Cell(it) = bvalV(it);
 				} else if (!isObstacle(it.Down())) {
@@ -710,28 +714,58 @@ void Geometry::UpdateGG_P(Grid *p) const
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					if (!isObstacle(it.Top())) {
+
+						//std::cout << "P Neumann: LeftTop: " << p->Cell(it) << ", " << 0.5*( p->Cell(it.Left()) + p->Cell(it.Top()) ) << ", " << p->Cell(it.Left()) << ", " << p->Cell(it.Top()) << "\n";
+
+						//std::cout << "P Neumann: left top\n";
+
 						p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Left()) + _h[0]*bvalP(it));
 					} else if (!isObstacle(it.Down())) {
 						p->Cell(it) = 0.5*(p->Cell(it.Down()) + _h[1]*bvalP(it) + p->Cell(it.Left()) + _h[0]*bvalP(it));
-					}
+
+						//std::cout << "P Neumann: left down\n";
+
+					} /*else {
+						while(true) std::cout << "Warning!\n";
+					}*/
 				} else if (!isObstacle(it.Right())) {
 					if (!isObstacle(it.Top())) {
+
+						//std::cout << "P Neumann: RightTop: " << p->Cell(it) << ", " << 0.5*( p->Cell(it.Right()) + p->Cell(it.Top()) ) << ", " << p->Cell(it.Right()) << ", " << p->Cell(it.Top()) << "\n";
+						//if (abs(p->Cell(it)) >= 1.0) std::cout << "Attention, value of p (right top corner), it position: " << it.Pos()[0] << ", " << it.Pos()[1] << ", val p: " << p->Cell(it) << "\n";
+						//if (abs(p->Cell(it.Right())) >= 1.0) std::cout << "Attention, value of p right, it position: " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << ", val p: " << p->Cell(it.Right()) << "\n";
+						//if (abs(p->Cell(it.Top())) >= 1.0) std::cout << "Attention, value of p top, it position: " << it.Top().Pos()[0] << ", " << it.Top().Pos()[1] << ", val p: " << p->Cell(it.Top()) << "\n";
+
+						//std::cout << "P Neumann: right top\n";
+
 						p->Cell(it) = 0.5*(p->Cell(it.Top()) - _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+
 					} else if (!isObstacle(it.Down())) {
 						p->Cell(it) = 0.5*(p->Cell(it.Down()) + _h[1]*bvalP(it) + p->Cell(it.Right()) - _h[0]*bvalP(it));
+
+						//std::cout << "P Neumann: right down\n";
+
+					} else {
+						std::cout << "Warning! Wrong boundary condition interpretation!\n";
 					}
 				} else {
 					if (!isObstacle(it.Top())) {
+						//std::cout << "P Neumann: top\n";
 						p->Cell(it) = p->Cell(it.Top()) - _h[1]*bvalP(it);
 					} else if (!isObstacle(it.Down())) {
+						//std::cout << "P Neumann: down\n";
 						p->Cell(it) = p->Cell(it.Down()) + _h[1]*bvalP(it);
+					} else {
+						std::cout << "Warning! Wrong boundary condition interpretation!\n";
 					}
 				}
 			} else if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
+					//std::cout << "P Neumann: left\n";
 					p->Cell(it) = p->Cell(it.Left()) + _h[0]*bvalP(it);
 				} else if (!isObstacle(it.Right())) {
+					//std::cout << "P Neumann: right\n";
 					p->Cell(it) = p->Cell(it.Right()) - _h[0]*bvalP(it);
 				}
 			}
@@ -744,23 +778,37 @@ void Geometry::UpdateGG_P(Grid *p) const
 			} else if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
-					if (!isObstacle(it.Top())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Top()));
-					else if (!isObstacle(it.Down())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Down()));
+					if (!isObstacle(it.Top())) {
+						//std::cout << "P Dirichlet: left top\n";
+						p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Top()));
+					} else if (!isObstacle(it.Down())) {
+						//std::cout << "P Dirichlet: left down\n";
+						p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Left()) + p->Cell(it.Down()));
+					}
 				} else if (!isObstacle(it.Right())) {
-					if (!isObstacle(it.Top())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Top()));
-					else if (!isObstacle(it.Down())) p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Down()));
+					if (!isObstacle(it.Top())) {
+						//std::cout << "P Dirichlet: right top\n";
+						p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Top()));
+					} else if (!isObstacle(it.Down())) {
+						//std::cout << "P Dirichlet: right down\n";
+						p->Cell(it) = 2.0*bvalP(it) - 0.5*(p->Cell(it.Right()) + p->Cell(it.Down()));
+					}
 				} else {
 					if (!isObstacle(it.Top())) {
+						//std::cout << "P Dirichlet: top\n";
 						p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Top());
 					} else if (!isObstacle(it.Down())) {
+						//std::cout << "P Dirichlet: down\n";
 						p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Down());
 					}
 				}
 			} else if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
+					//std::cout << "P Dirichlet: left\n";
 					p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Left());
 				} else if (!isObstacle(it.Right())) {
+					//std::cout << "P Dirichlet: right\n";
 					p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Right());
 				}
 			}
@@ -769,7 +817,7 @@ void Geometry::UpdateGG_P(Grid *p) const
 	}
 }
 
-void Geometry::UpdateGG_F(Grid* F, Grid* u) const
+/*void Geometry::UpdateGG_F(Grid* F, Grid* u) const
 {
 	BoundaryIteratorGG it(this);
 	it.First();
@@ -799,104 +847,6 @@ void Geometry::UpdateGG_G(Grid* G, Grid* v) const
 		}
 		it.Next();
 	}
-}
-
-/*void Geometry::updateAll(Grid* u, Grid* v, Grid* p) const
-{
-	BoundaryIteratorGG it(this);
-	it.First();
-
-	while (it.Valid()) {
-		if (!isObstacle(it.Left()) && !isObstacle(it.Top())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				u->Cell(it.Left()) = 0.0;
-				v->Cell(it) = 0.0;
-				p->Cell(it) = (p->Cell(it.Left()) + p->Cell(it.Top()))/2.0;
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else if (!isObstacle(it.Left()) && !isObstacle(it.Down())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				u->Cell(it.Left()) = 0.0;
-				v->Cell(it) = 0.0;
-				v->Cell(it.Down()) = 0.0;
-				p->Cell(it) = (p->Cell(it.Left()) + p->Cell(it.Down()))/2.0;
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else if (!isObstacle(it.Right()) && !isObstacle(it.Top())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				v->Cell(it) = 0.0;
-				p->Cell(it) = (p->Cell(it.Right()) + p->Cell(it.Top()))/2.0;
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else if (!isObstacle(it.Right()) && !isObstacle(it.Down())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				v->Cell(it) = 0.0;
-				v->Cell(it.Down()) = 0.0;
-				p->Cell(it) = (p->Cell(it.Right()) + p->Cell(it.Down()))/2.0;
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else if (!isObstacle(it.Right())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				v->Cell(it) = -v->Cell(it.Right());
-				p->Cell(it) = p->Cell(it.Right());
-			} else if (_flags[it.Value()] == 7) {
-				u->Cell(it) = u->Cell(it.Right());
-				v->Cell(it) = v->Cell(it.Right());
-				p->Cell(it) = 1.0;
-			}
-		} else if (!isObstacle(it.Left())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = 0.0;
-				u->Cell(it.Left()) = 0.0;
-				v->Cell(it) = -v->Cell(it.Left());
-				p->Cell(it) = p->Cell(it.Left());
-			} else if (_flags[it.Value()] == 7) {
-				u->Cell(it) = u->Cell(it.Left());
-				v->Cell(it) = v->Cell(it.Left());
-				p->Cell(it) = 0.0;
-			}
-		} else if (!isObstacle(it.Top())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = -u->Cell(it.Top());
-				v->Cell(it) = 0.0;
-				p->Cell(it) = p->Cell(it.Top());
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else if (!isObstacle(it.Down())) {
-			if (_flags[it.Value()] == 9) {
-				u->Cell(it) = -u->Cell(it.Down());
-				v->Cell(it) = 0.0;
-				v->Cell(it.Down()) = 0.0;
-				p->Cell(it) = p->Cell(it.Down());
-			} else if (_flags[it.Value()] == 7) {
-				std::cout << "Warning" << std::endl;
-			}
-		} else {
-			std::cout << "Warning" << std::endl;
-		}
-		it.Next();
-	}
-}
-
-void Geometry::UpdateGG_P(Grid *p) const
-{
-	Grid* tmp1 = new Grid(this);
-	Grid* tmp2 = new Grid(this);
-
-	updateAll(tmp1, tmp2, p);
-
-	delete tmp1;
-	delete tmp2;
 }*/
 
 // own method

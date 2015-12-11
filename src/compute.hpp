@@ -85,6 +85,17 @@ private:
   Grid *_tmp_vorticity;
   Grid *_tmp_stream;
 
+	// grid for the last pressure field to detect incontinuities (and other grids for the same reason)
+	Grid* _p_old;
+	Grid* _rhs_old;
+	Grid* _F_old;
+	Grid* _G_old;
+
+	real_t _diff_p;
+	real_t _diff_rhs;
+	real_t _diff_F;
+	real_t _diff_G;
+
 	RedOrBlackSOR *_solver;
 //	JacobiSolver* _solver;
 
@@ -121,6 +132,8 @@ private:
 	real_t currentTime = 0.0;
 	real_t currentIterations = 0.0;
 	real_t currentResidual = 0.0;
+
+	void check_for_incontinuities();
 	
 };
 //------------------------------------------------------------------------------
