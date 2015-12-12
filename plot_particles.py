@@ -14,11 +14,12 @@ print 'Number of particles: \t' + str(pos.shape[1])
 # plot
 import matplotlib.pyplot as plt
 import time
+from math import floor, ceil
 
-xmin = round(np.amin(pos[:,:,0]))
-xmax = round(np.amax(pos[:,:,0]))
-ymin = round(np.amin(pos[:,:,1]))
-ymax = round(np.amax(pos[:,:,1]))
+xmin = floor(np.nanmin(pos[:,:,0]))
+xmax = ceil(np.nanmax(pos[:,:,0]))
+ymin = floor(np.nanmin(pos[:,:,1]))
+ymax = ceil(np.nanmax(pos[:,:,1]))
 
 for ii in range(pos.shape[0]):
     plt.plot(pos[ii,:,0], pos[ii,:,1], 'bo', hold=False)

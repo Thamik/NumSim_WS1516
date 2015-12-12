@@ -104,5 +104,11 @@ private:
 	void init_particleTracing();
 	void init_streakline();
 
+	int _no_streaklines;
+	int _max_particles_per_streakline;
+	multi_real_t* _streakline_positions;
+
+	int _max_particles;
+
 };
 

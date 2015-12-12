@@ -35,8 +35,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 		_particles = new Particles(_geom);
 
 		// define options
-//		_particles->streaklinePolicy();
-		_particles->particleTracingPolicy();
+		_particles->streaklinePolicy();
+//		_particles->particleTracingPolicy();
 //		_particles->setMatlabFormat();
 //		_particles->setMatlabOneFileFormat();
 		_particles->setPythonOneFileFormat();
@@ -134,6 +134,10 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	// compute dt
 	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt(); // BLOCKING
+
+	// bounds for the timestep
+	real_t upper_bound_dt(0.2);
+	dt = std::min(dt, upper_bound_dt);
 
 	bool printInfo(false);
 	if (diff_time <= dt){
@@ -251,7 +255,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -262,8 +266,8 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "\t\t" << _clock->repr(0) << "\n";
 
 		std::cout << "Total simulated time: t = \t";
-		printf("%.2f", _t);
-		std::cout << "  \t seconds"; // total simulated time
+		printf("%.4f", _t);
+		std::cout << " \t seconds"; // total simulated time
 		std::cout << "\t" << _clock->repr(1) << "\n";
 
 		if (_solver_converging){
@@ -274,13 +278,13 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
 		std::cout << "Last residual: res = ";
-		printf("%10.4f", currentResidual/currentNoTimeSteps);
+		printf("%10.7f", currentResidual/currentNoTimeSteps);
 		std::cout << ",    \tno. iterations: ";
 		printf("%7i", int(currentIterations/currentNoTimeSteps/2));
 		std::cout << "     \n"; // residual
 
 		std::cout << "Last timestep: dt =  ";
-		printf("%10.4f", currentTime/currentNoTimeSteps);
+		printf("%10.7f", currentTime/currentNoTimeSteps);
 		std::cout << ",    \tno. timesteps:  ";
 		printf("%7i", int(currentNoTimeSteps));
 		std::cout << "     \n"; // timestep
@@ -317,6 +321,9 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << ", \tdiff(rhs) = ";
 		printf("%10.7f", _diff_rhs);
 		std::cout << std::endl;
+
+		// current number of particles
+		std::cout << "Current number of (virtual) particles: " << _particles->numberParticles() << std::endl;
 
 		std::cout << "============================================================\n";
 

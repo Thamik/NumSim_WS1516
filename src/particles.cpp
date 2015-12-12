@@ -120,7 +120,7 @@ bool ParticleList::isInside(multi_real_t pos) const
 //--------------------------------------------------------------------
 
 Particles::Particles(const Geometry* geom)
-: _pl(nullptr), _geom(geom), _policy(0), _file_format(defaultFormat), _no_timestep(0)
+: _pl(nullptr), _geom(geom), _policy(0), _file_format(defaultFormat), _no_timestep(0), _no_streaklines(0), _max_particles_per_streakline(0), _streakline_positions(nullptr), _max_particles(0)
 {
 }
 
@@ -130,6 +130,8 @@ Particles::~Particles()
 		_pl->deleteAllAfter();
 		_pl = nullptr;
 	}
+
+	if (_streakline_positions != nullptr) delete[] _streakline_positions;
 }
 
 void Particles::updateAllPositions(real_t dt, const Grid* u, const Grid* v)
@@ -196,7 +198,19 @@ void Particles::init()
 
 void Particles::init_streakline()
 {
-	// TODO: specify positions
+	if (_streakline_positions != nullptr) delete[] _streakline_positions;
+
+	_no_streaklines = 1;
+	_max_particles_per_streakline = 500;
+	_streakline_positions = new multi_real_t[_no_streaklines];
+
+	// in the middle
+//	_streakline_positions[0] = multi_real_t(_geom->TotalLength()[0]/2.0, _geom->TotalLength()[1]/2.0);
+
+	// in the left quarter, which is very nice for pipe flow (with or without step) and karman vortex street
+	_streakline_positions[0] = multi_real_t(_geom->TotalLength()[0]/4.0, _geom->TotalLength()[1]/2.0);
+
+	_max_particles = _no_streaklines * _max_particles_per_streakline;
 }
 
 void Particles::init_particleTracing()
@@ -218,6 +232,8 @@ void Particles::init_particleTracing()
 		}
 	}
 	std::cout << "Particle Tracing: All " << numberParticles() << " particles spawned\n";
+
+	_max_particles = totalNumberParticles;
 }
 
 void Particles::timestep(real_t dt, const Grid* u, const Grid* v)
@@ -233,7 +249,13 @@ void Particles::newParticles()
 	switch (_policy){
 		case streakline:
 			// spawn particles at the specified positions
-			// TODO
+			for (int i=0; i<_no_streaklines; i++){
+				if (numberParticles() < _max_particles){
+					spawnParticle(_streakline_positions[i]);
+				} else {
+					break;
+				}
+			}
 			break;
 		case particleTracing:
 			// nothing to do here, all particles spawned in the beginning
@@ -336,6 +358,16 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 		outfile << "\n\n";
 	}
 	if (_file_format == pythonOneFileFormat){
+		if (numberParticles() < _max_particles){
+			// write "empty" particle data, such that the (sub-)array has the right shape
+			int diff_particles = _max_particles - numberParticles();
+			for (int i=0; i<diff_particles; i++){
+				outfile << "[ float(\"NaN\"), float(\"NaN\") ],\n";
+			}
+		} else if (numberParticles() > _max_particles){
+			// something went wrong, there are too much particles!
+			std::cout << "Warning! Particles: too much particles." << std::endl;
+		}
 		outfile << "],\n";
 	}
 
