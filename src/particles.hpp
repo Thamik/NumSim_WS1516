@@ -62,6 +62,7 @@ public:
 	void setDefaultFormat();
 	void setMatlabFormat();
 	void setMatlabOneFileFormat();
+	void setPythonOneFileFormat();
 
 	void init();
 
@@ -72,6 +73,7 @@ public:
 	bool isInsideParticle(multi_real_t pos) const;
 
 	void writeToFile(real_t total_time = -1.0, const char* filename = "") const;
+	void finalizeFile() const;
 
 	bool isEmpty() const;
 
@@ -92,7 +94,8 @@ private:
 	enum {
 		defaultFormat = 0,
 		matlabFormat = 1,
-		matlabOneFileFormat = 2
+		matlabOneFileFormat = 2,
+		pythonOneFileFormat = 3
 	};
 	char _file_format;
 

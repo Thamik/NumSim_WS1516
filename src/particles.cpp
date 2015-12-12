@@ -176,7 +176,19 @@ void Particles::init()
 	}
 
 	if (_file_format == matlabOneFileFormat){
-		remove("VTK/timestep_all.particles");
+		remove("VTK/timestep_all_particles.m");
+	} else if (_file_format == pythonOneFileFormat){
+		remove("VTK/timestep_all_particles.py");
+
+		std::string file("");
+		file += "VTK/timestep_all_particles.py";
+		std::ofstream outfile;
+		outfile.open(file.c_str());
+
+		outfile << "import numpy as np\n";
+		outfile << "pos = np.array([";
+
+		outfile.close();
 	}
 }
 
@@ -248,7 +260,9 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 			file += filename;
 		}
 	} else if (_file_format == matlabOneFileFormat){
-		file += "VTK/timestep_all.particles";
+		file += "VTK/timestep_all_particles.m";
+	} else if (_file_format == pythonOneFileFormat){
+		file += "VTK/timestep_all_particles.py";
 	} else {
 		std::cout << "Warning! Particles: Unknown file format. Abort writing." << std::endl;
 		return;
@@ -260,7 +274,7 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 	std::ofstream outfile;
 	if (_file_format == defaultFormat || _file_format == matlabFormat){
 		outfile.open(file.c_str());
-	} else if (_file_format == matlabOneFileFormat){
+	} else if (_file_format == matlabOneFileFormat || _file_format == pythonOneFileFormat){
 		outfile.open(file.c_str(), std::ofstream::app);
 	}
 
@@ -290,7 +304,10 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 	// write particle positions
 	if (_file_format == matlabFormat || _file_format == matlabOneFileFormat){
 		outfile << "pos(:,:," << _no_timestep << ") = [ ";
+	} else if (_file_format == pythonOneFileFormat){
+		outfile << "[";
 	}
+
 	ParticleList* particle = _pl;
 	while (particle != nullptr){
 		if (_file_format == defaultFormat){
@@ -300,6 +317,8 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 			if (!particle->isEnd()){
 				outfile << " ;\n";
 			}
+		} else if (_file_format == pythonOneFileFormat){
+			outfile << "[ " << particle->getPos()[0] << ", " << particle->getPos()[1] << " ],\n";
 		}
 
 		particle = particle->getSucc();
@@ -310,8 +329,25 @@ void Particles::writeToFile(real_t total_time, const char* filename) const
 	if (_file_format == matlabOneFileFormat){
 		outfile << "\n\n";
 	}
+	if (_file_format == pythonOneFileFormat){
+		outfile << "],\n";
+	}
 
 	outfile.close();
+}
+
+void Particles::finalizeFile() const
+{
+	if (_file_format == pythonOneFileFormat){
+		std::string file("");
+		file += "VTK/timestep_all_particles.py";
+		std::ofstream outfile;
+		outfile.open(file.c_str(), std::ofstream::app);
+
+		outfile << "])";
+
+		outfile.close();
+	}
 }
 
 bool Particles::isEmpty() const
@@ -343,4 +379,9 @@ void Particles::setMatlabFormat()
 void Particles::setMatlabOneFileFormat()
 {
 	_file_format = matlabOneFileFormat;
+}
+
+void Particles::setPythonOneFileFormat()
+{
+	_file_format = pythonOneFileFormat;
 }
