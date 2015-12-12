@@ -87,6 +87,8 @@ class Solver;
 class RedOrBlackSOR; // filled in, used in the Compute class
 //class JacobiSolver;
 
+class Particles;
+
 class Compute;
 
 #endif // __TYPEDEF_HPP

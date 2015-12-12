@@ -6,6 +6,7 @@
 #include "solver.hpp"
 #include "communicator.hpp"
 #include "console_output.hpp"
+#include "particles.hpp"
 
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
@@ -28,6 +29,17 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_epslimit = param->Eps();
 	//_epslimit = 1e-4;
 	//_dtlimit = 
+
+	// build particles object
+	_particles = new Particles(_geom);
+
+	// define options
+//	_particles->streaklinePolicy();
+	_particles->particleTracingPolicy();
+//	_particles->setMatlabFormat();
+	_particles->setMatlabOneFileFormat();
+
+	_particles->init();
 
 	// construct grids
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
@@ -101,6 +113,8 @@ Compute::~Compute()
 	delete _solver;
 
 	delete _clock;
+
+	delete _particles;
 }
 
 /**
@@ -121,6 +135,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		printInfo = !_comm->getRank();
 	}
 	printInfo = !_comm->getRank();
+	//printInfo = false;
 
 	/*if (dt < 0){
 		std::cout << "Fatal error! Compute::TimeStep(): negative timestep!" << std::endl;
@@ -215,6 +230,10 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	currentTime += dt;
 	currentNoTimeSteps++;
 	currentResidual += residual;
+
+	// handle particles
+	_particles->timestep(dt, _u, _v);
+	_particles->writeToFile(_t);
 
 	// print information
 	if (printInfo){

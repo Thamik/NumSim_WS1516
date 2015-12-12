@@ -103,6 +103,8 @@ private:
   const Parameter *_param;
   const Communicator *_comm;
 
+	Particles* _particles;
+
   /// Compute the new velocites u,v
   void NewVelocities(const real_t &dt);
   /// Compute the temporary velocites F,G

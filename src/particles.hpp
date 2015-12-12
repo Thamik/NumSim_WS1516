@@ -1,5 +1,8 @@
 #include "typedef.hpp"
 
+/**
+This class implements a doubly-linked list, in which each node stores the data concerning a single particle.
+*/
 class ParticleList {
 public:
 	ParticleList(multi_real_t pos, const Geometry* geom);
@@ -25,8 +28,12 @@ public:
 
 	void updatePos(real_t dt, const Grid* u, const Grid* v);
 
+	bool isInside(multi_real_t pos) const;
+
 private:
 	multi_real_t _pos;
+
+	real_t _radius;
 
 	ParticleList* _pred;
 	ParticleList* _succ;
@@ -37,6 +44,9 @@ private:
 
 //--------------------------------------------------------------------
 
+/**
+This class stores the data concerning all particles that are involved in the current simulation.
+*/
 class Particles {
 public:
 	Particles(const Geometry* geom);
@@ -49,7 +59,23 @@ public:
 	void streaklinePolicy();
 	void particleTracingPolicy();
 
-	void timestep();
+	void setDefaultFormat();
+	void setMatlabFormat();
+	void setMatlabOneFileFormat();
+
+	void init();
+
+	void timestep(real_t dt, const Grid* u, const Grid* v);
+
+	void newParticles();
+
+	bool isInsideParticle(multi_real_t pos) const;
+
+	void writeToFile(real_t total_time = -1.0, const char* filename = "") const;
+
+	bool isEmpty() const;
+
+	int numberParticles() const;
 
 private:
 	ParticleList* _pl;
@@ -62,6 +88,18 @@ private:
 		particleTracing = 2
 	};
 	char _policy;
+
+	enum {
+		defaultFormat = 0,
+		matlabFormat = 1,
+		matlabOneFileFormat = 2
+	};
+	char _file_format;
+
+	int _no_timestep;
+
+	void init_particleTracing();
+	void init_streakline();
 
 };
 
