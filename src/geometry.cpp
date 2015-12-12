@@ -381,7 +381,8 @@ const multi_index_t& Geometry::Offset(index_t i, index_t j) const
 {
 	if (_comm->getRank() != 0){
 		// the data is undefined!
-		std::cout << "Warning: Geometry: Offset data is undefined on non-master process!\n" << std::flush;
+		std::cout << "Fatal error! Geometry: Offset data is undefined on non-master process!\n" << std::flush;
+		throw std::runtime_error("Geometry: Offset data is undefined on non-master process.");
 	} else {
 		return _offsets[i][j];
 	}
@@ -392,6 +393,7 @@ const multi_index_t& Geometry::LocalSize(index_t i, index_t j) const
 	if (_comm->getRank() != 0){
 		// the data is undefined!
 		std::cout << "Warning: Geometry: LocalSize data is undefined on non-master process!\n" << std::flush;
+		throw std::runtime_error("Geometry: LocalSize data is undefined on non-master process.");
 	} else {
 		return _localSizes[i][j];
 	}

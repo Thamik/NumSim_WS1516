@@ -158,8 +158,8 @@ int main(int argc, char **argv) {
 	if(!comm.getRank()) std::cout << "\n\n\n\n\n" << "\n\n\n\n\n\n" << std::flush;
 
 	// initialize the wanted time steps
-	real_t next_wanted_time(param.Dt());
-	real_t difference_time(0.0);
+//	real_t next_wanted_time(param.Dt());
+//	real_t difference_time(0.0);
 
 	// Run the time steps until the end is reached
 	while (comp.GetTime() < param.Tend()) {
@@ -215,21 +215,21 @@ int main(int argc, char **argv) {
 		// Run a few steps
 		if (VERBOSE) std::cout << "Running a few timesteps...\n" << std::flush;
 
-		next_wanted_time += param.Dt();
-		bool keep_running(true);
+//		next_wanted_time += param.Dt();
+//		bool keep_running(true);
 
 		//while (keep_running){
 		for (int i=0; i<1; i++){
 
-			difference_time = next_wanted_time - comp.GetTime(); // time difference to the next timestep for vtk and visu
+//			difference_time = next_wanted_time - comp.GetTime(); // time difference to the next timestep for vtk and visu
 
 			comp.TimeStep(VERBOSE, 1000.0);
 			//comp.TimeStep(VERBOSE, difference_time);
 
-			if (comp.GetTime() >= (next_wanted_time - 1e-3)){
+//			if (comp.GetTime() >= (next_wanted_time - 1e-3)){
 				// the next wanted timestep is achieved
-				keep_running = false;
-			}
+//				keep_running = false;
+//			}
 		}
 
 	}

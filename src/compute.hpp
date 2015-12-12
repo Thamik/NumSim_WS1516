@@ -91,6 +91,9 @@ private:
 	Grid* _F_old;
 	Grid* _G_old;
 
+	/// specifies if the solver is currently converging
+	bool _solver_converging;
+
 	real_t _diff_p;
 	real_t _diff_rhs;
 	real_t _diff_F;
@@ -123,9 +126,6 @@ private:
 	void sync_uv();
 	void sync_p();
 	void sync_all();
-
-	/// specifies if the solver is currently converging
-	bool _solver_converging;
 
 	/// the console clock
 	ConsoleClock* _clock;
