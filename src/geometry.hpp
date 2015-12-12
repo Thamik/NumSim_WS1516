@@ -94,6 +94,10 @@ public:
 	void output_flags() const;
 	void testIterator() const;
 
+	bool isInsideObstacle(const multi_real_t& pos, const multi_real_t& offset) const;
+
+	bool isInsideThisSubdomain(const multi_real_t& pos) const;
+
 private:
 	/// Communicator
 	Communicator *_comm;

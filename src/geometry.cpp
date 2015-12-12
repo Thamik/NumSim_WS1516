@@ -8,7 +8,7 @@
 #include <string>
 #include <stdlib.h>     /* atof */
 
-//#include <math.h>
+#include <math.h>
 
 #include <mpi.h>
 
@@ -1280,3 +1280,30 @@ void Geometry::testIterator() const
 	tmp->Out();
 	delete tmp;	
 }
+
+bool Geometry::isInsideObstacle(const multi_real_t& pos, const multi_real_t& offset) const
+{
+	real_t ix = ( (Size()[0] - 2.0)*(pos[0]/Length()[0]) ) - offset[0];
+	real_t iy = ( (Size()[1] - 2.0)*(pos[1]/Length()[1]) ) - offset[1];
+	
+//	if (_offset[0] > 0 || _offset[1] > 0)
+//		std::cout << "Warning: Positive Offset \n";
+
+	index_t x = round(ix);
+	index_t y = round(iy);
+
+	index_t val = x + y * Size()[0];
+
+	return isObstacle(Iterator(this, val));
+}
+
+bool Geometry::isInsideThisSubdomain(const multi_real_t& pos) const
+{
+	real_t minX = _blength[0] * real_t(_total_offset[0]) / real_t(_bsize[0]-2);
+	real_t maxX = minX + _blength[0] * real_t(_size[0]-2) / real_t(_bsize[0]-2);
+	real_t minY = _blength[1] * real_t(_total_offset[1]) / real_t(_bsize[1]-2);
+	real_t maxY = minY + _blength[1] * real_t(_size[1]-2) / real_t(_bsize[1]-2);
+
+	return pos[0] >= minX && pos[0] <= maxX && pos[1] >= minY && pos[1] <= maxY;
+}
+

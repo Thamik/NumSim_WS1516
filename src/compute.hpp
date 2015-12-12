@@ -106,6 +106,7 @@ private:
   const Parameter *_param;
   const Communicator *_comm;
 
+	// this is only in use on process rank 0, otherwise not in use
 	Particles* _particles;
 
   /// Compute the new velocites u,v

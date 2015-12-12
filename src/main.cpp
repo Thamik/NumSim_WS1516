@@ -111,13 +111,13 @@ int main(int argc, char **argv) {
 	// Create and initialize the visualization
 #ifdef USE_DEBUG_VISU
 	if (VERBOSE) std::cout << "Initializing the visualization..." << std::flush;
-	Renderer visu(geom.Length(), geom.Mesh());
+	Renderer visu(geom.Length(), geom.Mesh(), &geom);
 
 	/*visu.Init(800 / comm.ThreadDim()[0], 800 / comm.ThreadDim()[1], comm.getRank() + 1);*/
 
 	// set window position automatically fix
-	index_t winMaxX = 1000;
-	index_t winMaxY = 600;
+	index_t winMaxX = 1200;
+	index_t winMaxY = 650;
 	index_t winSizeX, winSizeY;
 	if (geom.TotalLength()[0]/double(winMaxX) >= geom.TotalLength()[1]/double(winMaxY)){
 		winSizeX = winMaxX;

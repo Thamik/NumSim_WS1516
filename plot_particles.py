@@ -1,3 +1,5 @@
+import numpy as np
+
 # load the particle position data
 # resulting data:
 # pos[ <number timesteps> , <number particle> , 2 (spatial dimensions) ]
@@ -13,10 +15,15 @@ print 'Number of particles: \t' + str(pos.shape[1])
 import matplotlib.pyplot as plt
 import time
 
+xmin = round(np.amin(pos[:,:,0]))
+xmax = round(np.amax(pos[:,:,0]))
+ymin = round(np.amin(pos[:,:,1]))
+ymax = round(np.amax(pos[:,:,1]))
+
 for ii in range(pos.shape[0]):
     plt.plot(pos[ii,:,0], pos[ii,:,1], 'bo', hold=False)
-    plt.xlim(0,1)
-    plt.ylim(0,1)
+    plt.xlim(xmin, xmax)
+    plt.ylim(ymin, ymax)
     plt.draw()
     plt.show(block=False)
     time.sleep(0.02)

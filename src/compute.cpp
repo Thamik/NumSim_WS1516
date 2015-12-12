@@ -23,24 +23,26 @@
 \param[in]	comm 	pointer on Communicator object
 */
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm), _particles(nullptr)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
 	//_epslimit = 1e-4;
 	//_dtlimit = 
 
-	// build particles object
-	_particles = new Particles(_geom);
+	if (_comm->getRank() == 0){
+		// build particles object
+		_particles = new Particles(_geom);
 
-	// define options
-//	_particles->streaklinePolicy();
-	_particles->particleTracingPolicy();
-//	_particles->setMatlabFormat();
-//	_particles->setMatlabOneFileFormat();
-	_particles->setPythonOneFileFormat();
+		// define options
+//		_particles->streaklinePolicy();
+		_particles->particleTracingPolicy();
+//		_particles->setMatlabFormat();
+//		_particles->setMatlabOneFileFormat();
+		_particles->setPythonOneFileFormat();
 
-	_particles->init();
+		_particles->init();
+	}
 
 	// construct grids
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
@@ -115,8 +117,10 @@ Compute::~Compute()
 
 	delete _clock;
 
-	_particles->finalizeFile();
-	delete _particles;
+	if (_comm->getRank() == 0 && _particles != nullptr){
+		_particles->finalizeFile();
+		delete _particles;
+	}
 }
 
 /**
@@ -234,8 +238,10 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	currentResidual += residual;
 
 	// handle particles
-	_particles->timestep(dt, _u, _v);
-	_particles->writeToFile(_t);
+	if (_comm->getRank() == 0){
+		_particles->timestep(dt, _u, _v);
+		_particles->writeToFile(_t);
+	}
 
 	// print information
 	if (printInfo){
@@ -270,7 +276,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "Last residual: res = ";
 		printf("%10.4f", currentResidual/currentNoTimeSteps);
 		std::cout << ",    \tno. iterations: ";
-		printf("%7i", int(currentIterations/currentNoTimeSteps));
+		printf("%7i", int(currentIterations/currentNoTimeSteps/2));
 		std::cout << "     \n"; // residual
 
 		std::cout << "Last timestep: dt =  ";

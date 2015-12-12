@@ -16,6 +16,8 @@
  */
 
 #include "visu.hpp"
+#include "geometry.hpp"
+
 #include <cmath>
 #include <limits>
 //------------------------------------------------------------------------------
@@ -117,8 +119,8 @@ void setpixelrgb(SDL_Surface *screen, int x, int y, uint8_t r, uint8_t g,
 //------------------------------------------------------------------------------
 uint32_t Renderer::_count = 0;
 //------------------------------------------------------------------------------
-Renderer::Renderer(const multi_real_t &length, const multi_real_t &h)
-    : _length(length), _h(h) {
+Renderer::Renderer(const multi_real_t &length, const multi_real_t &h, const Geometry* geom)
+    : _length(length), _h(h), _geom(geom) {
   if (_count == 0)
     SDL_Init(SDL_INIT_VIDEO);
   _count++;
@@ -298,6 +300,7 @@ int Renderer::Render(const Grid *grid, const real_t &min, const real_t &max) {
         setpixelrgb(_screen, x, y, 255, 255, 255);
         continue;
       }
+
       if (_grid && _orig[_x] >= treshold[0]) {
         setpixelrgb(_screen, x, y, 20, 20, 20);
       } else if (_grid && _orig[_y] < treshold[1]) {
@@ -311,6 +314,14 @@ int Renderer::Render(const Grid *grid, const real_t &min, const real_t &max) {
         if (value < _min)
           _min = value;
       }
+
+	// colour obstacles in another way
+	if (_geom->isInsideObstacle(_orig, grid->getOffset())){
+//		setpixelrgb(_screen, x, y, 0, 0, 0); // set black
+		setpixelrgb(_screen, x, y, 50, 50, 50); // set grey
+		continue;
+	}
+
     }
     if (_grid && _orig[_x] >= treshold[0]) {
       treshold[0] += _h[_x];

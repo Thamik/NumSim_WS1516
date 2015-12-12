@@ -136,7 +136,9 @@ void Particles::updateAllPositions(real_t dt, const Grid* u, const Grid* v)
 {
 	ParticleList* particle = _pl;
 	while (particle != nullptr){
-		particle->updatePos(dt,u,v);
+		if (_geom->isInsideThisSubdomain(particle->getPos())){
+			particle->updatePos(dt,u,v);
+		}
 		particle = particle->getSucc();
 	}
 }
@@ -202,8 +204,12 @@ void Particles::init_particleTracing()
 	// spawn all particles
 	
 	// for instance, spawn the particles on a uniform grid all over the geometry
-	int nx(20);
-	int ny(20);
+	int totalNumberParticles(400);
+	int nx, ny;
+	// split the number of particles in each dimension like the mesh was built
+	nx = int(round(real_t(_geom->TotalSize()[0]) * sqrt(real_t(totalNumberParticles) / real_t(_geom->TotalSize()[0] * _geom->TotalSize()[1]))));
+	ny = int(round(real_t(_geom->TotalSize()[1]) * sqrt(real_t(totalNumberParticles) / real_t(_geom->TotalSize()[0] * _geom->TotalSize()[1]))));
+
 	for (int i=1; i<=nx; i++){
 		for (int j=1; j<=ny; j++){
 			real_t x = _geom->TotalLength()[0]/(nx+1.0)*real_t(i);

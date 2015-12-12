@@ -39,7 +39,7 @@ const char States[][42] = {
 class Renderer {
 public:
   /// Constructs a Renderer
-  Renderer(const multi_real_t &length, const multi_real_t &h);
+  Renderer(const multi_real_t &length, const multi_real_t &h, const Geometry* geom);
   ~Renderer();
 
   /// Initializes the Renderer
@@ -80,6 +80,8 @@ private:
   int _idx;
 
   static uint32_t _count;
+
+	const Geometry* _geom;
 };
 //------------------------------------------------------------------------------
 /*! \class	Renderer
