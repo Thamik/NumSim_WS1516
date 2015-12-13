@@ -140,6 +140,11 @@ void Geometry::load_domain_partitioning(const char* file)
 						total_bvu[ival] = 0.0;
 						total_bvv[ival] = 0.0;
 						total_bvp[ival] = 0.0;
+					} else {
+						total_flags[ival] = 0; // fluid
+						total_bvu[ival] = 0.0;
+						total_bvv[ival] = 0.0;
+						total_bvp[ival] = 0.0;
 					}
 				}
 			}

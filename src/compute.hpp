@@ -135,6 +135,7 @@ private:
 	real_t currentTime = 0.0;
 	real_t currentIterations = 0.0;
 	real_t currentResidual = 0.0;
+	index_t ind = 0.0;
 
 	void check_for_incontinuities();
 	

@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
 //		bool keep_running(true);
 
 		//while (keep_running){
-		for (int i=0; i<1; i++){
+		for (int i=0; i<10; i++){
 
 //			difference_time = next_wanted_time - comp.GetTime(); // time difference to the next timestep for vtk and visu
 

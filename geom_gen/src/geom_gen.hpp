@@ -11,7 +11,7 @@ public:
 	void setTotalSize(int n);
 	void setLength(double x, double y);
 
-	void writeToFile(const char* filename=nullptr);
+	void writeToFile(const char* filename=nullptr, const char* filenameParam=nullptr);
 
 	void print() const;
 
@@ -36,11 +36,23 @@ private:
 	double _bLengthX, _bLengthY;
 
 	std::string* _filename;
+	std::string* _filenameParam;
 
 	char* _flags;
 	double* _bvu;
 	double* _bvv;
 	double* _bvp;
+
+	// local Parameter variables
+	double _re; // Reynolds number
+  	double _omega; // relaxation factor
+  	double _alpha; // upwind differencing factor
+  	double _dt; // time step size
+  	double _tend; // end time
+  	double _eps; // tolerance for pressure iteration
+  	double _tau; // safety factor time step size
+  	int _itermax; // maximum number of iterations
+	int _itermin; // minimum number of iterations
 
 	void setSize(int x, int y);
 

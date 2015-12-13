@@ -78,6 +78,6 @@ int main(int argc, char** argv){
 	}
 
 	geom_gen.print();
-	geom_gen.writeToFile("../data/complex_default.geom");
+	geom_gen.writeToFile("../data/complex_default.geom", "../data/assignment03.params");
 
 }

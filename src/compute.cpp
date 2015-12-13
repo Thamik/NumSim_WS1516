@@ -35,8 +35,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 		_particles = new Particles(_geom);
 
 		// define options
-		_particles->streaklinePolicy();
-//		_particles->particleTracingPolicy();
+//		_particles->streaklinePolicy();
+		_particles->particleTracingPolicy();
 //		_particles->setMatlabFormat();
 //		_particles->setMatlabOneFileFormat();
 		_particles->setPythonOneFileFormat();
@@ -140,11 +140,15 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	dt = std::min(dt, upper_bound_dt);
 
 	bool printInfo(false);
-	if (diff_time <= dt){
+	/*if (diff_time <= dt){
 		dt = diff_time;
 		printInfo = !_comm->getRank();
+	}*/
+	if (ind == 9 && _comm->getRank() == 0) {
+		printInfo = true;
+		ind = 0;
 	}
-	printInfo = !_comm->getRank();
+	//printInfo = !_comm->getRank();
 	//printInfo = false;
 
 	/*if (dt < 0){
@@ -335,6 +339,8 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		_v->TotalAbsMax();
 		_p->TotalAbsMax();
 	}
+
+	ind++;
 
 }
 
