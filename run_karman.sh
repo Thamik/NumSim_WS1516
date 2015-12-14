@@ -1,3 +1,8 @@
+# clear VTK folder
+cd VTK
+rm *
+cd ..
+
 # compile and run karman vortex street
 cd geom_gen
 make -j 2

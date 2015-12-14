@@ -1,3 +1,9 @@
+# clear VTK folder
+cd VTK
+rm *
+cd ..
+
+
 cd geom_gen
 make -j 2
 ./geomgen_release 2500 2
