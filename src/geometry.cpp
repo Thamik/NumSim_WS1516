@@ -12,6 +12,9 @@
 
 #include <mpi.h>
 
+// this is only for exercise sheet 3, the two-cell criterion is not satisfied
+//#define twocell_criterion_check
+
 /* public methods */
 
 /* constructor */
@@ -574,11 +577,14 @@ void Geometry::UpdateGG_U(Grid *u) const
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
 		if(isNeumannBoundaryU(it)) {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (leftright) {
+			} else 
+#endif
+			if (leftright) {
 				// the corner cases don't have to be considered as they were already consider above!
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = u->Cell(it.Left()) + _h[0]*bvalU(it);
@@ -600,11 +606,14 @@ void Geometry::UpdateGG_U(Grid *u) const
 				//}
 			}
 		} else {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in u(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
+			} else 
+#endif
+			if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					u->Cell(it) = bvalU(it);
@@ -645,11 +654,14 @@ void Geometry::UpdateGG_V(Grid *v) const
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
 		if(isNeumannBoundaryV(it)) {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
+			} else 
+#endif
+			if (topdown) {
 				//either at the top or the bottom cell is fluid
 				//if (!isObstacle(it.Left())) {
 				//	v->Cell(it) = v->Cell(it.Left()) + _h[0]*bvalV(it);
@@ -671,11 +683,14 @@ void Geometry::UpdateGG_V(Grid *v) const
 				}
 			}
 		} else {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in v(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (leftright) {
+			} else 
+#endif
+			if (leftright) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Top())) {
 					v->Cell(it) = bvalV(it);
@@ -715,12 +730,15 @@ void Geometry::UpdateGG_P(Grid *p) const
 		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
 		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
 		if(isNeumannBoundaryP(it)) {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in pN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in pN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
+			} else 
+#endif
+			if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					if (!isObstacle(it.Top())) {
@@ -780,12 +798,15 @@ void Geometry::UpdateGG_P(Grid *p) const
 				}
 			}
 		} else {
+#ifdef twocell_criterion_check
 			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
 				std::cout << "Warning in pD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
 				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
 			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
 				std::cout << "Warning in pD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
-			} else if (topdown) {
+			} else 
+#endif
+			if (topdown) {
 				//either at the top or the bottom cell is fluid
 				if (!isObstacle(it.Left())) {
 					if (!isObstacle(it.Top())) {

@@ -479,3 +479,38 @@ void GeometryGenerator::testCase2()
 		_bvp[ival] = 0.0;
 	}
 }
+
+void GeometryGenerator::test_twoCellCriterion()
+{
+	pipeFlow();
+
+	int ival(0);
+	for (int i=_bSizeX/2; i<=_bSizeX/2; i++){
+		for (int j=0; j<_bSizeY; j++){
+			ival = j * (_bSizeX) + i;
+			_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+			_bvu[ival] = 1.0;
+			_bvv[ival] = 0.0;
+			_bvp[ival] = 0.0;
+		}
+	}
+}
+
+void GeometryGenerator::test_twoCellCriterion2()
+{
+	pipeFlow();
+
+	int ival(0);
+	for (int i=_bSizeX/2; i<=_bSizeX/2; i++){
+		for (int j=0; j<_bSizeY; j++){
+			ival = j * (_bSizeX) + i;
+			_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+			_bvu[ival] = 1.0;
+			_bvv[ival] = 0.0;
+			_bvp[ival] = 0.0;
+		}
+	}
+
+	fixSingleCells();
+}
+
