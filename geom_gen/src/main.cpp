@@ -68,6 +68,12 @@ int main(int argc, char** argv){
 		case 6:
 			geom_gen.testCase2();
 			break;
+		case 7:
+			geom_gen.test_twoCellCriterion();
+			break;
+		case 8:
+			geom_gen.test_twoCellCriterion2();
+			break;
 		case -1:
 			// default case: no console input
 			geom_gen.drivenCavity();

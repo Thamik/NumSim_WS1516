@@ -30,6 +30,9 @@ public:
 
 	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=1.1, double pressureRight=1.0);
 
+	void test_twoCellCriterion();
+	void test_twoCellCriterion2();
+
 private:
 	int _bSizeX, _bSizeY;
 	int _totalCells;
