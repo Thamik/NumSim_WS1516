@@ -20,7 +20,7 @@ public:
 	/// Constructs geometry data for the driven cavity problem
 	void drivenCavity();
 	/// Constructs geometry data for a simple pipe flow
-	void pipeFlow(double xlength=6.0, double ylength=1.0, double pressureLeft=2.0, double pressureRight=1.0);
+	void pipeFlow(double xlength=6.0, double ylength=1.0, double pressureLeft=1.1, double pressureRight=1.0);
 	/// Constructs geometry data for the flow over a staircase in a pipe
 	void flowOverAStep(double xlength=6.0, double ylength=1.0, double pressureLeft=1.1, double pressureRight=1.0);
 

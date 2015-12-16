@@ -38,8 +38,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 //		_particles->streaklinePolicy();
 		_particles->particleTracingPolicy();
 //		_particles->setMatlabFormat();
-//		_particles->setMatlabOneFileFormat();
-		_particles->setPythonOneFileFormat();
+		_particles->setMatlabOneFileFormat();
+//		_particles->setPythonOneFileFormat();
 
 		_particles->init();
 	}
@@ -259,7 +259,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -328,6 +328,8 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// current number of particles
 		std::cout << "Current number of (virtual) particles: " << _particles->numberParticles() << std::endl;
+
+		std::cout << "Error in L^2 norm: " << errPipe() << std::endl;
 
 		std::cout << "============================================================\n";
 
@@ -657,4 +659,24 @@ void Compute::check_for_incontinuities()
 //		for (int i=0; i<10; i++) std::cout << "Warning: Incontinuity (G) detected! Diff: " << diff_G << std::endl;
 	}
 
+}
+
+real_t Compute::errPipe()
+{
+	real_t res(0.0);
+	InteriorIteratorGG it(_geom);
+	it.First();
+
+	while(it.Valid()) {
+		multi_real_t pos(0.0,0.0); // physical position
+		pos[0] = (_u->getOffset()[0] + it.Pos()[0])*_geom->Length()[0]/(_geom->Size()[0] - 2.0);
+		pos[1] = (_u->getOffset()[1] + it.Pos()[1])*_geom->Length()[1]/(_geom->Size()[1] - 2.0);
+		
+		real_t exactSol = -0.5*_param->Re()*0.1/6.0*pos[1]*(pos[1]-1.0);
+
+		res += (_u->Cell(it) - exactSol)*(_u->Cell(it) - exactSol);
+		it.Next();
+	}
+
+	return sqrt(res/((_geom->Size()[0]-2.0)*(_geom->Size()[1]-2.0)));
 }
