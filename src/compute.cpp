@@ -259,7 +259,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -329,7 +329,10 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		// current number of particles
 		std::cout << "Current number of (virtual) particles: " << _particles->numberParticles() << std::endl;
 
-		std::cout << "Error in L^2 norm: " << errPipe() << std::endl;
+		//std::cout << "Error in L^2 norm: " << errPipe() << std::endl;
+
+		//GetVorticity();
+		//std::cout << "Break-Off Point: " << breakOffPoint() << std::endl;
 
 		std::cout << "============================================================\n";
 
@@ -680,3 +683,28 @@ real_t Compute::errPipe()
 
 	return sqrt(res/((_geom->Size()[0]-2.0)*(_geom->Size()[1]-2.0)));
 }
+
+real_t Compute::breakOffPoint()
+{
+	BoundaryIterator it(_geom);
+	it.SetBoundary(BoundaryIterator::boundaryBottom);
+	it.First();
+
+	bool wasNegative(false);
+	real_t vort(0.0);
+
+	while (it.Valid()){
+		vort = _tmp_vorticity->Cell(it.Top());
+		if (vort < 0){
+			wasNegative = true;
+		} else if (wasNegative && vort > 0){
+			// here is the break-off point
+			return (_tmp_vorticity->getOffset()[0] + it.Pos()[0])*_geom->Length()[0]/(_geom->Size()[0] - 2.0);
+		}
+
+		it.Next();
+	}
+
+	return nan("");
+}
+

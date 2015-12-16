@@ -138,7 +138,10 @@ private:
 	index_t ind = 0.0;
 
 	void check_for_incontinuities();
+
 	real_t errPipe();
+
+	real_t breakOffPoint();
 	
 };
 //------------------------------------------------------------------------------
