@@ -270,7 +270,7 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "\t\t" << _clock->repr(0) << "\n";
 
 		std::cout << "Total simulated time: t = \t";
-		printf("%.4f", _t);
+		printf("%5.3f", _t);
 		std::cout << " \t seconds"; // total simulated time
 		std::cout << "\t" << _clock->repr(1) << "\n";
 
