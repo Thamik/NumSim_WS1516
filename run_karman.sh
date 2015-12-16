@@ -8,10 +8,8 @@ cd geom_gen
 make -j 2
 ./geomgen_release 7500 4
 cd ..
-make -j 2
+sh compile.sh
 mpirun -np 4 numsim data/assignment03.params data/complex_default.geom
 
-# view particle tracing
-iphython 
 
 

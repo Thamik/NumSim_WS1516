@@ -38,8 +38,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 //		_particles->streaklinePolicy();
 		_particles->particleTracingPolicy();
 //		_particles->setMatlabFormat();
-		_particles->setMatlabOneFileFormat();
-//		_particles->setPythonOneFileFormat();
+//		_particles->setMatlabOneFileFormat();
+		_particles->setPythonOneFileFormat();
 
 		_particles->init();
 	}

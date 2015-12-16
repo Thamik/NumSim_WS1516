@@ -200,7 +200,7 @@ void Particles::init_streakline()
 {
 	if (_streakline_positions != nullptr) delete[] _streakline_positions;
 
-	_no_streaklines = 1;
+	_no_streaklines = 2;
 	_max_particles_per_streakline = 500;
 	_streakline_positions = new multi_real_t[_no_streaklines];
 
@@ -208,7 +208,9 @@ void Particles::init_streakline()
 //	_streakline_positions[0] = multi_real_t(_geom->TotalLength()[0]/2.0, _geom->TotalLength()[1]/2.0);
 
 	// in the left quarter, which is very nice for pipe flow (with or without step) and karman vortex street
-	_streakline_positions[0] = multi_real_t(_geom->TotalLength()[0]/4.0, _geom->TotalLength()[1]/2.0);
+	//_streakline_positions[0] = multi_real_t(_geom->TotalLength()[0]/4.0, _geom->TotalLength()[1]/2.0);
+	_streakline_positions[0] = multi_real_t(0.2, 0.8);
+	_streakline_positions[0] = multi_real_t(0.2, 0.2);
 
 	_max_particles = _no_streaklines * _max_particles_per_streakline;
 }
