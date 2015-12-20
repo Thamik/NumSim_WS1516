@@ -60,7 +60,7 @@ void Grid::Initialize(const real_t& value, bool verbose)
 real_t& Grid::Cell(const Iterator& it)
 {
 	if (it.Value() >= _geom->Size()[0] * _geom->Size()[1]){
-		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds!\n";
+		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds! Iterator: (" << it.Pos()[0] << ", " << it.Pos()[1] << ")\n";
 	}
 	return _data[it.Value()];
 }
@@ -71,7 +71,7 @@ real_t& Grid::Cell(const Iterator& it)
 const real_t& Grid::Cell(const Iterator& it) const
 {
 	if (it.Value() >= _geom->Size()[0] * _geom->Size()[1]){
-		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds!\n";
+		for (int i=0; i<10; i++) std::cout << "Warning! Grid: Index out of bounds! Iterator: (" << it.Pos()[0] << ", " << it.Pos()[1] << ")\n";
 	}
 	return _data[it.Value()];
 }
@@ -187,7 +187,7 @@ real_t Grid::dy_c(const Iterator& it) const
 real_t Grid::dxx(const Iterator &it) const
 {
 	//return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/( (_geom->Mesh())[0] * (_geom->Mesh())[0] );
-	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/pow(_geom->Mesh()[0],2.0);
+	return (_data[it.Right().Value()] - 2.0 * _data[it.Value()] + _data[it.Left().Value()])/(_geom->Mesh()[0]*_geom->Mesh()[0]);
 }
 
 /**
@@ -197,7 +197,7 @@ real_t Grid::dxx(const Iterator &it) const
 real_t Grid::dyy(const Iterator& it) const
 {
 	//return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/( (_geom->Mesh())[1] * (_geom->Mesh())[1] );
-	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/pow(_geom->Mesh()[1],2.0);
+	return (_data[it.Top().Value()] - 2.0 * _data[it.Value()] + _data[it.Down().Value()])/(_geom->Mesh()[1]*_geom->Mesh()[1]);
 }
 
 /**
@@ -459,6 +459,20 @@ real_t Grid::InnerMin() const
 	return res;
 }
 
+real_t Grid::InnerAbsMax() const
+{
+	InteriorIterator it(_geom);
+	it.First();
+	real_t res = Cell(it);
+	real_t temp(0.0);
+	while (it.Valid()){
+		temp = std::abs(Cell(it));
+		if (temp>res) res = temp;
+		it.Next();
+	}
+	return res;
+}
+
 /**
 \return minimal value of the grid
 */
@@ -512,6 +526,12 @@ real_t Grid::TotalInnerMin() const
 {
 	// this needs to be called by all processes!
 	return _geom->getCommunicator()->gatherMin(InnerMin());
+}
+
+real_t Grid::TotalInnerAbsMax() const
+{
+	// this needs to be called by all processes!
+	return _geom->getCommunicator()->gatherMin(InnerAbsMax());
 }
 
 /**

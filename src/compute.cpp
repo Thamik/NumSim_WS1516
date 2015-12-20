@@ -6,12 +6,15 @@
 #include "solver.hpp"
 #include "communicator.hpp"
 #include "console_output.hpp"
+
+#ifdef USE_PARTICLES
 #include "particles.hpp"
+#endif
 
 #include <cmath>	// sin, M_PI
 #include <algorithm>    // std::min
 #include <iostream>	// std::cout
-
+#include <fstream>
 #include <math.h>
 
 /* Public methods */
@@ -22,14 +25,19 @@
 \param[in]	param	pointer on parameter object providing the parameter data
 \param[in]	comm 	pointer on Communicator object
 */
-Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm), _particles(nullptr)
+Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm, const char* uq_filename, int sim_id)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm), 
+#ifdef USE_PARTICLES
+_particles(nullptr), 
+#endif
+_uq_filename(uq_filename), _sim_id(sim_id)
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
 	//_epslimit = 1e-4;
 	//_dtlimit = 
 
+#ifdef USE_PARTICLES
 	if (_comm->getRank() == 0){
 		// build particles object
 		_particles = new Particles(_geom);
@@ -43,6 +51,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 
 		_particles->init();
 	}
+#endif
 
 	// construct grids
 	_u = new Grid(_geom, multi_real_t(-1.0,-0.5));
@@ -71,10 +80,10 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_tmp_vorticity->Initialize(0.0);
 	_tmp_stream->Initialize(0.0);
 
-	_p_old->Initialize(0.0);
+	/*_p_old->Initialize(0.0);
 	_rhs_old->Initialize(0.0);
 	_F_old->Initialize(0.0);
-	_G_old->Initialize(0.0);
+	_G_old->Initialize(0.0);*/
 
 	//set boundary values
 	update_boundary_values();
@@ -82,12 +91,31 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	// construct solver
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
 	real_t omega = 2.0 / (1.0+sin(M_PI*h));
-	//real_t omega = 1.0;	
 	_solver = new RedOrBlackSOR(_geom, omega);
-	//_solver = new JacobiSolver(_geom);
 
 	// construct console clock
 	_clock = new ConsoleClock();
+
+	// open the uq file for the first time (overwrite an existing file)
+	std::ofstream outfile;
+	if (_uq_filename.compare("") != 0){
+		// the filename specifies just something
+		outfile.open(_uq_filename.c_str());
+	}
+
+	// check on filestream
+	if (!outfile.is_open()){
+		// something went wrong, file is not open
+		std::cout << "Warning! Compute: Could not open uq file!\n" << std::flush;
+	}
+
+	// write simulation id
+	outfile << sim_id << "\n";
+	// write Reynolds number
+	outfile << _param->Re() << "\n";
+
+	outfile.close();
+
 }
 
 /* Destructor */
@@ -117,10 +145,13 @@ Compute::~Compute()
 
 	delete _clock;
 
+#ifdef USE_PARTICLES
 	if (_comm->getRank() == 0 && _particles != nullptr){
 		_particles->finalizeFile();
 		delete _particles;
 	}
+#endif
+
 }
 
 /**
@@ -129,10 +160,9 @@ Afterwards, the Poisson pressure equation is solved and the velocitys are update
 \param[in] printInfo boolean if additional informations on the fields and rediduum of p are printed
 \param[in] verbose boolean if debbuging information should be printed (standard: false)
 */
-void Compute::TimeStep(bool verbose, real_t diff_time)
+void Compute::TimeStep(bool verbose)
 {
 	// compute dt
-	if (verbose) std::cout << "Computing the timestep width..." << std::flush; // only for debugging issues
 	real_t dt = compute_dt(); // BLOCKING
 
 	// bounds for the timestep
@@ -140,16 +170,9 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 	dt = std::min(dt, upper_bound_dt);
 
 	bool printInfo(false);
-	/*if (diff_time <= dt){
-		dt = diff_time;
-		printInfo = !_comm->getRank();
-	}*/
-	if (ind == 9 && _comm->getRank() == 0) {
-		printInfo = true;
-		ind = 0;
+	if (_comm->getRank() == 0) {
+		printInfo = verbose;
 	}
-	//printInfo = !_comm->getRank();
-	//printInfo = false;
 
 	/*if (dt < 0){
 		std::cout << "Fatal error! Compute::TimeStep(): negative timestep!" << std::endl;
@@ -160,35 +183,35 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "Warning! Compute::TimeStep(): very large timestep!" << std::endl;
 	}*/
 
-	if (verbose) std::cout << "Done.\n" << std::flush; // only for debugging issues
-	
 	// for debugging issues
-	delete _F_old;
+	/*delete _F_old;
 	delete _G_old;
 	_F_old = _F->copy();
-	_G_old = _G->copy();
+	_G_old = _G->copy();*/
 
 	// compute F, G...
 	MomentumEqu(dt);
 	update_boundary_values(); //update boundary values
 
+#ifndef RUN_SERIAL
 	// ...and sync them
 	sync_FG(); // BLOCKING
+#endif
 
 	// for debugging issues
-	delete _rhs_old;
-	_rhs_old = _rhs->copy();
+	/*delete _rhs_old;
+	_rhs_old = _rhs->copy();*/
 
 	// compute rhs
 	RHS(dt);
 
-	//_geom->UpdateGG_P(_p);
+//	_geom->UpdateGG_P(_p);
 
-	//update_boundary_values(); // debug
+//	update_boundary_values(); // debug
 
 	// for debugging issues
-	delete _p_old;
-	_p_old = _p->copy();
+	/*delete _p_old;
+	_p_old = _p->copy();*/
 	
 	// solve Poisson equation
 	real_t residual(_epslimit + 1.0);
@@ -201,16 +224,15 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 			residual = _solver->BlackCycle(_p, _rhs);
 		}
 
-		// for Jacobi solvers
-		//residual = _solver->Cycle(_p, _rhs);
-
+#ifndef RUN_SERIAL
 		sync_p();
+#endif
 
 		iteration++;
 
 		if (iteration >= _param->IterMin()){
 			// check for edge condition
-			if ((iteration/2) > _param->IterMax()){ // iteration/2 because we only do half a cycle in each iteration
+			if (iteration > _param->IterMax()*2){ // *2 because we only do half a cycle in each iteration
 				//if (_comm->getRank()==0) std::cout << "Warning: Solver did not converge! Residual: " << residual << "\n";
 				_solver_converging = false;
 				break;
@@ -221,35 +243,37 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 			}
 		}
 	}
+#ifdef COMPLEX_GEOM
 	_geom->UpdateGG_P(_p);
+#else
+	_geom->Update_P(_p);
+#endif
 
-	update_boundary_values(); // debug
+//	update_boundary_values(); // debug
 
-	check_for_incontinuities();
+//	check_for_incontinuities();
 	
 	// compute new velocitys u, v...
 	NewVelocities(dt);
 	update_boundary_values();
 
+#ifndef RUN_SERIAL
 	// ...and sync them
 	sync_uv(); // BLOCKING
+#endif
 
-	update_boundary_values(); // debug
+//	update_boundary_values(); // debug
 
 	//update total time
 	_t += dt;
 
-	//update infos
-	currentIterations += iteration;
-	currentTime += dt;
-	currentNoTimeSteps++;
-	currentResidual += residual;
-
+#ifdef USE_PARTICLES
 	// handle particles
 	if (_comm->getRank() == 0){
 		_particles->timestep(dt, _u, _v);
 		_particles->writeToFile(_t);
 	}
+#endif
 
 	// print information
 	if (printInfo){
@@ -259,7 +283,13 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 
 		// set curser back, such that the console output it being overwritten
 		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
-		std::cout << "\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\x1b[A\x1b[A";
+#ifdef USE_PARTICLES
+		std::cout << "\x1b[A";
+#endif
+#ifndef GO_FAST
+		std::cout << "\x1b[A\x1b[A";
+#endif
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -282,21 +312,16 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "\t\t\t\t" << _clock->repr(2) << "\n";
 
 		std::cout << "Last residual: res = ";
-		printf("%10.7f", currentResidual/currentNoTimeSteps);
+		printf("%10.7f", residual);
 		std::cout << ",    \tno. iterations: ";
-		printf("%7i", int(currentIterations/currentNoTimeSteps/2));
+		printf("%7i", int(iteration/2));
 		std::cout << "     \n"; // residual
 
 		std::cout << "Last timestep: dt =  ";
-		printf("%10.7f", currentTime/currentNoTimeSteps);
-		std::cout << ",    \tno. timesteps:  ";
-		printf("%7i", int(currentNoTimeSteps));
+		printf("%10.7f", dt);
 		std::cout << "     \n"; // timestep
-		currentResidual = 0.0;
-		currentNoTimeSteps = 0.0;
-		currentIterations = 0.0;
-		currentTime = 0.0;
 
+#ifndef GO_FAST
 		// magnitudes of the fields
 		std::cout << "max(F) = ";
 		printf("%7.4f", _F->TotalAbsMax());
@@ -312,10 +337,11 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << ", \tmax(p) = ";
 		printf("%7.4f", _p->TotalAbsMax());
 		std::cout << "   \n";
+#endif
 		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
 
-		std::cout << "diff(F) = ";
+		/*std::cout << "diff(F) = ";
 		printf("%10.7f", _diff_F);
 		std::cout << ", \tdiff(G) = ";
 		printf("%10.7f", _diff_G);
@@ -324,10 +350,12 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		printf("%10.7f", _diff_p);
 		std::cout << ", \tdiff(rhs) = ";
 		printf("%10.7f", _diff_rhs);
-		std::cout << std::endl;
+		std::cout << std::endl;*/
 
+#ifdef USE_PARTICLES
 		// current number of particles
 		std::cout << "Current number of (virtual) particles: " << _particles->numberParticles() << std::endl;
+#endif
 
 		//std::cout << "Error in L^2 norm: " << errPipe() << std::endl;
 
@@ -337,15 +365,15 @@ void Compute::TimeStep(bool verbose, real_t diff_time)
 		std::cout << "============================================================\n";
 
 	} else {
+#ifndef GO_FAST
 		_F->TotalAbsMax();
 		_G->TotalAbsMax();
 		_rhs->TotalAbsMax();
 		_u->TotalAbsMax();
 		_v->TotalAbsMax();
 		_p->TotalAbsMax();
+#endif
 	}
-
-	ind++;
 
 }
 
@@ -503,7 +531,11 @@ The new velocitys are calculated and stored in the _u,_v grids (in-place
 */
 void Compute::NewVelocities(const real_t& dt)
 {
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		_u->Cell(it) = _F->Cell(it) - dt * _p->dx_r(it);
@@ -518,7 +550,11 @@ The expression for F,G arrising for the Momentum equations is evaluated and stor
 */
 void Compute::MomentumEqu(const real_t& dt)
 {
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
@@ -534,7 +570,11 @@ The Right-Hand-Side of the pressure poisson equation is calculated depending on 
 */
 void Compute::RHS(const real_t& dt)
 {
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		_rhs->Cell(it) = 1.0/dt * (_F->dx_l(it) + _G->dy_l(it));
@@ -552,8 +592,12 @@ In the algorithm, dt has to be sufficiently small to provide stability of the al
 */
 real_t Compute::compute_dt() const
 {
-	real_t u_absmax = _u->TotalAbsMax();
-	real_t v_absmax = _v->TotalAbsMax();
+//	real_t u_absmax = _u->TotalAbsMax();
+//	real_t v_absmax = _v->TotalAbsMax();
+
+	real_t u_absmax = _u->TotalInnerAbsMax();
+	real_t v_absmax = _v->TotalInnerAbsMax();
+
 	real_t res = std::min(_geom->Mesh()[0]/u_absmax, _geom->Mesh()[1]/v_absmax);
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
 	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
@@ -565,6 +609,8 @@ Update the boundary values in all grids where this is necessary.
 */
 void Compute::update_boundary_values()
 {
+#ifdef COMPLEX_GEOM
+	std::cout << "Something is totally going wrong here!\n";
 	_geom->UpdateGG_U(_u);
 	_geom->UpdateGG_V(_v);
 
@@ -572,6 +618,12 @@ void Compute::update_boundary_values()
 	_geom->UpdateGG_V(_G);
 	//_geom->UpdateGG_F(_F,_u);
 	//_geom->UpdateGG_G(_G,_v);
+#else
+	_geom->Update_U(_u);
+	_geom->Update_V(_v);
+	_geom->Update_U(_F);
+	_geom->Update_V(_G);
+#endif
 }
 
 void Compute::sync_FG()
@@ -706,5 +758,42 @@ real_t Compute::breakOffPoint()
 	}
 
 	return nan("");
+}
+
+void Compute::writeUQFile() const
+{
+	if (_uq_filename.compare("") == 0){
+		// no filepath specified, just write no file
+		return;
+	}
+
+	std::ofstream outfile;
+	if (_uq_filename.compare("") != 0){
+		// the filename specifies just something
+		outfile.open(_uq_filename.c_str(), std::ofstream::app);
+	}
+
+	// check on filestream
+	if (!outfile.is_open()){
+		// something went wrong, file is not open
+		std::cout << "Warning! Compute: Could not open uq file for appending!\n" << std::flush;
+	}
+
+	// write data (timestep and velocities in one line)
+	outfile << _t;
+
+//	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t(120,5)));
+//	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t(64,64)));
+//	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t(5,120)));
+
+	// this will work on arbitrary grid sizes
+	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t((120*_geom->Size()[0])/128,(5*_geom->Size()[1])/128)));
+	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t((64*_geom->Size()[0])/128,(64*_geom->Size()[1])/128)));
+	outfile << " " << _u->Cell(Iterator(_geom,multi_index_t((5*_geom->Size()[0])/128,(120*_geom->Size()[1])/128)));
+
+	outfile << "\n";
+
+	outfile.close();
+
 }
 

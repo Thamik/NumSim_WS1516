@@ -40,6 +40,8 @@ public:
   /// Constructs a new Iterator on a geometry with a defined starting value
   Iterator(const Geometry *geom, const index_t &value);
 
+	Iterator(const Geometry* geom, const multi_index_t& pos);
+
   /// Returns the current position value
   virtual const index_t &Value() const;
   /// Cast operator to convert Iterators to integers
@@ -75,6 +77,10 @@ protected:
   const Geometry *_geom;
   index_t _value;
   bool _valid;
+
+	multi_index_t _pos;
+
+	Iterator(const Geometry* geom, const index_t &value, const multi_index_t& pos);
 
 };
 

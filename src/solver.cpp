@@ -81,7 +81,11 @@ This function return the total Linf residual of the approximate solution in grid
 real_t Solver::totalRes_Linf(const Grid* grid, const Grid* rhs) const
 {
 	real_t totalRes(0.0);
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		totalRes = std::max(totalRes, localRes(it,grid,rhs));
@@ -100,7 +104,11 @@ This function return the averaged L1 residual of the approximate solution in gri
 real_t Solver::totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const
 {
 	real_t totalRes(0.0);
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		totalRes += localRes(it,grid,rhs);
@@ -149,7 +157,12 @@ void Solver::delete_average(Grid* grid) const
 	// compute the average value
 	real_t avg = grid->average_value();
 
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
+
 	it.First();
 	while (it.Valid()){
 		grid->Cell(it) -= avg;
@@ -187,7 +200,11 @@ This method executes a SOR solver cycle on the given grid and returns the total 
 */
 real_t SOR::Cycle(Grid* grid, const Grid* rhs) const
 {
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		erase_local_residual(grid,rhs,it);
@@ -292,14 +309,31 @@ Performs a red cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::RedCycle(Grid* grid, const Grid* rhs) const
 {
+#ifdef COMPLEX_GEOM
 	JumpingInteriorIteratorGG it(_geom, false);
+#else
+	JumpingInteriorIterator it(_geom, false);
+#endif
 	it.First();
+
+	real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
+	real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
+	real_t twohxhyinv = 1.0/(2.0*(hx+hy));
+
 	while (it.Valid()){
-		erase_local_residual(grid,rhs,it);
+//		erase_local_residual(grid,rhs,it);
+
+		real_t corr = ( (grid->Cell(it.Left())-2.0*grid->Cell(it)+grid->Cell(it.Right()))*hy + (grid->Cell(it.Top())-2.0*grid->Cell(it)+grid->Cell(it.Down()))*hx - rhs->Cell(it)*hx*hy) * twohxhyinv;
+		grid->Cell(it) += _omega * corr;
+
 		it.Next();
 	}
 	// update the pressure boundary values
+#ifdef COMPLEX_GEOM
 	_geom->UpdateGG_P(grid);
+#else
+	_geom->Update_P(grid);
+#endif
 	return synced_totalRes(grid,rhs);
 }
 
@@ -310,14 +344,31 @@ Performs a black cycle to solve the Poisson equation.
 */
 real_t RedOrBlackSOR::BlackCycle(Grid* grid, const Grid* rhs) const
 {
+#ifdef COMPLEX_GEOM
 	JumpingInteriorIteratorGG it(_geom, true);
+#else
+	JumpingInteriorIterator it(_geom, true);
+#endif
 	it.First();
+
+	real_t hx = _geom->Mesh()[0] * _geom->Mesh()[0];
+	real_t hy = _geom->Mesh()[1] * _geom->Mesh()[1];
+	real_t twohxhyinv = 1.0/(2.0*(hx+hy));
+
 	while (it.Valid()){
-		erase_local_residual(grid,rhs,it);
+//		erase_local_residual(grid,rhs,it);
+
+		real_t corr = ( (grid->Cell(it.Left())-2.0*grid->Cell(it)+grid->Cell(it.Right()))*hy + (grid->Cell(it.Top())-2.0*grid->Cell(it)+grid->Cell(it.Down()))*hx - rhs->Cell(it)*hx*hy) * twohxhyinv;
+		grid->Cell(it) += _omega * corr;
+
 		it.Next();
 	}
 	// update the pressure boundary values
+#ifdef COMPLEX_GEOM
 	_geom->UpdateGG_P(grid);
+#else
+	_geom->Update_P(grid);
+#endif
 	return synced_totalRes(grid,rhs);
 }
 
@@ -366,7 +417,11 @@ This method executes a Jacobi solver cycle on the given grid and returns the tot
 real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 {
 	Grid* cpy = grid->copy();
+#ifdef COMPLEX_GEOM
 	InteriorIteratorGG it(_geom);
+#else
+	InteriorIterator it(_geom);
+#endif
 	it.First();
 	while (it.Valid()){
 		grid->Cell(it) = 1.0/(-2.0/pow(_geom->Mesh()[0],2.0) - 2.0/pow(_geom->Mesh()[1],2.0)) * (rhs->Cell(it) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Left()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Right()) - 1.0/pow(_geom->Mesh()[1],2.0) * cpy->Cell(it.Top()) - 1.0/pow(_geom->Mesh()[0],2.0) * cpy->Cell(it.Down()));
@@ -374,7 +429,11 @@ real_t JacobiSolver::Cycle(Grid* grid, const Grid* rhs) const
 		it.Next();
 	}
 	delete cpy;
+#ifdef COMPLEX_GEOM
 	_geom->UpdateGG_P(grid);
+#else
+	_geom->Update_P(grid);
+#endif
 	return synced_totalRes(grid,rhs);
 }
 
@@ -410,7 +469,11 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 	real_t dt = 0.000001;
 	Grid* cpy = grid->copy();
 	for (int i=0; i<=10; i++){
+#ifdef COMPLEX_GEOM
 		InteriorIteratorGG it(_geom);
+#else
+		InteriorIterator it(_geom);
+#endif
 		it.First();
 		while (it.Valid()){
 			grid->Cell(it) += dt * (cpy->dxx(it)+cpy->dyy(it) - rhs->Cell(it));

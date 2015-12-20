@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+//#define COMPLEX_GEOM
+
 #include "typedef.hpp"
 //------------------------------------------------------------------------------
 #ifndef __GEOMETRY_HPP

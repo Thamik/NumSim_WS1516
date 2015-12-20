@@ -16,8 +16,13 @@
  */
 
 #include "typedef.hpp"
-
 #include "console_output.hpp"
+
+#include <string>
+
+#define GO_FAST
+//#define USE_PARTICLES
+#define RUN_SERIAL
 
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
@@ -28,14 +33,14 @@ class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
   Compute(const Geometry *geom, const Parameter *param,
-          const Communicator *comm = 0);
+          const Communicator *comm = 0, const char* uq_filename = "", int sim_id = 0);
   /// Deletes all grids
   ~Compute();
 
   /// Execute one time step of the fluid simulation (with or without debug info)
   // @ param printInfo print information about current solver state (residual
   // etc.)
-  void TimeStep(bool verbose = false, real_t diff_time = 1e10);
+  void TimeStep(bool verbose = false);
 
   /// Returns the simulated time in total
   const real_t &GetTime() const;
@@ -55,6 +60,8 @@ public:
   const Grid *GetVorticity();
   /// Computes and returns the stream line values
   const Grid *GetStream();
+
+	void writeUQFile() const;
 
 private:
   /// current timestep
@@ -100,14 +107,15 @@ private:
 	real_t _diff_G;
 
 	RedOrBlackSOR *_solver;
-//	JacobiSolver* _solver;
 
   const Geometry *_geom;
   const Parameter *_param;
   const Communicator *_comm;
 
+#ifdef USE_PARTICLES
 	// this is only in use on process rank 0, otherwise not in use
 	Particles* _particles;
+#endif
 
   /// Compute the new velocites u,v
   void NewVelocities(const real_t &dt);
@@ -131,18 +139,16 @@ private:
 	/// the console clock
 	ConsoleClock* _clock;
 
-	real_t currentNoTimeSteps = 0.0;
-	real_t currentTime = 0.0;
-	real_t currentIterations = 0.0;
-	real_t currentResidual = 0.0;
-	index_t ind = 0.0;
-
 	void check_for_incontinuities();
 
 	real_t errPipe();
 
 	real_t breakOffPoint();
-	
+
+	const std::string _uq_filename;
+
+	const int _sim_id;
+
 };
 //------------------------------------------------------------------------------
 #endif // __COMPUTE_HPP

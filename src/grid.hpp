@@ -107,6 +107,9 @@ public:
 	/// Returns the minimal value of the interior cells of all grids
 	real_t TotalInnerMin() const;
 
+	real_t InnerAbsMax() const;
+	real_t TotalInnerAbsMax() const;
+
   /// Returns a pointer to the raw data
   real_t *Data();
 
