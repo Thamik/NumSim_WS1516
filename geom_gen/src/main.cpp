@@ -15,9 +15,12 @@ int main(int argc, char** argv){
 	 * 2 = pipe flow
 	 * 3 = flow over a step
 	 * 4 = karman vortex street
+	 * 0 = simple geometry with variable Re number
 	 */
 	int geom_type(-1);
 	double alpha(M_PI/4.0);
+	double re(10000);
+	int id(0);
 	
 	for (int i=0; i<argc; i++){
 		switch (i){
@@ -31,9 +34,15 @@ int main(int argc, char** argv){
 				geom_type = atoi(argv[i]);
 				break;
 			case 3:
-				// read alpha (used in the Karman vortex street)
-				alpha = atof(argv[i]);
+				if (geom_type == 4) {
+					// read alpha (used in the Karman vortex street)
+					alpha = atof(argv[i]);
+				} else if (geom_type == 0) {
+					re = atof(argv[i]);
+				}
 				break;
+			case 4:
+				id = atoi(argv[i]);
 			default:
 				std::cout << "Warning: too much command line arguments!\n" << std::flush;
 		}
@@ -50,6 +59,9 @@ int main(int argc, char** argv){
 	}
 
 	switch (geom_type){
+		case 0:
+			geom_gen.simpleGeom(re);
+			break;
 		case 1:
 			geom_gen.drivenCavity();
 			break;
@@ -84,6 +96,11 @@ int main(int argc, char** argv){
 	}
 
 	geom_gen.print();
-	geom_gen.writeToFile("../data/complex_default.geom", "../data/assignment03.params");
+	if (geom_type == 0) {
+		std::string file1("../uq_data/uq_parameter_" + std::to_string(id) + ".params");
+		geom_gen.writeToFile_simple("../uq_data/uq_geometry.geom", file1.c_str());
+	} else {
+		geom_gen.writeToFile("../data/complex_default.geom", "../data/assignment03.params");
+	}
 
 }

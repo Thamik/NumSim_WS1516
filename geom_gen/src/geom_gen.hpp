@@ -12,6 +12,7 @@ public:
 	void setLength(double x, double y);
 
 	void writeToFile(const char* filename=nullptr, const char* filenameParam=nullptr);
+	void writeToFile_simple(const char* filename=nullptr, const char* filenameParam=nullptr);
 
 	void print() const;
 
@@ -32,6 +33,7 @@ public:
 
 	void test_twoCellCriterion();
 	void test_twoCellCriterion2();
+	void simpleGeom(double re);
 
 private:
 	int _bSizeX, _bSizeY;

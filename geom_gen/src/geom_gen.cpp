@@ -155,6 +155,77 @@ void GeometryGenerator::writeToFile(const char* filename, const char* filenamePa
 	outfileParam.close();
 }
 
+void GeometryGenerator::writeToFile_simple(const char* filename, const char* filenameParam)
+{
+	// Write Geometry file
+	if (filename == nullptr && _filename == nullptr){
+		// handle default filename parameter, set this value to default
+//		_filename = new std::string("../data/complex_default.geom");
+		_filename = new std::string("geom_files/complex_default.geom");
+		std::cout << "Writing geometry data to (default) file: " << _filename->c_str() << std::endl;
+	} else if (filename == nullptr) {
+		// nothing given, but already a name in _filename (member)
+		std::cout << "Writing geometry data to file: " << _filename->c_str() << std::endl;
+		// just use the path in _filename, do nothing
+	} else {
+		if (_filename != nullptr) delete _filename;
+		_filename = new std::string(filename);
+		std::cout << "Writing geometry data to file: " << _filename->c_str() << std::endl;
+	}
+
+	// write to file
+	std::ofstream outfile;
+	outfile.open(_filename->c_str());
+	if (!outfile.is_open()){
+		// something went wrong, file is not open
+		std::cout << "Warning: Geometry generator could not open file! No output file was written!\n" << std::flush;
+	} else {
+		// file is open, go on writing
+		outfile << _bSizeX-2 << "\n"; // write without ghost cells
+		outfile << _bSizeY-2 << "\n";
+		outfile << _bLengthX << "\n";
+		outfile << _bLengthY << "\n";
+//		outfile << "\n";
+	}
+	outfile.close();
+
+
+	// Write Parameter file
+	if (filenameParam == nullptr && _filenameParam == nullptr){
+		// handle default filename parameter, set this value to default
+//		_filenameParam = new std::string("../data/complex_default.geom");
+		_filenameParam = new std::string("geom_files/complex_default.params");
+		std::cout << "Writing parameter to (default) file: " << _filenameParam->c_str() << std::endl;
+	} else if (filenameParam == nullptr) {
+		// nothing given, but already a name in _filename (member)
+		std::cout << "Writing parameter to file: " << _filenameParam->c_str() << std::endl;
+		// just use the path in _filename, do nothing
+	} else {
+		if (_filenameParam != nullptr) delete _filenameParam;
+		_filenameParam = new std::string(filenameParam);
+		std::cout << "Writing parameter to file: " << _filenameParam->c_str() << std::endl;
+	}
+
+	// write to file
+	std::ofstream outfileParam;
+	outfileParam.open(_filenameParam->c_str());
+	if (!outfileParam.is_open()){
+		// something went wrong, file is not open
+		std::cout << "Warning: Geometry generator could not open file! No output file was written!\n" << std::flush;
+	} else {
+		outfileParam << _re << "\n";
+		outfileParam << _omega << "\n";
+		outfileParam << _alpha << "\n";
+		outfileParam << _eps << "\n";
+		outfileParam << _tau << "\n";
+		outfileParam << _itermax << "\n";
+		outfileParam << _itermin << "\n";
+		outfileParam << _dt << "\n";
+		outfileParam << _tend << "\n";
+	}
+	outfileParam.close();
+}
+
 void GeometryGenerator::print() const
 {
 	std::cout << "==================================================\n";
@@ -512,5 +583,14 @@ void GeometryGenerator::test_twoCellCriterion2()
 	}
 
 	fixSingleCells();
+}
+
+void GeometryGenerator::simpleGeom(double re)
+{
+	_re = re;	
+	_tend = 16.5;
+	_tau = 0.9;
+	_itermax = 100;
+	_itermin = 0;
 }
 
