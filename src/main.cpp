@@ -19,6 +19,7 @@
 
 #define VERBOSE false
 //#define VTK_OUTPUT
+//#define OUTPUT_MAIN
 
 #include "typedef.hpp"
 #include "communicator.hpp"
@@ -157,6 +158,7 @@ int main(int argc, char **argv) {
 #endif // USE_DEBUG_VISU
 
 	// prepare console output
+#ifdef OUTPUT_MAIN
 	if(!comm.getRank()){
 		std::cout << "\n\n\n\n\n" << "\n\n" << std::flush;
 #ifdef USE_PARTICLES
@@ -166,6 +168,7 @@ int main(int argc, char **argv) {
 		std::cout << "\n\n";
 #endif
 	}
+#endif
 
 	// Run the time steps until the end is reached
 	while (comp.GetTime() < param.Tend()) {
@@ -223,6 +226,7 @@ int main(int argc, char **argv) {
 	// runtime measurement
 	if (comm.getRank() == 0) { // do this only on the master
 
+#ifdef OUTPUT_MAIN
 		std::cout << "The program was executed sucessfully!\n";
 
 #ifdef __linux__
@@ -235,6 +239,7 @@ int main(int argc, char **argv) {
 #endif
 
 		std::cout << "Exiting...\n" << std::flush;
+#endif
 	}
 
 	return 0;

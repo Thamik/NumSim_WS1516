@@ -275,6 +275,7 @@ void Compute::TimeStep(bool verbose)
 	}
 #endif
 
+#ifdef OUTPUT
 	// print information
 	if (printInfo){
 
@@ -374,6 +375,7 @@ void Compute::TimeStep(bool verbose)
 		_p->TotalAbsMax();
 #endif
 	}
+#endif
 
 }
 

@@ -91,7 +91,9 @@ void Geometry::load_domain_partitioning(const char* file)
 		std::ifstream infile;
 		if (read){
 			infile.open(file);
+#ifdef OUTPUT_GEOMETRY
 			std::cout << "Loading geometry file from path " << file << " ...\n";
+#endif
 			if (!infile.is_open()){
 				std::cout << "Warning: geometry file could not be read!\n";
 				read = false;
@@ -187,11 +189,13 @@ void Geometry::load_domain_partitioning(const char* file)
 		_blength[1] = blengthY;
 
 		// console output
+#ifdef OUTPUT_GEOMETRY
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Geometry configuration:\n";
 		std::cout << "Total Size\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
 		std::cout << "Total Length\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
 		std::cout << "--------------------------------------------------\n";
+#endif
 
 		// domain partitioning
 		multi_index_t tdim;
@@ -1007,6 +1011,7 @@ void Geometry::do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, m
 	// update geometry values
 	update_values();
 
+#ifdef OUTPUT_GEOMETRY
 	if(_comm->getRank()==0) {
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Process distribution (" << _comm->getSize() << " processes in total):\n" << std::flush;
@@ -1019,6 +1024,7 @@ void Geometry::do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, m
 		}
 		std::cout << "--------------------------------------------------\n";
 	}
+#endif
 }
 
 /**

@@ -22,6 +22,7 @@
 
 #define GO_FAST
 //#define USE_PARTICLES
+//#define OUTPUT
 #define RUN_SERIAL
 
 //------------------------------------------------------------------------------

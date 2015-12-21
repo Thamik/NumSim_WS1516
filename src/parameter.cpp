@@ -76,6 +76,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 	}
 	infile.close();
 	//if (verbose){
+#ifdef OUTPUT_PARAMS
 	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
 		std::cout << "Parameter configuration read from file:\n";
@@ -90,6 +91,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "tend\t\t=\t" << _tend << "\n";
 		std::cout << "--------------------------------------------------\n";
 	}
+#endif
 
 }
 MPI_Barrier(MPI_COMM_WORLD);

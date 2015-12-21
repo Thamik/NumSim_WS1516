@@ -18,6 +18,7 @@
 //#define COMPLEX_GEOM
 
 #include "typedef.hpp"
+//define OUTPUT_GEOMETRY
 //------------------------------------------------------------------------------
 #ifndef __GEOMETRY_HPP
 #define __GEOMETRY_HPP
