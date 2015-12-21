@@ -103,3 +103,4 @@ if (MPI_LINK_FLAGS)
 endif()
 
 set(CMAKE_BUILD_TYPE Release) # -O3 flag
+#set(CMAKE_BUILD_TYPE Debug)
