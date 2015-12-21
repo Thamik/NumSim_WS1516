@@ -155,22 +155,30 @@ void GeometryGenerator::writeToFile(const char* filename, const char* filenamePa
 	outfileParam.close();
 }
 
-void GeometryGenerator::writeToFile_simple(const char* filename, const char* filenameParam)
+bool GeometryGenerator::writeToFile_simple(const char* filename, const char* filenameParam)
 {
+	bool success(true);
+
 	// Write Geometry file
 	if (filename == nullptr && _filename == nullptr){
 		// handle default filename parameter, set this value to default
 //		_filename = new std::string("../data/complex_default.geom");
 		_filename = new std::string("geom_files/complex_default.geom");
+#ifdef GEN_OUTPUT
 		std::cout << "Writing geometry data to (default) file: " << _filename->c_str() << std::endl;
+#endif
 	} else if (filename == nullptr) {
 		// nothing given, but already a name in _filename (member)
+#ifdef GEN_OUTPUT
 		std::cout << "Writing geometry data to file: " << _filename->c_str() << std::endl;
+#endif
 		// just use the path in _filename, do nothing
 	} else {
 		if (_filename != nullptr) delete _filename;
 		_filename = new std::string(filename);
+#ifdef GEN_OUTPUT
 		std::cout << "Writing geometry data to file: " << _filename->c_str() << std::endl;
+#endif
 	}
 
 	// write to file
@@ -178,7 +186,10 @@ void GeometryGenerator::writeToFile_simple(const char* filename, const char* fil
 	outfile.open(_filename->c_str());
 	if (!outfile.is_open()){
 		// something went wrong, file is not open
+#ifdef GEN_OUTPUT
 		std::cout << "Warning: Geometry generator could not open file! No output file was written!\n" << std::flush;
+#endif
+		success = false;
 	} else {
 		// file is open, go on writing
 		outfile << _bSizeX-2 << "\n"; // write without ghost cells
@@ -195,15 +206,21 @@ void GeometryGenerator::writeToFile_simple(const char* filename, const char* fil
 		// handle default filename parameter, set this value to default
 //		_filenameParam = new std::string("../data/complex_default.geom");
 		_filenameParam = new std::string("geom_files/complex_default.params");
+#ifdef GEN_OUTPUT
 		std::cout << "Writing parameter to (default) file: " << _filenameParam->c_str() << std::endl;
+#endif
 	} else if (filenameParam == nullptr) {
 		// nothing given, but already a name in _filename (member)
+#ifdef GEN_OUTPUT
 		std::cout << "Writing parameter to file: " << _filenameParam->c_str() << std::endl;
+#endif
 		// just use the path in _filename, do nothing
 	} else {
 		if (_filenameParam != nullptr) delete _filenameParam;
 		_filenameParam = new std::string(filenameParam);
+#ifdef GEN_OUTPUT
 		std::cout << "Writing parameter to file: " << _filenameParam->c_str() << std::endl;
+#endif
 	}
 
 	// write to file
@@ -211,7 +228,10 @@ void GeometryGenerator::writeToFile_simple(const char* filename, const char* fil
 	outfileParam.open(_filenameParam->c_str());
 	if (!outfileParam.is_open()){
 		// something went wrong, file is not open
+#ifdef GEN_OUTPUT
 		std::cout << "Warning: Geometry generator could not open file! No output file was written!\n" << std::flush;
+#endif
+		success = false;
 	} else {
 		outfileParam << _re << "\n";
 		outfileParam << _omega << "\n";
@@ -224,6 +244,8 @@ void GeometryGenerator::writeToFile_simple(const char* filename, const char* fil
 		outfileParam << _tend << "\n";
 	}
 	outfileParam.close();
+
+	return success;
 }
 
 void GeometryGenerator::print() const

@@ -1,5 +1,7 @@
 #include <string>
 
+// #define GEN_OUTPUT
+
 /**
 This class implements an complex geometry generator.
 */
@@ -12,7 +14,7 @@ public:
 	void setLength(double x, double y);
 
 	void writeToFile(const char* filename=nullptr, const char* filenameParam=nullptr);
-	void writeToFile_simple(const char* filename=nullptr, const char* filenameParam=nullptr);
+	bool writeToFile_simple(const char* filename=nullptr, const char* filenameParam=nullptr);
 
 	void print() const;
 

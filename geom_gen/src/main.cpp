@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>     /* atof */
 
+// #define OUTPUT
 #define _USE_MATH_DEFINES // to get pi via M_PI
 #include <math.h>
 
@@ -21,6 +22,7 @@ int main(int argc, char** argv){
 	double alpha(M_PI/4.0);
 	double re(10000);
 	int id(0);
+	bool success(true);
 	
 	for (int i=0; i<argc; i++){
 		switch (i){
@@ -43,6 +45,7 @@ int main(int argc, char** argv){
 				break;
 			case 4:
 				id = atoi(argv[i]);
+				break;
 			default:
 				std::cout << "Warning: too much command line arguments!\n" << std::flush;
 		}
@@ -95,12 +98,17 @@ int main(int argc, char** argv){
 			geom_gen.drivenCavity();
 	}
 
+#ifdef OUTPUT
 	geom_gen.print();
+#endif
+
 	if (geom_type == 0) {
 		std::string file1("../uq_data/uq_parameter_" + std::to_string(id) + ".params");
-		geom_gen.writeToFile_simple("../uq_data/uq_geometry.geom", file1.c_str());
+		success = geom_gen.writeToFile_simple("../uq_data/uq_geometry.geom", file1.c_str());
 	} else {
 		geom_gen.writeToFile("../data/complex_default.geom", "../data/assignment03.params");
 	}
 
+	if (success) return 0;
+	else if (success) return 1;
 }
