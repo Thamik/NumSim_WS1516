@@ -610,7 +610,7 @@ void GeometryGenerator::test_twoCellCriterion2()
 void GeometryGenerator::simpleGeom(double re)
 {
 	_re = re;	
-	_tend = 16.5;
+	_tend = 30;
 	_tau = 0.9;
 	_itermax = 100;
 	_itermin = 0;

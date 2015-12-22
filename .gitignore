@@ -12,3 +12,4 @@ documentation/
 data/complex_default.geom
 analysis.txt
 gmon.out
+*.pyc
