@@ -1,6 +1,7 @@
 import os
 from math import sqrt
 import matplotlib.pyplot as plt
+import matplotlib.mlab as mlab
 import numpy as np
 
 from uq_sampling import Sample
@@ -98,7 +99,7 @@ class Statistics:
                 plt.ylabel('Standard deviation')
                 plt.xlabel('Time')
 
-                # plot the data for the first evaluation point
+                # plot the data for the third evaluation point
                 u3_mean = [ m[2] for m in self.__means ]
                 u3_std = [ s[2] for s in self.__stds ]
                 
@@ -111,6 +112,16 @@ class Statistics:
                 plt.plot(np.array(self.__times), np.array(u3_std))
                 plt.ylabel('Standard deviation')
                 plt.xlabel('Time')
+
+		# the distribution of the reynolds numbers of the samples
+		res = [ s.re for s in self.__data ]
+
+		plt.figure(4)
+		n, bins, patches = plt.hist(res, 10, normed=1)
+		mu = 1500.0
+		sigma = 1000.0/6.0
+		y = mlab.normpdf(bins, mu, sigma)
+		plt.plot(bins, y, 'r--')
 
                 plt.show()
 
