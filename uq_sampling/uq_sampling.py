@@ -33,7 +33,7 @@ class SimFrame:
                         s = self.__sampler.nextSample()
                         while not pool.hasFreeSlot():
                                 time.sleep(0.1) # wait a bit
-                        cmds = [ (['./geomgen_release', '1000', '0', str(s.re), str(s.sid)], 'geom_gen'),
+                        cmds = [ (['./geomgen_release', '16384', '0', str(s.re), str(s.sid)], 'geom_gen'),
                                 (['./numsim', 'uq_data/uq_parameter_' + str(s.sid) + '.params', 'uq_data/uq_geometry.geom', str(s.sid)], '.') ]
                         #print "Run process: " + str(cmds)
                         print "Running sample %s/%s" % (str(s.n+1), self.__no_samples)
