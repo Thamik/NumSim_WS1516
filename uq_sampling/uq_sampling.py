@@ -22,8 +22,8 @@ class SimFrame:
 
         def generateSamples(self):
                 self.__sampler = Sampler(self.__no_samples)
-                self.__sampler.setNormalDistribution(2000.0, 1000.0/6.0)
-                #self.__sampler.setTrapezoidalRule(2000.0, 1000.0/6.0)
+                self.__sampler.setNormalDistribution(1500.0, 1000.0/6.0)
+                #self.__sampler.setTrapezoidalRule(1500.0, 1000.0/6.0)
                 self.__sampler.computeSamples()
 
         def run(self):
@@ -32,8 +32,10 @@ class SimFrame:
                 while self.__sampler.hasMoreSamples():
                         s = self.__sampler.nextSample()
                         while not pool.hasFreeSlot():
-                                time.sleep(0.1) # wait a bit
-                        cmds = [ (['./geomgen_release', '1000', '0', str(s.re), str(s.sid)], 'geom_gen'),
+                                time.sleep(0.01) # wait a bit
+                        #cmds = [ (['./geomgen_release', '1000', '0', str(s.re), str(s.sid)], 'geom_gen'),
+                        #        (['./numsim', 'uq_data/uq_parameter_' + str(s.sid) + '.params', 'uq_data/uq_geometry.geom', str(s.sid)], '.') ]
+                        cmds = [ (['./geomgen_release', '16384', '0', str(s.re), str(s.sid)], 'geom_gen'),
                                 (['./numsim', 'uq_data/uq_parameter_' + str(s.sid) + '.params', 'uq_data/uq_geometry.geom', str(s.sid)], '.') ]
                         #print "Run process: " + str(cmds)
                         print "Running sample %s/%s" % (str(s.n+1), self.__no_samples)
@@ -41,7 +43,7 @@ class SimFrame:
                 
                 # wait until all processes returned
                 while not pool.allFinished():
-                        time.sleep(0.1)
+                        time.sleep(0.01)
                 
                 # everything is done
                 print 'Running all samples finished.'
@@ -61,7 +63,7 @@ class Pool:
                         p = subprocess.Popen(cmd, cwd=cwd)
                         if not ii == len(cmds)-1:
                                 while p.poll() is None:
-                                        time.sleep(0.1)
+                                        time.sleep(0.01)
                 # dont wait for the last command, just add it to the list
                 self.__procs.append(p)
 
