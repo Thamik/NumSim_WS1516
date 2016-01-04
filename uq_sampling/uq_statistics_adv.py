@@ -124,6 +124,24 @@ class Statistics:
 		res = 1/(float(sigma)*sqrt(2*pi)) * exp(-0.5*((reNum-mu)/float(sigma))**2)
 		return res
 
+
+	def computeConvergence(self):
+		print 'Computing mean and standard deviations at end time...'
+		self.__meanConv = []
+		mean = 0.0
+		for jj in range(len(self.__data_interp[-2])):
+			mean += self.__data_interp[-2][jj][0]
+			if (jj == 499):
+				temp = mean
+				temp /= 500.0
+				self.__meanConv.append(temp)
+			elif (jj == 999):
+				temp = mean
+				temp /= 1000.0
+				self.__meanConv.append(temp)
+
+		self.__meanConv.append(mean/float(len(self.__data_interp[-2])))
+
         def __interpolate_to_times(self):
                 self.__data_interp = [ [ s.interpolate(t) for s in self.__data ] for t in self.__times ]
 
@@ -266,6 +284,13 @@ class Statistics:
                 plt.plot(np.array(self.__times), np.array(u3_stdQuad))
                 plt.ylabel('Standard deviation')
                 plt.xlabel('Time')
+
+		# plot the convergence for the mean of u1 at the first evaluation point
+		plt.figure(8)
+		plt.plot(np.array([500,1000,2000]), np.array(self.__meanConv))
+		plt.ylabel('Mean value')
+		plt.title('Convergence of mean value at the first evaluation point')
+		plt.xlabel('Number of Samples')
 
                 plt.show()
 

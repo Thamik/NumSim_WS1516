@@ -11,4 +11,5 @@ if __name__ == '__main__':
 	stats.setGrid(np.linspace(1000,2000,50))
         stats.compute()
 	stats.computeTrap()
+	stats.computeConvergence()
         stats.plot()

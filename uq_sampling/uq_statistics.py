@@ -64,6 +64,7 @@ class Statistics:
 
                         self.__means.append(mean)
                         self.__stds.append(std)
+				
 
         def __interpolate_to_times(self):
                 self.__data_interp = [ [ s.interpolate(t) for s in self.__data ] for t in self.__times ]
