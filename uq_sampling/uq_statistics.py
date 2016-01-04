@@ -117,7 +117,8 @@ class Statistics:
 		res = [ s.re for s in self.__data ]
 
 		plt.figure(4)
-		n, bins, patches = plt.hist(res, 10, normed=1)
+		#n, bins, patches = plt.hist(res, 10, normed=1)
+                n, bins, patches = plt.hist(res, 25, normed=1)
 		mu = 1500.0
 		sigma = 1000.0/6.0
 		y = mlab.normpdf(bins, mu, sigma)
