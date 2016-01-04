@@ -112,6 +112,7 @@ class Statistics:
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
 				std[kk] *= h
+				std[kk] = sqrt(std[kk])
 
 			self.__stdsQuad.append(std)
 
