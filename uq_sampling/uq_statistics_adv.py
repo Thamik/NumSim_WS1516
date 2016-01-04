@@ -92,6 +92,7 @@ class Statistics:
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
 				expect[kk] *= 0.5*h
+				print t, expect[kk]
 			
 			self.__expectQuad.append(expect)
 
@@ -126,22 +127,22 @@ class Statistics:
 
 	def __interpolate_to_grid(self):
 		self.__data_interp_grid = []
-		reNumsSort = sorted(range(len(self.__data_interp)), key=lambda k: self.__data_interp[k])
+		reNumsSort = sorted(range(len(self.__data)), key=lambda k: self.__data[k])
 		ind = 0
 		for reCurr in self.__grid:
 			index = 0
-			while self.__data_interp[reNumsSort[index]].re < reCurr:
+			while self.__data[reNumsSort[index]].re < reCurr:
 				index += 1
 
-			re1 = reNumsSort[index-1]
-			re2 = reNumsSort[index]
+			re1 = self.__data[reNumsSort[index-1]].re
+			re2 = self.__data[reNumsSort[index]].re
 			w1 = (reCurr-re1)/float(re2-re1)
 			w2 = 1.0 - w1
 			tempRes = SimData(ind, reCurr)
 			for timeCurr in range(len(self.__times)):
-				u1Weigh = self.__data_interp[index-1][timeCurr][0] * w1 + self.__data_interp[index][timeCurr][0] * w2
-				u2Weigh = self.__data_interp[index-1][timeCurr][1] * w1 + self.__data_interp[index][timeCurr][1] * w2
-				u3Weigh = self.__data_interp[index-1][timeCurr][2] * w1 + self.__data_interp[index][timeCurr][2] * w2
+				u1Weigh = self.__data_interp[timeCurr][index-1][0] * w1 + self.__data_interp[timeCurr][index][0] * w2
+				u2Weigh = self.__data_interp[timeCurr][index-1][1] * w1 + self.__data_interp[timeCurr][index][1] * w2
+				u3Weigh = self.__data_interp[timeCurr][index-1][2] * w1 + self.__data_interp[timeCurr][index][2] * w2
 				tempRes.data[timeCurr] = (u1Weigh, u2Weigh, u3Weigh)
 
 			if reCurr == range(len(self.__grid))[0]:
