@@ -103,11 +103,11 @@ class Statistics:
 				if (ii == range(len(self.__grid))[0] or ii == range(len(self.__grid))[-1]):
 					# first and last element
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						std[jj] += 0.5*self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])
+						std[jj] += 0.5*self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])**2
 	
 				else:
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						std[jj] += self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])
+						std[jj] += self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])**2
 			
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
@@ -132,8 +132,13 @@ class Statistics:
 		ind = 0
 		for reCurr in self.__grid:
 			index = 0
-			while self.__data[reNumsSort[index]].re < reCurr:
-				index += 1
+			if (self.__data[reNumsSort[0]].re >= reCurr):
+				index = 1
+			elif (self.__data[reNumsSort[-1]].re < reCurr):
+				index = len(reNumsSort) - 1
+			else:
+				while self.__data[reNumsSort[index]].re < reCurr:
+					index += 1
 
 			re1 = self.__data[reNumsSort[index-1]].re
 			re2 = self.__data[reNumsSort[index]].re
