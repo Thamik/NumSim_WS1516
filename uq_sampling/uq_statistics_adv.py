@@ -128,7 +128,9 @@ class Statistics:
 	def computeConvergence(self):
 		print 'Computing mean and standard deviations at end time...'
 		self.__meanConv = []
+		self.__stdConv = []
 		mean = 0.0
+		std = 0.0
 		for jj in range(len(self.__data_interp[-2])):
 			mean += self.__data_interp[-2][jj][0]
 			if (jj == 499):
@@ -140,7 +142,19 @@ class Statistics:
 				temp /= 1000.0
 				self.__meanConv.append(temp)
 
+		for jj in range(len(self.__data_interp[-2])):
+			std += (self.__data_interp[-2][jj][0] - mean)**2
+			if (jj == 499):
+				temp = std
+				temp /= 499.0
+				self.__stdConv.append(temp)
+			elif (jj == 999):
+				temp = std
+				temp /= 999.0
+				self.__stdConv.append(temp)
+
 		self.__meanConv.append(mean/float(len(self.__data_interp[-2])))
+		self.__stdConv.append(std/float(len(self.__data_interp[-2]) - 1))
 
         def __interpolate_to_times(self):
                 self.__data_interp = [ [ s.interpolate(t) for s in self.__data ] for t in self.__times ]
