@@ -126,35 +126,23 @@ class Statistics:
 
 
 	def computeConvergence(self):
+		# only do this all for the first evaluation point/cell
 		print 'Computing mean and standard deviations at end time...'
+
 		self.__meanConv = []
-		self.__stdConv = []
-		mean = 0.0
-		std = 0.0
+		temp_sum_mean = 0.0
 		for jj in range(len(self.__data_interp[-2])):
-			mean += self.__data_interp[-2][jj][0]
-			if (jj == 499):
-				temp = mean
-				temp /= 500.0
-				self.__meanConv.append(temp)
-			elif (jj == 999):
-				temp = mean
-				temp /= 1000.0
-				self.__meanConv.append(temp)
-
+			n = jj + 1
+			temp_sum_mean += self.__data_interp[-2][jj][0]
+			self.__meanConv.append( (n, temp_sum_mean/n) )
+                
+                self.__stdConv = []
+		temp_sum_std = 0.0
+		mean = temp_sum_mean/n
 		for jj in range(len(self.__data_interp[-2])):
-			std += (self.__data_interp[-2][jj][0] - mean)**2
-			if (jj == 499):
-				temp = std
-				temp /= 499.0
-				self.__stdConv.append(temp)
-			elif (jj == 999):
-				temp = std
-				temp /= 999.0
-				self.__stdConv.append(temp)
-
-		self.__meanConv.append(mean/float(len(self.__data_interp[-2])))
-		self.__stdConv.append(std/float(len(self.__data_interp[-2]) - 1))
+			n = jj + 1
+			temp_sum_std += (self.__data_interp[-2][jj][0] - mean)**2
+			self.__stdConv.append( (n, sqrt(temp_sum_std/(n-1))) )
 
         def __interpolate_to_times(self):
                 self.__data_interp = [ [ s.interpolate(t) for s in self.__data ] for t in self.__times ]
@@ -299,11 +287,21 @@ class Statistics:
                 plt.ylabel('Standard deviation')
                 plt.xlabel('Time')
 
-		# plot the convergence for the mean of u1 at the first evaluation point
+		# plot the convergence of mean and std of u1 at the first evaluation point
+		# unzip
+		n_samples_means, means = map(list, zip(*self.__meanConv))
+		n_samples_stds, stds = map(list, zip(*self.__stdConv))
+
 		plt.figure(8)
-		plt.plot(np.array([500,1000,2000]), np.array(self.__meanConv))
+		plt.plot(np.array(n_samples_means), np.array(means))
 		plt.ylabel('Mean value')
-		plt.title('Convergence of mean value at the first evaluation point')
+		plt.title('MC: Mean value at the first evaluation point')
+		plt.xlabel('Number of Samples')
+
+		plt.figure(9)
+		plt.plot(np.array(n_samples_stds), np.array(stds))
+		plt.ylabel('Standard deviation')
+		plt.title('MC: Standard deviation at the first evaluation point')
 		plt.xlabel('Number of Samples')
 
                 plt.show()
