@@ -167,6 +167,8 @@ class Statistics:
 
         def plot(self):
                 print 'Plotting...'
+
+		# plot MC results
                 
                 # plot the data for the first evaluation point
                 u1_mean = [ m[0] for m in self.__means ]
@@ -176,7 +178,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u1_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (120,5)')
+                plt.title('MC: Velocity at the grid cell (120,5)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u1_std))
                 plt.ylabel('Standard deviation')
@@ -190,7 +192,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u2_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (64,64)')
+                plt.title('MC: Velocity at the grid cell (64,64)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u2_std))
                 plt.ylabel('Standard deviation')
@@ -204,7 +206,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u3_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (5,120)')
+                plt.title('MC: Velocity at the grid cell (5,120)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u3_std))
                 plt.ylabel('Standard deviation')
@@ -220,8 +222,8 @@ class Statistics:
 		y = mlab.normpdf(bins, mu, sigma)
 		plt.plot(bins, y, 'r--')
 
-		print 'Plotting...'
-                
+		# plot quad results
+
                 # plot the data for the first evaluation point
                 u1_expQuad = [ m[0] for m in self.__expectQuad ]
                 u1_stdQuad = [ s[0] for s in self.__stdsQuad ]
@@ -230,7 +232,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u1_expQuad))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (120,5)')
+                plt.title('Quad: Velocity at the grid cell (120,5)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u1_stdQuad))
                 plt.ylabel('Standard deviation')
@@ -244,7 +246,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u2_expQuad))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (64,64)')
+                plt.title('Quad: Velocity at the grid cell (64,64)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u2_stdQuad))
                 plt.ylabel('Standard deviation')
@@ -258,7 +260,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u3_expQuad))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (5,120)')
+                plt.title('Quad: Velocity at the grid cell (5,120)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u3_stdQuad))
                 plt.ylabel('Standard deviation')
