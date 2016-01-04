@@ -46,7 +46,7 @@ class Statistics:
 
 	def setGrid(self, grid):
 		self.__grid = grid
-		print 'Iterpolating data to match the given grid in probability space'
+		print 'Interpolating data to match the given grid in probability space...'
 		self.__interpolate_to_grid()
 		
 
@@ -77,40 +77,41 @@ class Statistics:
 		print 'Computing mean values and standard deviations over time with quadrature...'
 		self.__expectQuad = []
 		self.__stdsQuad = []
-		for t in range(len (self.__times)):
+		for tind, time in enumerate(self.__times):
 			expect = [0.0] * 3
 			for ii in range(len(self.__grid)):
 				if (ii == range(len(self.__grid))[0] or ii == range(len(self.__grid))[-1]):
 					# first and last element
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						expect[jj] += 0.5*self.__data_interp_grid[ii].data[t][jj]*self.prob(self.__grid[ii])
+						expect[jj] += 0.5*self.__data_interp_grid[ii].data[tind][jj]*self.prob(self.__grid[ii])
 	
 				else:
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						expect[jj] += self.__data_interp_grid[ii].data[t][jj]*self.prob(self.__grid[ii])
+						expect[jj] += self.__data_interp_grid[ii].data[tind][jj]*self.prob(self.__grid[ii])
 			
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
 				expect[kk] *= 0.5*h
-				print t, expect[kk]
+				#print "Expectation value (quad.):", time, expect[kk]
 			
 			self.__expectQuad.append(expect)
 
-		for t in range(len(self.__times)):
+		for tind, time in enumerate(self.__times):
 			std = [0.0] * 3
 			for ii in range(len(self.__grid)):
 				if (ii == range(len(self.__grid))[0] or ii == range(len(self.__grid))[-1]):
 					# first and last element
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						std[jj] += 0.5*self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])
+						std[jj] += 0.5*self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[tind][jj] - self.__expectQuad[tind][jj])
 	
 				else:
 					for jj in range(len(self.__data_interp_grid[ii].data[0])):
-						std[jj] += self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[t][jj] - self.__expectQuad[t][jj])
+						std[jj] += self.prob(self.__grid[ii])*(self.__data_interp_grid[ii].data[tind][jj] - self.__expectQuad[tind][jj])
 			
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
 				std[kk] *= 0.5*h
+				#print "Standard deviation (quad.):", time, std[kk]
 
 			self.__stdsQuad.append(std)
 
@@ -155,6 +156,8 @@ class Statistics:
         def plot(self):
                 print 'Plotting...'
                 
+		# Monte-Carlo results
+
                 # plot the data for the first evaluation point
                 u1_mean = [ m[0] for m in self.__means ]
                 u1_std = [ s[0] for s in self.__stds ]
@@ -163,7 +166,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u1_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (120,5)')
+                plt.title('MC: Velocity at the grid cell (120,5)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u1_std))
                 plt.ylabel('Standard deviation')
@@ -177,7 +180,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u2_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (64,64)')
+                plt.title('MC: Velocity at the grid cell (64,64)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u2_std))
                 plt.ylabel('Standard deviation')
@@ -191,7 +194,7 @@ class Statistics:
                 plt.subplot(2,1,1)
                 plt.plot(np.array(self.__times), np.array(u3_mean))
                 plt.ylabel('Mean value')
-                plt.title('Velocity at the grid cell (5,120)')
+                plt.title('MC: Velocity at the grid cell (5,120)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u3_std))
                 plt.ylabel('Standard deviation')
@@ -206,6 +209,51 @@ class Statistics:
 		sigma = 1000.0/6.0
 		y = mlab.normpdf(bins, mu, sigma)
 		plt.plot(bins, y, 'r--')
+		plt.title('MC: Distribution of the Reynolds numbers of the samples')
+
+		# plot the results of the quadrature
+
+		# plot the data for the first evaluation point
+                u1_mean = [ m[0] for m in self.__expectQuad ]
+                u1_std = [ s[0] for s in self.__stdsQuad ]
+                
+                plt.figure(5)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u1_mean))
+                plt.ylabel('Mean value')
+                plt.title('Quad: Velocity at the grid cell (120,5)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u1_std))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
+
+                # plot the data for the second evaluation point
+                u2_mean = [ m[1] for m in self.__expectQuad ]
+                u2_std = [ s[1] for s in self.__stdsQuad ]
+                
+                plt.figure(6)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u2_mean))
+                plt.ylabel('Mean value')
+                plt.title('Quad: Velocity at the grid cell (64,64)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u2_std))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
+
+                # plot the data for the third evaluation point
+                u3_mean = [ m[2] for m in self.__expectQuad ]
+                u3_std = [ s[2] for s in self.__stdsQuad ]
+                
+                plt.figure(7)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u3_mean))
+                plt.ylabel('Mean value')
+                plt.title('Quad: Velocity at the grid cell (5,120)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u3_std))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
 
                 plt.show()
 
