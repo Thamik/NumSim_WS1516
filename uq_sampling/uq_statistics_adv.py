@@ -92,7 +92,7 @@ class Statistics:
 			
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
-				expect[kk] *= 0.5*h
+				expect[kk] *= h
 				#print t, expect[kk]
 			
 			self.__expectQuad.append(expect)
@@ -111,7 +111,7 @@ class Statistics:
 			
 			for kk in range(len(self.__data_interp_grid[0].data[0])):
 				h = (self.__grid[-1] - self.__grid[0])/float(len(self.__grid))
-				std[kk] *= 0.5*h
+				std[kk] *= h
 
 			self.__stdsQuad.append(std)
 
