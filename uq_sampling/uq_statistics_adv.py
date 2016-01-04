@@ -2,6 +2,7 @@ import os
 from math import sqrt
 from math import pi
 from math import exp
+from math import isnan
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import numpy as np
@@ -144,6 +145,13 @@ class Statistics:
 				u1Weigh = self.__data_interp[timeCurr][index-1][0] * w1 + self.__data_interp[timeCurr][index][0] * w2
 				u2Weigh = self.__data_interp[timeCurr][index-1][1] * w1 + self.__data_interp[timeCurr][index][1] * w2
 				u3Weigh = self.__data_interp[timeCurr][index-1][2] * w1 + self.__data_interp[timeCurr][index][2] * w2
+#				if (isnan(u1Weigh)):
+#					print '(1) NaN found!!!: ', self.__data_interp[timeCurr][index-1][0], self.__data_interp[timeCurr][index][0]
+#				elif (isnan(u2Weigh)):
+#					print '(2) NaN found!!!: ', self.__data_interp[timeCurr][index-1][1], self.__data_interp[timeCurr][index][1]
+#				elif (isnan(u3Weigh)):
+#					print '(3) NaN found!!!: ', self.__data_interp[timeCurr][index-1][2], self.__data_interp[timeCurr][index][2]
+
 				tempRes.data[timeCurr] = (u1Weigh, u2Weigh, u3Weigh)
 
 			if reCurr == range(len(self.__grid))[0]:
@@ -252,6 +260,50 @@ class Statistics:
                 plt.title('Quad: Velocity at the grid cell (5,120)')
                 plt.subplot(2,1,2)
                 plt.plot(np.array(self.__times), np.array(u3_std))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
+
+		print 'Plotting...'
+                
+                # plot the data for the first evaluation point
+                u1_expQuad = [ m[0] for m in self.__expectQuad ]
+                u1_stdQuad = [ s[0] for s in self.__stdsQuad ]
+                
+                plt.figure(5)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u1_expQuad))
+                plt.ylabel('Mean value')
+                plt.title('Velocity at the grid cell (120,5)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u1_stdQuad))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
+
+		# plot the data for the second evaluation point
+                u2_expQuad = [ m[1] for m in self.__expectQuad ]
+                u2_stdQuad = [ s[1] for s in self.__stdsQuad ]
+                
+                plt.figure(6)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u2_expQuad))
+                plt.ylabel('Mean value')
+                plt.title('Velocity at the grid cell (64,64)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u2_stdQuad))
+                plt.ylabel('Standard deviation')
+                plt.xlabel('Time')
+
+		# plot the data for the third evaluation point
+                u3_expQuad = [ m[2] for m in self.__expectQuad ]
+                u3_stdQuad = [ s[2] for s in self.__stdsQuad ]
+                
+                plt.figure(7)
+                plt.subplot(2,1,1)
+                plt.plot(np.array(self.__times), np.array(u3_expQuad))
+                plt.ylabel('Mean value')
+                plt.title('Velocity at the grid cell (5,120)')
+                plt.subplot(2,1,2)
+                plt.plot(np.array(self.__times), np.array(u3_stdQuad))
                 plt.ylabel('Standard deviation')
                 plt.xlabel('Time')
 
