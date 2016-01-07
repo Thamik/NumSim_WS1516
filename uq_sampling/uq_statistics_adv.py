@@ -48,8 +48,7 @@ class Statistics:
 	def setGrid(self, grid):
 		self.__grid = grid
 		print 'Iterpolating data to match the given grid in probability space'
-		self.__interpolate_to_grid()
-		
+		self.__data_interp_grid = self.__interpolate_to_grid(self.__grid)
 
         def compute(self):
                 print 'Computing mean values and standard deviations over time...'
@@ -116,14 +115,11 @@ class Statistics:
 
 			self.__stdsQuad.append(std)
 
-			
-
 	def prob(self, reNum):
 		sigma = 1000.0/6.0
 		mu = 1500.0
 		res = 1/(float(sigma)*sqrt(2*pi)) * exp(-0.5*((reNum-mu)/float(sigma))**2)
 		return res
-
 
 	def computeConvergence(self):
 		# only do this all for the first evaluation point/cell
@@ -144,14 +140,31 @@ class Statistics:
 			temp_sum_std += (self.__data_interp[-2][jj][0] - mean)**2
 			self.__stdConv.append( (n, sqrt(temp_sum_std/(n-1))) )
 
+		temp_mean_quad = self.__expectQuad
+		temp_stds_quad = self.__stdsQuad
+		temp_grid = self.__grid
+		self.__meanConvQuad = []
+		self.__stdConvQuad = []
+		#for n in [ (ii+1)*10 for ii in range(50) ]:
+		for n in [50, 100, 200]:
+			self.setGrid(np.linspace(1000,2000,n))
+			self.computeTrap()
+			self.__meanConvQuad.append( (n, self.__expectQuad[-2][1]) )
+			self.__stdConvQuad.append( (n, self.__stdsQuad[-2][1]) )
+
+		self.__expectQuad = temp_mean_quad
+		self.__stdsQuad = temp_stds_quad
+		self.__grid = temp_grid
+		
+
         def __interpolate_to_times(self):
                 self.__data_interp = [ [ s.interpolate(t) for s in self.__data ] for t in self.__times ]
 
-	def __interpolate_to_grid(self):
-		self.__data_interp_grid = []
+	def __interpolate_to_grid(self, grid):
+		data_interp_grid = []
 		reNumsSort = sorted(range(len(self.__data)), key=lambda k: self.__data[k])
 		ind = 0
-		for reCurr in self.__grid:
+		for reCurr in grid:
 			index = 0
 			if (self.__data[reNumsSort[0]].re >= reCurr):
 				index = 1
@@ -179,11 +192,10 @@ class Statistics:
 
 				tempRes.data[timeCurr] = (u1Weigh, u2Weigh, u3Weigh)
 
-			if reCurr == range(len(self.__grid))[0]:
-				print self.__data_interp[reNumsSort[index]].re
-
-			self.__data_interp_grid.append(tempRes)
+			data_interp_grid.append(tempRes)
 			ind += 1
+
+		return data_interp_grid
 			
 
         def plot(self):
@@ -292,17 +304,40 @@ class Statistics:
 		n_samples_means, means = map(list, zip(*self.__meanConv))
 		n_samples_stds, stds = map(list, zip(*self.__stdConv))
 
+		means_err = map(abs, map(lambda x: x-means[-1], means))
+		stds_err = map(abs, map(lambda x: x-stds[-1], stds))
+
 		plt.figure(8)
-		plt.plot(np.array(n_samples_means), np.array(means))
+		plt.plot(np.array(n_samples_means), np.array(means_err))
 		plt.ylabel('Mean value')
 		plt.title('MC: Mean value at the first evaluation point')
 		plt.xlabel('Number of Samples')
 
 		plt.figure(9)
-		plt.plot(np.array(n_samples_stds), np.array(stds))
+		plt.plot(np.array(n_samples_stds), np.array(stds_err))
 		plt.ylabel('Standard deviation')
 		plt.title('MC: Standard deviation at the first evaluation point')
 		plt.xlabel('Number of Samples')
+
+		# plot the convergence of mean and std of u1 at the first evaluation point
+		# unzip
+		n_nodes_means, means_quad = map(list, zip(*self.__meanConvQuad))
+		n_nodes_stds, stds_quad = map(list, zip(*self.__stdConvQuad))
+
+		meansQuad_err = map(abs, map(lambda x: x-means_quad[-1], means_quad))
+		stdsQuad_err = map(abs, map(lambda x: x-stds_quad[-1], stds_quad))
+
+		plt.figure(10)
+		plt.plot(np.array(n_nodes_means), np.array(meansQuad_err))
+		plt.ylabel('Mean value')
+		plt.title('Quad: Mean value at the first evaluation point')
+		plt.xlabel('Number of Nodes')
+
+		plt.figure(11)
+		plt.plot(np.array(n_nodes_stds), np.array(stdsQuad_err))
+		plt.ylabel('Standard deviation')
+		plt.title('Quad: Standard deviation at the first evaluation point')
+		plt.xlabel('Number of Nodes')
 
                 plt.show()
 
