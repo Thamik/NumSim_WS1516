@@ -673,3 +673,14 @@ const Geometry* Grid::getGeometry() const
 {
 	return _geom;
 }
+
+void Grid::add(const Grid* a)
+{
+	Iterator it(_geom);
+	it.First();
+	while (it.Valid()){
+		Cell(it) += a->Cell(it);
+		it.Next();
+	}
+}
+

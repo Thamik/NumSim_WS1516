@@ -486,6 +486,14 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 
 //------------------------------------------------------------------------------
 
+MGInfoHandle::MGInfoHandle()
+{
+}
+
+MGInfoHandle::~MGInfoHandle()
+{
+}
+
 MGSolver::MGSolver(real_t eps)
 : _eps(eps)
 {
@@ -495,16 +503,64 @@ MGSolver::~MGSolver()
 {
 }
 
-MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
+MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs, bool homogeneous_boundary) const
+{
+	// TODO
+
+	// smooth
+	smooth(pressure, rhs, homogeneous_boundary);
+
+	// compute residual
+	Grid res(pressure->getGeometry());
+	res.Initialize(0.0); // this should not be needed
+	compute_residual(pressure, rhs, &res);
+
+	// compute coarser geometry
+	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
+	geom_coarse.fitToGeom(pressure->getGeometry()); // set length, blength
+	sizeX_coarse = pressure->getGeometry()->Size()[0];
+	sizeX_coarse /= 2;
+	sizeY_coarse = pressure->getGeometry()->Size()[1];
+	sizeY_coarse /= 2;
+	geom_coarse.setSize(multi_real_t(sizeX_coarse, sizeY_coarse));
+
+	// restrict to coarser grid
+	Grid res_coarse(&geom_coarse);
+	res_coarse.Initialize(0.0); // this should not be needed
+	restrict_grid(&res, &res_coarse);
+
+	// MG iteration
+	Grid err_coarse(&geom_coarse);
+	err_coarse.Initialize(0.0); // THIS IS NEEDED
+	Solve(&err_coarse, &res_coarse, true); // solve recursively with homogeneous boundary
+
+	// prologate to finer grid
+	Grid err(pressure->getGeometry());
+	err.Initialize(0.0); // this should not be needed
+	interpolate_grid(&err_coarse, &err);
+
+	// ... and finally add the error to this grid
+	pressure->add(&err);
+
+}
+
+void MGSolver::smooth(Grid* pressure, const Grid* rhs, bool homogeneous_boundary) const
 {
 	// TODO
 }
 
-MGInfoHandle::MGInfoHandle()
+void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const
 {
+	// TODO
 }
 
-MGInfoHandle::~MGInfoHandle()
+void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 {
+	// TODO
+}
+
+void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
+{
+	// TODO
 }
 

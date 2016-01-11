@@ -140,9 +140,15 @@ class MGSolver {
 public:
 	MGSolver(real_t eps);
 	~MGSolver();
-	MGInfoHandle Solve(Grid* pressure, const Grid* rhs) const;
+	MGInfoHandle Solve(Grid* pressure, const Grid* rhs, bool homogenous_boundary=false) const;
 private:
 	real_t _eps;
+
+	void smooth(Grid* pressure, const Grid* rhs, bool homogeneous_boundary) const;
+	void compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const;
+	void restrict_grid(const Grid* old_grid, Grid* new_grid) const;
+	void interpolate_grid(const Grid* old_grid, Grid* new_grid) const;
+
 };
 
 //------------------------------------------------------------------------------

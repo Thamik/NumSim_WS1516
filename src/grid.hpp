@@ -136,6 +136,8 @@ public:
   /// Return a pointer to the Geometry
   const Geometry* getGeometry() const;
 
+	void add(const Grid* a);
+
 private:
 	/// Pointer to the raw grid data
 	real_t *_data;

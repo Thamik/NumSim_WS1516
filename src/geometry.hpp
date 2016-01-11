@@ -41,6 +41,10 @@ public:
   //      u=0, v=0
   Geometry();
   Geometry(Communicator *comm);
+
+	// copy constructor
+	Geometry(const Geometry* geom);
+
 	~Geometry();
 
 	void load_domain_partitioning(const char* file);
@@ -100,6 +104,12 @@ public:
 	bool isInsideObstacle(const multi_real_t& pos, const multi_real_t& offset) const;
 
 	bool isInsideThisSubdomain(const multi_real_t& pos) const;
+
+	//void homogeneousBoundary();
+
+	void fitToGeom(const Geometry* geom);
+
+	void setSize(multi_real_t size);
 
 private:
 	/// Communicator

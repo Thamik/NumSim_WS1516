@@ -46,8 +46,11 @@ public:
   virtual const index_t &Value() const;
   /// Cast operator to convert Iterators to integers
   virtual operator const index_t &() const;
-  /// Returns the position coordinates
+  /// Returns the (index) position coordinates
   virtual multi_index_t Pos() const;
+
+	/// Returns the physical position coordinates
+	virtual multi_real_t PhysPos() const;
 
   /// Sets the iterator to the first element
   virtual void First();

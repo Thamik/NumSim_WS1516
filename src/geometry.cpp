@@ -38,6 +38,16 @@ Geometry::Geometry(Communicator *comm)
 	// TODO: something else to do?
 }
 
+// copy constructor
+Geometry::Geometry(const Geometry* geom)
+: _comm(geom->_comm), _size(geom->_size), _bsize(geom->_bsize), _total_offset(geom->_total_offset), 
+//_offsets(geom->_offsets), _localSizes(geom->_localSizes), 
+_length(geom->_length), _blength(geom->_blength), _h(geom->_h)
+//, _flags(geom->_flags), _bval_u(geom->_bval_u), _bval_v(geom->_bval_v), _bval_p(geom->_bval_p)
+{
+	set_meshwidth(); // set _h to the right values
+}
+
 /**
 The destructor of the Geometry class.
 */
@@ -1337,5 +1347,27 @@ bool Geometry::isInsideThisSubdomain(const multi_real_t& pos) const
 	real_t maxY = minY + _blength[1] * real_t(_size[1]-2) / real_t(_bsize[1]-2);
 
 	return pos[0] >= minX && pos[0] <= maxX && pos[1] >= minY && pos[1] <= maxY;
+}
+
+/*void Geometry::homogeneousBoundary()
+{
+	
+}*/
+
+void Geometry::fitToGeom(const Geometry* geom)
+{
+	_size = geom->_size;
+	_bsize = geom->_bsize;
+	_length = geom->_length;
+	_blength = geom->_blength;
+
+	setMeshwidth();
+}
+
+void Geometry::setSize(multi_real_t size)
+{
+	_size = size;
+
+	setMeshwidth();
 }
 

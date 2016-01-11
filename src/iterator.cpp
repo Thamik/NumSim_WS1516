@@ -83,6 +83,11 @@ multi_index_t Iterator::Pos() const
 	return _pos;
 }
 
+multi_real_t Iterator::PhysPos() const
+{
+	return multi_real_t((_pos[0]-1)*_geom->Mesh()[0], (_pos[1]-1)*_geom->Mesh()[1]);
+}
+
 /** The Iterator is set to the first element.
 Here, the first element is the element located
 in the bottom left corner
