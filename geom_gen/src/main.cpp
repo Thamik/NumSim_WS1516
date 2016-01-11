@@ -1,7 +1,8 @@
 #include <iostream>
 #include <stdlib.h>     /* atof */
 
-// #define OUTPUT
+#define OUTPUT
+
 #define _USE_MATH_DEFINES // to get pi via M_PI
 #include <math.h>
 

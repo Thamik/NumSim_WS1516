@@ -16,7 +16,7 @@
  */
 
 #include "typedef.hpp"
-//#define OUTPUT_PARAMS
+#define OUTPUT_PARAMS
 //------------------------------------------------------------------------------
 #ifndef __PARAMETER_HPP
 #define __PARAMETER_HPP

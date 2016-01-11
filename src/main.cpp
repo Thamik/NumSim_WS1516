@@ -18,8 +18,9 @@
 //------------------------------------------------------------------------------
 
 #define VERBOSE false
-//#define VTK_OUTPUT
-//#define OUTPUT_MAIN
+#define VTK_OUTPUT
+#define OUTPUT_MAIN
+#define UQ_RUN
 
 #include "typedef.hpp"
 #include "communicator.hpp"
@@ -51,7 +52,9 @@ int main(int argc, char **argv) {
 	std::string param_file("");
 	std::string geom_file("");
 	std::string uq_filename("");
+#ifdef UQ_RUN
 	int sim_id(0);
+#endif
 	for (int i=0; i<argc; i++){
 		switch (i){
 			case 0:
@@ -65,10 +68,12 @@ int main(int argc, char **argv) {
 				// this should be the filename of the geometry file
 				geom_file.assign(argv[i]);
 				break;
+#ifdef UQ_RUN
 			case 3:
 				// this should be the simulation id
 				sim_id = atoi(argv[i]);
 				break;
+#endif
 			default:
 				// too much parameters, don't know what to do here
 				std::cout << "Warning: too much command line arguments!\n";
@@ -76,7 +81,9 @@ int main(int argc, char **argv) {
 		}
 	}
 
+#ifdef UQ_RUN
 	uq_filename += "VTK/uq_data_" + std::to_string(sim_id) + ".uqdat";
+#endif
 
 	// measure runtime
 	timeval tv;
@@ -215,10 +222,12 @@ int main(int argc, char **argv) {
 #endif
 
 		// Run a few steps
-		for (int i=0; i<25; i++){
+		/*for (int i=0; i<25; i++){
 			comp.TimeStep(false);
+#ifdef UQ_RUN
 			if (comm.getRank() == 0) comp.writeUQFile();
-		}
+#endif
+		}*/
 		comp.TimeStep(true); // print info
 
 	}

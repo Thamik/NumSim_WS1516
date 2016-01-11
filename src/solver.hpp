@@ -127,4 +127,24 @@ public:
 
 //------------------------------------------------------------------------------
 
+class MGInfoHandle {
+public:
+	MGInfoHandle();
+	~MGInfoHandle();
+
+	bool converged;
+	real_t last_res;
+};
+
+class MGSolver {
+public:
+	MGSolver(real_t eps);
+	~MGSolver();
+	MGInfoHandle Solve(Grid* pressure, const Grid* rhs) const;
+private:
+	real_t _eps;
+};
+
+//------------------------------------------------------------------------------
+
 #endif // __SOLVER_HPP

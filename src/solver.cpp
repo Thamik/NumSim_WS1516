@@ -483,3 +483,28 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 	delete cpy;
 	return totalRes(grid,rhs);
 }
+
+//------------------------------------------------------------------------------
+
+MGSolver::MGSolver(real_t eps)
+: _eps(eps)
+{
+}
+
+MGSolver::~MGSolver()
+{
+}
+
+MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
+{
+	// TODO
+}
+
+MGInfoHandle::MGInfoHandle()
+{
+}
+
+MGInfoHandle::~MGInfoHandle()
+{
+}
+

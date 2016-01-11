@@ -20,10 +20,10 @@
 
 #include <string>
 
-#define GO_FAST
+//#define GO_FAST // do not define this, if you want to run in parallel, use complex geometries or anything else non-default
 //#define USE_PARTICLES
-//#define OUTPUT
-#define RUN_SERIAL
+#define OUTPUT
+//#define RUN_SERIAL
 
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP

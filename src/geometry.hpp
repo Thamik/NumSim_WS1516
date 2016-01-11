@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//#define COMPLEX_GEOM
+#define COMPLEX_GEOM
 
 #include "typedef.hpp"
-//define OUTPUT_GEOMETRY
+#define OUTPUT_GEOMETRY
 //------------------------------------------------------------------------------
 #ifndef __GEOMETRY_HPP
 #define __GEOMETRY_HPP

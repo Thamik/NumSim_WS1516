@@ -594,11 +594,11 @@ In the algorithm, dt has to be sufficiently small to provide stability of the al
 */
 real_t Compute::compute_dt() const
 {
-//	real_t u_absmax = _u->TotalAbsMax();
-//	real_t v_absmax = _v->TotalAbsMax();
+	real_t u_absmax = _u->TotalAbsMax();
+	real_t v_absmax = _v->TotalAbsMax();
 
-	real_t u_absmax = _u->TotalInnerAbsMax();
-	real_t v_absmax = _v->TotalInnerAbsMax();
+//	real_t u_absmax = _u->TotalInnerAbsMax();
+//	real_t v_absmax = _v->TotalInnerAbsMax();
 
 	real_t res = std::min(_geom->Mesh()[0]/u_absmax, _geom->Mesh()[1]/v_absmax);
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
@@ -612,7 +612,6 @@ Update the boundary values in all grids where this is necessary.
 void Compute::update_boundary_values()
 {
 #ifdef COMPLEX_GEOM
-	std::cout << "Something is totally going wrong here!\n";
 	_geom->UpdateGG_U(_u);
 	_geom->UpdateGG_V(_v);
 
