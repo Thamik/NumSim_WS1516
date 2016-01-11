@@ -9,7 +9,7 @@ CMakeCache.txt
 *~
 .project
 documentation/
-data/complex_default.geom
+!data/complex_default.geom
 analysis.txt
 gmon.out
 *.pyc
