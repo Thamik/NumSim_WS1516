@@ -551,7 +551,13 @@ void MGSolver::smooth(Grid* pressure, const Grid* rhs, bool homogeneous_boundary
 
 void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const
 {
-	// TODO
+	// TODO: Test
+	InteriorIteratorGG it(pressure->getGeometry());
+	it.First();
+	while(it.Valid()) {
+		res->Cell(it.Value()) = std::abs(rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it));
+		it.Next();
+	}
 }
 
 void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
