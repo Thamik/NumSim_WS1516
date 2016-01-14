@@ -89,9 +89,13 @@ _uq_filename(uq_filename), _sim_id(sim_id)
 	update_boundary_values();
 
 	// construct solver
+#ifdef MULTIGRID
+	_solver = new MGSolver(_param->Eps(), _param->IterMax());
+#else
 	real_t h = 0.5 * (_geom->Mesh()[0] + _geom->Mesh()[1]); // just took the average here
 	real_t omega = 2.0 / (1.0+sin(M_PI*h));
 	_solver = new RedOrBlackSOR(_geom, omega);
+#endif
 
 	// construct console clock
 	_clock = new ConsoleClock();
@@ -214,6 +218,10 @@ void Compute::TimeStep(bool verbose)
 	_p_old = _p->copy();*/
 	
 	// solve Poisson equation
+#ifdef MULTIGRID
+	real_t residual = _solver->Solve(_p, _rhs);
+	_solver_converging = true; // TODO: remove! (do better)
+#else
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
 	while (true){
@@ -243,6 +251,8 @@ void Compute::TimeStep(bool verbose)
 			}
 		}
 	}
+#endif
+
 #ifdef COMPLEX_GEOM
 	_geom->UpdateGG_P(_p);
 #else
@@ -314,8 +324,10 @@ void Compute::TimeStep(bool verbose)
 
 		std::cout << "Last residual: res = ";
 		printf("%10.7f", residual);
+#ifndef MULTIGRID
 		std::cout << ",    \tno. iterations: ";
 		printf("%7i", int(iteration/2));
+#endif
 		std::cout << "     \n"; // residual
 
 		std::cout << "Last timestep: dt =  ";

@@ -39,6 +39,9 @@ public:
   /// This method deletes the average value of the scalar field given by grid
   virtual void delete_average(Grid* grid) const;
 
+	/// Computes the total residual of the all grids
+	real_t synced_totalRes(const Grid* grid, const Grid* rhs) const;
+
 protected:
   const Geometry *_geom;
 
@@ -52,9 +55,6 @@ protected:
 	real_t totalRes_Linf(const Grid* grid, const Grid* rhs) const;
 	/// Computes the total L1 residual of the local grid
 	real_t totalRes_L1_averaged(const Grid* grid, const Grid* rhs) const;
-
-	/// Computes the total residual of the all grids
-	real_t synced_totalRes(const Grid* grid, const Grid* rhs) const;
 
 	/// Computes the total Linf residual of all grids
 	real_t synced_totalRes_Linf(const Grid* grid, const Grid* rhs) const;
@@ -127,24 +127,25 @@ public:
 
 //------------------------------------------------------------------------------
 
-class MGInfoHandle {
+/*class MGInfoHandle {
 public:
 	MGInfoHandle();
 	~MGInfoHandle();
 
 	bool converged;
 	real_t last_res;
-};
+};*/
 
 class MGSolver {
 public:
-	MGSolver(real_t eps);
+	MGSolver(real_t eps, index_t itermax);
 	~MGSolver();
-	MGInfoHandle Solve(Grid* pressure, const Grid* rhs) const;
+	real_t Solve(Grid* pressure, const Grid* rhs) const;
 private:
 	real_t _eps;
+	index_t _itermax;
 
-	void smooth(Grid* pressure, const Grid* rhs) const;
+	real_t smooth(Grid* pressure, const Grid* rhs) const;
 	void compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const;
 	void restrict_grid(const Grid* old_grid, Grid* new_grid) const;
 	void interpolate_grid(const Grid* old_grid, Grid* new_grid) const;

@@ -50,7 +50,7 @@ public:
   virtual multi_index_t Pos() const;
 
 	/// Returns the physical position coordinates
-	virtual multi_real_t PhysPos() const;
+	virtual multi_real_t PhysPos(const multi_real_t& offset) const;
 
   /// Sets the iterator to the first element
   virtual void First();

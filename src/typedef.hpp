@@ -85,6 +85,7 @@ class Parameter;
 class Solver;
 
 class RedOrBlackSOR; // filled in, used in the Compute class
+class MGSolver;
 //class JacobiSolver;
 
 class Particles;

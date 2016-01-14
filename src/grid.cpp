@@ -86,8 +86,9 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 	real_t ix = ( (_geom->Size()[0] - 2.0)*(pos[0]/_geom->Length()[0]) ) - _offset[0];
 	real_t iy = ( (_geom->Size()[1] - 2.0)*(pos[1]/_geom->Length()[1]) ) - _offset[1];
 	
-	if (_offset[0] > 0 || _offset[1] > 0)
+	if (_offset[0] > 0 || _offset[1] > 0){
 		std::cout << "Warning: Positive Offset \n";
+	}
 
 	index_t x1 = floor(ix);
 	index_t x2 = ceil(ix);
@@ -105,14 +106,16 @@ real_t Grid::Interpolate(const multi_real_t& pos) const
 
 	index_t val = x + y*_geom->Size()[0];
 
-	if (_geom->isObstacle(Iterator(_geom, val))) return 0.0;
+	if (_geom->isObstacle(Iterator(_geom, val))){
+		return 0.0;
+	}
 	//return _data[val]; // use this line, if you want to see the values cell-wise
 
 	/*if(vallu < 0){
 		std::cout << "Warning, negative index value in interpolation: " << vallu << "\n" << std::flush;
 	} else */
 	if(valro >= _geom->Size()[0]*_geom->Size()[1]){
-		std::cout << "Warnng, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
+		std::cout << "Warning, too large index value in interpolation: " << ix << ", " << iy << "\n" << std::flush;
 	}
 
 	real_t alpha = ix - x1;

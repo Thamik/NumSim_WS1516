@@ -107,9 +107,7 @@ public:
 
 	//void homogeneousBoundary();
 
-	void fitToGeom(const Geometry* geom);
-
-	void setSize(multi_index_t size);
+	void halfSize(const Geometry* geom);
 
 private:
 	/// Communicator

@@ -24,6 +24,7 @@
 //#define USE_PARTICLES
 #define OUTPUT
 //#define RUN_SERIAL
+#define MULTIGRID
 
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
@@ -107,7 +108,11 @@ private:
 	real_t _diff_F;
 	real_t _diff_G;
 
-	RedOrBlackSOR *_solver;
+#ifdef MULTIGRID
+	MGSolver* _solver;
+#else
+	RedOrBlackSOR* _solver;
+#endif
 
   const Geometry *_geom;
   const Parameter *_param;

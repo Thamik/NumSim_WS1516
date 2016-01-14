@@ -83,9 +83,9 @@ multi_index_t Iterator::Pos() const
 	return _pos;
 }
 
-multi_real_t Iterator::PhysPos() const
+multi_real_t Iterator::PhysPos(const multi_real_t& offset) const
 {
-	return multi_real_t((_pos[0]-1)*_geom->Mesh()[0], (_pos[1]-1)*_geom->Mesh()[1]);
+	return multi_real_t((real_t(_pos[0])-1.0-real_t(offset[0]))*_geom->Mesh()[0], (real_t(_pos[1])-1.0-real_t(offset[1]))*_geom->Mesh()[1]);
 }
 
 /** The Iterator is set to the first element.

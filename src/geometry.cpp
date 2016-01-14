@@ -1354,20 +1354,65 @@ bool Geometry::isInsideThisSubdomain(const multi_real_t& pos) const
 	
 }*/
 
-void Geometry::fitToGeom(const Geometry* geom)
+void Geometry::halfSize(const Geometry* geom)
 {
-	_size = geom->_size;
-	_bsize = geom->_bsize;
+	// just take these values
 	_length = geom->_length;
 	_blength = geom->_blength;
+	_comm = geom->_comm;
+	_total_offset = multi_index_t(geom->_total_offset[0]/2,geom->_total_offset[1]/2); // this hopefully will never be used
+	// ignore _offsets, _localSizes
+	
+	// set size
+	_size = multi_index_t(((geom->_size[0]-2)/2)+2,((geom->_size[1]-2)/2)+2);
+	_bsize = multi_index_t(((geom->_bsize[0]-2)/2)+2,((geom->_bsize[1]-2)/2)+2);
 
-	set_meshwidth();
-}
+	// set flags and boundary values
+	// delete everything
+	if (_flags != nullptr) delete[] _flags;
+	if (_bval_u != nullptr) delete[] _bval_u;
+	if (_bval_v != nullptr) delete[] _bval_v;
+	if (_bval_p != nullptr) delete[] _bval_p;
+	// allocate
+	_flags = new char[_size[0]*_size[1]];
+	_bval_u = new real_t[_size[0]*_size[1]];
+	_bval_v = new real_t[_size[0]*_size[1]];
+	_bval_p = new real_t[_size[0]*_size[1]];
+	// set values
+	char flag_up = geom->_flags[(geom->_size[1]-1)*geom->_size[0] + geom->_size[0]/2];
+	char flag_down = geom->_flags[(0)*geom->_size[0] + geom->_size[0]/2];
+	char flag_left = geom->_flags[(geom->_size[1]/2)*geom->_size[0] + 0];
+	char flag_right = geom->_flags[(geom->_size[1]/2)*geom->_size[0] + geom->_size[0]-1];
+	index_t ival;
+	for (index_t jj=0; jj<_size[1]; jj++){
+		for (index_t ii=0; ii<_size[0]; ii++){
+			ival = jj*_size[0] + ii;
+			_bval_u[ival] = 0.0;
+			_bval_v[ival] = 0.0;
+			_bval_p[ival] = 0.0;
 
-void Geometry::setSize(multi_index_t size)
-{
-	_size = size;
+			// only care about the outer boundaries (equal at the whole side)
+			if (jj == 0){
+				// down
+				_flags[ival] = flag_down;
+			} else if (jj == _size[1]-1){
+				// up
+				_flags[ival] = flag_up;
+			} else if (ii == 0){
+				// left
+				_flags[ival] = flag_left;
+			} else if (ii == _size[0]-1){
+				// right
+				_flags[ival] = flag_right;
+			} else {
+				// interior
+				_flags[ival] = 0;
+			}
+		}
+	}
 
-	set_meshwidth();
+	// update meshwidth (do not call update_meshwidth() since this does some weird parallel communicator stuff!)
+	_h[0] = _blength[0]/(_bsize[0]-2);
+	_h[1] = _blength[1]/(_bsize[1]-2);
 }
 

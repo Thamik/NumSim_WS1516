@@ -486,16 +486,16 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 
 //------------------------------------------------------------------------------
 
-MGInfoHandle::MGInfoHandle()
+/*MGInfoHandle::MGInfoHandle()
 {
 }
 
 MGInfoHandle::~MGInfoHandle()
 {
-}
+}*/
 
-MGSolver::MGSolver(real_t eps)
-: _eps(eps)
+MGSolver::MGSolver(real_t eps, index_t itermax)
+: _eps(eps), _itermax(itermax)
 {
 }
 
@@ -503,64 +503,112 @@ MGSolver::~MGSolver()
 {
 }
 
-MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
+real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 {
 	// TODO
 
-	// smooth
-	smooth(pressure, rhs);
-
-	// compute residual
-	Grid res(pressure->getGeometry());
-	res.Initialize(0.0); // this should not be needed
-	compute_residual(pressure, rhs, &res);
+	real_t total_res(_eps * 2.0);
+	bool converged(false);
 
 	// compute coarser geometry
 	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
-	index_t sizeX_coarse = pressure->getGeometry()->Size()[0];
-	sizeX_coarse /= 2;
-	index_t sizeY_coarse = pressure->getGeometry()->Size()[1];
-	sizeY_coarse /= 2;
-	geom_coarse.setSize(multi_index_t(sizeX_coarse, sizeY_coarse));
-	geom_coarse.fitToGeom(pressure->getGeometry()); // TODO: include homogeneous boundary data
+	geom_coarse.halfSize(pressure->getGeometry());
 
-	// restrict to coarser grid
-	Grid res_coarse(&geom_coarse);
-	res_coarse.Initialize(0.0); // this should not be needed
-	restrict_grid(&res, &res_coarse);
+	index_t minGridSize = 16;
 
-	// MG iteration
-	Grid err_coarse(&geom_coarse);
-	err_coarse.Initialize(0.0); // THIS IS NEEDED
-	Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
+	if (std::min(geom_coarse.TotalSize()[0], geom_coarse.TotalSize()[1]) < minGridSize){
+		// do not use a coarser grid anymore, solve per SOR
 
-	// prolongate to finer grid
-	Grid err(pressure->getGeometry());
-	err.Initialize(0.0); // this should not be needed
-	interpolate_grid(&err_coarse, &err);
+		real_t h = 0.5 * (pressure->getGeometry()->Mesh()[0] + pressure->getGeometry()->Mesh()[1]);
+		real_t omega = 2.0 / (1.0+sin(M_PI*h));
+		RedOrBlackSOR solver = RedOrBlackSOR(pressure->getGeometry(), omega);
+		index_t iteration(0);
+		while(true){
+			if ((iteration % 2) == (pressure->getGeometry()->getCommunicator()->EvenOdd() ? 1 : 0)){
+				total_res = solver.RedCycle(pressure, rhs);
+			} else {
+				total_res = solver.BlackCycle(pressure, rhs);
+			}
 
-	// ... and finally add the error to this grid
-	pressure->add(&err);
+			if (pressure->getGeometry()->getCommunicator()->getSize() > 1){
+				pressure->getGeometry()->getCommunicator()->copyBoundary(pressure);
+			}
 
-	// postsmooting
-	smooth(pressure, rhs);
+			iteration++;
 
-	// return InfoHandle
-	return MGInfoHandle();
+			if (iteration > _itermax*2){
+				converged = false;
+				break;
+			} else if (total_res < _eps){
+				converged = true;
+				break;
+			}
+		}
+	} else {
+		// solve on coarser grid
+
+		// do W-cycle
+		index_t iter(0);
+		index_t max_w_cycles = 50;
+		while (total_res >= _eps && iter <= max_w_cycles){
+
+			// smooth
+			total_res = smooth(pressure, rhs);
+
+			// compute residual
+			Grid res(pressure->getGeometry());
+			res.Initialize(0.0); // this should not be needed
+			compute_residual(pressure, rhs, &res);
+
+			// restrict to coarser grid
+			Grid res_coarse(&geom_coarse);
+			res_coarse.Initialize(0.0); // this should not be needed
+			restrict_grid(&res, &res_coarse);
+
+			// MG iteration
+			Grid err_coarse(&geom_coarse);
+			err_coarse.Initialize(0.0); // THIS IS NEEDED
+			Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
+
+			// prolongate to finer grid
+			Grid err(pressure->getGeometry());
+			err.Initialize(0.0); // this should not be needed
+			interpolate_grid(&err_coarse, &err);
+
+			// ... and finally add the error to this grid
+			pressure->add(&err);
+
+			// postsmooting
+			total_res = smooth(pressure, rhs);
+
+			iter++;
+
+		}
+	}
+	
+	return total_res;
 }
 
-void MGSolver::smooth(Grid* pressure, const Grid* rhs) const
+real_t MGSolver::smooth(Grid* pressure, const Grid* rhs) const
 {
 	// TODO: Test
+	real_t res(0.0);
+
 	RedOrBlackSOR solver = RedOrBlackSOR(pressure->getGeometry(), 1.0); // use Gauss-Seidel solver
 	index_t n_cycles = 2;
 	for (index_t ii=0; ii<n_cycles*2; ii++){
 		if ((ii % 2) == (pressure->getGeometry()->getCommunicator()->EvenOdd() ? 1 : 0)){
-			solver.RedCycle(pressure, rhs);
+			res = solver.RedCycle(pressure, rhs);
 		} else {
-			solver.BlackCycle(pressure, rhs);
+			res = solver.BlackCycle(pressure, rhs);
+		}
+
+		if (pressure->getGeometry()->getCommunicator()->getSize() > 1){
+			pressure->getGeometry()->getCommunicator()->copyBoundary(pressure);
 		}
 	}
+
+	return res;
 }
 
 void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const
@@ -577,11 +625,16 @@ void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res
 void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 {
 	// TODO: Use faster interpolate
-	Iterator it_new(new_grid->getGeometry());
+
+	InteriorIteratorGG it_new(new_grid->getGeometry());
 	it_new.First();
 
 	while(it_new.Valid()) {
-		new_grid->Cell(it_new) = old_grid->Interpolate(it_new.PhysPos());
+		multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
+			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
+		}
+		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
 		it_new.Next();
 	}
 
@@ -592,11 +645,15 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 {
 	// TODO: Use faster interpolate
 
-	Iterator it_new(new_grid->getGeometry());
+	InteriorIteratorGG it_new(new_grid->getGeometry());
 	it_new.First();
 
 	while(it_new.Valid()) {
-		new_grid->Cell(it_new) = old_grid->Interpolate(it_new.PhysPos());
+		multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
+			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
+		}
+		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
 		it_new.Next();
 	}
 
