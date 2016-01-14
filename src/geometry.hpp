@@ -43,7 +43,7 @@ public:
   Geometry(Communicator *comm);
 
 	// copy constructor
-	Geometry(const Geometry* geom);
+	//Geometry(const Geometry* geom);
 
 	~Geometry();
 
@@ -68,7 +68,7 @@ public:
   const multi_real_t &Mesh() const;
 
 	/// Returns a pointer to the communicator
-	const Communicator* getCommunicator() const;
+	Communicator* getCommunicator() const;
 
   /// Updates the velocity field u
   void Update_U(Grid *u) const;

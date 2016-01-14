@@ -39,14 +39,14 @@ Geometry::Geometry(Communicator *comm)
 }
 
 // copy constructor
-Geometry::Geometry(const Geometry* geom)
+/*Geometry::Geometry(const Geometry* geom)
 : _comm(geom->_comm), _size(geom->_size), _bsize(geom->_bsize), _total_offset(geom->_total_offset), 
 //_offsets(geom->_offsets), _localSizes(geom->_localSizes), 
 _length(geom->_length), _blength(geom->_blength), _h(geom->_h)
 //, _flags(geom->_flags), _bval_u(geom->_bval_u), _bval_v(geom->_bval_v), _bval_p(geom->_bval_p)
 {
 	set_meshwidth(); // set _h to the right values
-}
+}*/
 
 /**
 The destructor of the Geometry class.
@@ -445,7 +445,7 @@ const multi_real_t& Geometry::Mesh() const
 /**
 \return pointer to the communicator instance
 */
-const Communicator* Geometry::getCommunicator() const
+Communicator* Geometry::getCommunicator() const
 {
 	return _comm;
 }

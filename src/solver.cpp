@@ -503,12 +503,12 @@ MGSolver::~MGSolver()
 {
 }
 
-MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs, bool homogeneous_boundary) const
+MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 {
 	// TODO
 
 	// smooth
-	smooth(pressure, rhs, homogeneous_boundary);
+	smooth(pressure, rhs);
 
 	// compute residual
 	Grid res(pressure->getGeometry());
@@ -517,12 +517,12 @@ MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs, bool homogeneous_b
 
 	// compute coarser geometry
 	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
-	geom_coarse.fitToGeom(pressure->getGeometry()); // set length, blength
-	sizeX_coarse = pressure->getGeometry()->Size()[0];
+	index_t sizeX_coarse = pressure->getGeometry()->Size()[0];
 	sizeX_coarse /= 2;
-	sizeY_coarse = pressure->getGeometry()->Size()[1];
+	index_t sizeY_coarse = pressure->getGeometry()->Size()[1];
 	sizeY_coarse /= 2;
-	geom_coarse.setSize(multi_real_t(sizeX_coarse, sizeY_coarse));
+	geom_coarse.setSize(multi_index_t(sizeX_coarse, sizeY_coarse));
+	geom_coarse.fitToGeom(pressure->getGeometry()); // TODO: include homogeneous boundary data
 
 	// restrict to coarser grid
 	Grid res_coarse(&geom_coarse);
@@ -532,9 +532,9 @@ MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs, bool homogeneous_b
 	// MG iteration
 	Grid err_coarse(&geom_coarse);
 	err_coarse.Initialize(0.0); // THIS IS NEEDED
-	Solve(&err_coarse, &res_coarse, true); // solve recursively with homogeneous boundary
+	Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
 
-	// prologate to finer grid
+	// prolongate to finer grid
 	Grid err(pressure->getGeometry());
 	err.Initialize(0.0); // this should not be needed
 	interpolate_grid(&err_coarse, &err);
@@ -542,11 +542,25 @@ MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs, bool homogeneous_b
 	// ... and finally add the error to this grid
 	pressure->add(&err);
 
+	// postsmooting
+	smooth(pressure, rhs);
+
+	// return InfoHandle
+	return MGInfoHandle();
 }
 
-void MGSolver::smooth(Grid* pressure, const Grid* rhs, bool homogeneous_boundary) const
+void MGSolver::smooth(Grid* pressure, const Grid* rhs) const
 {
-	// TODO
+	// TODO: Test
+	RedOrBlackSOR solver = RedOrBlackSOR(pressure->getGeometry(), 1.0); // use Gauss-Seidel solver
+	index_t n_cycles = 2;
+	for (index_t ii=0; ii<n_cycles*2; ii++){
+		if ((ii % 2) == (pressure->getGeometry()->getCommunicator()->EvenOdd() ? 1 : 0)){
+			solver.RedCycle(pressure, rhs);
+		} else {
+			solver.BlackCycle(pressure, rhs);
+		}
+	}
 }
 
 void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const
