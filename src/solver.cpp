@@ -555,18 +555,37 @@ void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res
 	InteriorIteratorGG it(pressure->getGeometry());
 	it.First();
 	while(it.Valid()) {
-		res->Cell(it.Value()) = std::abs(rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it));
+		res->Cell(it) = rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it);
 		it.Next();
 	}
 }
 
 void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 {
-	// TODO
+	// TODO: Use faster interpolate
+	Iterator it_new(new_grid->getGeometry());
+	it_new.First();
+
+	while(it_new.Valid()) {
+		new_grid->Cell(it_new) = old_grid->Interpolate(it_new.PhysPos());
+		it_new.Next();
+	}
+
+	new_grid->getGeometry()->UpdateGG_P(new_grid);
 }
 
 void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 {
-	// TODO
+	// TODO: Use faster interpolate
+
+	Iterator it_new(new_grid->getGeometry());
+	it_new.First();
+
+	while(it_new.Valid()) {
+		new_grid->Cell(it_new) = old_grid->Interpolate(it_new.PhysPos());
+		it_new.Next();
+	}
+
+	new_grid->getGeometry()->UpdateGG_P(new_grid);
 }
 

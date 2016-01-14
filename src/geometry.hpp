@@ -109,7 +109,7 @@ public:
 
 	void fitToGeom(const Geometry* geom);
 
-	void setSize(multi_real_t size);
+	void setSize(multi_index_t size);
 
 private:
 	/// Communicator

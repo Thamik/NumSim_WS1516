@@ -1361,13 +1361,13 @@ void Geometry::fitToGeom(const Geometry* geom)
 	_length = geom->_length;
 	_blength = geom->_blength;
 
-	setMeshwidth();
+	set_meshwidth();
 }
 
-void Geometry::setSize(multi_real_t size)
+void Geometry::setSize(multi_index_t size)
 {
 	_size = size;
 
-	setMeshwidth();
+	set_meshwidth();
 }
 
