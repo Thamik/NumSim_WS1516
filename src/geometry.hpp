@@ -77,12 +77,16 @@ public:
   /// Updates the pressure field p
   void Update_P(Grid *p) const;
 
+	void Update_T(Grid* T) const;
+
 	// New update methods
 	void UpdateGG_U(Grid *u) const;
 	void UpdateGG_V(Grid *v) const;
 	void UpdateGG_P(Grid *p) const;
 	//void UpdateGG_F(Grid *F, Grid* u) const;
 	//void UpdateGG_G(Grid *G, Grid* v) const;
+
+	void UpdateGG_T(Grid* T) const;
 
 	/// Updates the local geometry data
 	void update_values();
@@ -93,10 +97,14 @@ public:
 	bool isNeumannBoundaryV(const Iterator& it) const;
 	bool isNeumannBoundaryP(const Iterator& it) const;
 
+	bool isNeumannBoundaryT(const Iterator& it) const;
+
 	// Getter functions for the boundary data
 	const real_t& bvalU(const Iterator& it) const;
 	const real_t& bvalV(const Iterator& it) const;
 	const real_t& bvalP(const Iterator& it) const;
+
+	real_t bvalT(const Iterator& it) const;
 
 	void output_flags() const;
 	void testIterator() const;
@@ -138,11 +146,13 @@ private:
 		      ^		0/1 = u dirichlet/neumann boundary
 		     ^		0/1 = v dirichlet/neumann boundary
 		    ^		0/1 = p dirichlet/neumann boundary
+		   ^		0/1 = T dirichlet/neumann boundary
 	*/
 	char* _flags;
 	real_t* _bval_u;
 	real_t* _bval_v;
 	real_t* _bval_p;
+//	real_t* _bval_T;
 
 	// own method
 	/// sets the meshwidth

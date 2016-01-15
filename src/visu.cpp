@@ -131,7 +131,11 @@ Renderer::Renderer(const multi_real_t &length, const multi_real_t &h, const Geom
   _y = 1;
   _click_x = 0;
   _click_y = 1;
-  _grid = true;
+
+	// grid active?
+//	_grid = true;
+	_grid = false;
+
   _min = std::numeric_limits<real_t>::max();
   _max = std::numeric_limits<real_t>::min();
 }

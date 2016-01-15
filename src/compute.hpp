@@ -25,6 +25,7 @@
 #define OUTPUT
 //#define RUN_SERIAL
 #define MULTIGRID
+//#define UQ_RUN
 
 //------------------------------------------------------------------------------
 #ifndef __COMPUTE_HPP
@@ -34,8 +35,12 @@
 class Compute {
 public:
   /// Creates a compute instance with given geometry and parameter
+#ifdef UQ_RUN
   Compute(const Geometry *geom, const Parameter *param,
           const Communicator *comm = 0, const char* uq_filename = "", int sim_id = 0);
+#else
+  Compute(const Geometry *geom, const Parameter *param, const Communicator *comm = 0);
+#endif
   /// Deletes all grids
   ~Compute();
 
@@ -56,6 +61,8 @@ public:
   /// Returns the pointer to RHS
   const Grid *GetRHS() const;
 
+	const Grid* GetT() const;
+
   /// Computes and returns the absolute velocity
   const Grid *GetVelocity();
   /// Computes and returns the vorticity
@@ -63,7 +70,9 @@ public:
   /// Computes and returns the stream line values
   const Grid *GetStream();
 
+#ifdef UQ_RUN
 	void writeUQFile() const;
+#endif
 
 private:
   /// current timestep
@@ -88,6 +97,10 @@ private:
 
   /// right-hand side
    Grid *_rhs;
+
+	/// temperature
+	Grid* _T;
+	Grid* _dT;
 
   // container for interpolating whichever values
   Grid *_tmp_velocity;
@@ -130,6 +143,9 @@ private:
   /// Compute the RHS of the poisson equation
   void RHS(const real_t &dt);
 
+	// compute the new temperature
+	void ComputeTemperature(const real_t& dt);
+
 	// own methods
 	/// computing dt for stability
 	real_t compute_dt() const;
@@ -141,6 +157,7 @@ private:
 	void sync_uv();
 	void sync_p();
 	void sync_all();
+	void sync_T();
 
 	/// the console clock
 	ConsoleClock* _clock;
@@ -151,9 +168,10 @@ private:
 
 	real_t breakOffPoint();
 
+#ifdef UQ_RUN
 	const std::string _uq_filename;
-
 	const int _sim_id;
+#endif
 
 };
 //------------------------------------------------------------------------------
