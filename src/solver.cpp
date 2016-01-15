@@ -624,18 +624,42 @@ void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res
 
 void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 {
-	// TODO: Use faster interpolate
-
 	InteriorIteratorGG it_new(new_grid->getGeometry());
 	it_new.First();
 
-	while(it_new.Valid()) {
+	/*while(it_new.Valid()) {
 		// multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
 		multi_real_t physpos = it_new.PhysPos(multi_real_t(-0.5,-0.5));
 		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
 			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
 		}
 		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
+		it_new.Next();
+	}*/
+
+	multi_index_t size = new_grid->getGeometry()->Size();
+	index_t posX, posY, x1, x2, y1, y2, vallu, valru, vallo, valro, newsizeX;
+
+	newsizeX = 2*size[0]-2;
+
+	while(it_new.Valid()) {
+		posX = it_new.Pos()[0];
+		posY = it_new.Pos()[1];
+
+		x1 = 2*posX-1;
+		x2 = 2*posX;
+		y1 = 2*posY-1;
+		y2 = 2*posY;
+
+		//calculate values
+		vallu = x1 + y1*newsizeX;
+		valru = x2 + y1*newsizeX;
+		vallo = x1 + y2*newsizeX;	
+		valro = x2 + y2*newsizeX;
+
+		//interpolation
+		new_grid->Cell(it_new) = 0.25 * (old_grid->Data()[vallu] + old_grid->Data()[valru] + old_grid->Data()[vallo] + old_grid->Data()[valro]);
+
 		it_new.Next();
 	}
 
@@ -646,7 +670,7 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 {
 	// TODO: Use faster interpolate
 
-	InteriorIteratorGG it_new(new_grid->getGeometry());
+	/*InteriorIteratorGG it_new(new_grid->getGeometry());
 	it_new.First();
 
 	while(it_new.Valid()) {
@@ -657,6 +681,37 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 		}
 		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
 		it_new.Next();
+	}*/
+
+	InteriorIteratorGG it_old(old_grid->getGeometry());
+	it_old.First();
+
+	multi_index_t size = old_grid->getGeometry()->Size();
+	index_t posX, posY, x1, x2, y1, y2, vallu, valru, vallo, valro, newsizeX;
+
+	newsizeX = 2*size[0]-2;
+
+	while(it_old.Valid()) {
+		posX = it_old.Pos()[0];
+		posY = it_old.Pos()[1];
+
+		x1 = 2*posX-1;
+		x2 = 2*posX;
+		y1 = 2*posY-1;
+		y2 = 2*posY;
+
+		//calculate values
+		vallu = x1 + y1*newsizeX;
+		valru = x2 + y1*newsizeX;
+		vallo = x1 + y2*newsizeX;	
+		valro = x2 + y2*newsizeX;
+
+		new_grid->Data()[vallu] = old_grid->Cell(it_old);
+		new_grid->Data()[valru] = old_grid->Cell(it_old);
+		new_grid->Data()[vallo] = old_grid->Cell(it_old);
+		new_grid->Data()[valro] = old_grid->Cell(it_old);
+
+		it_old.Next();
 	}
 
 	new_grid->getGeometry()->UpdateGG_P(new_grid);
