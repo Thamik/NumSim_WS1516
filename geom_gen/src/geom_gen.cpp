@@ -366,12 +366,23 @@ void GeometryGenerator::drivenCavity()
 	}
 }
 
-void GeometryGenerator::pipeFlow(double xlength, double ylength, double pressureLeft, double pressureRight)
+void GeometryGenerator::pipeFlow(bool powerTwo, double xlength, double ylength, double pressureLeft, double pressureRight)
 {
 	setLength(xlength, ylength);
 
 	// auto balance the number of cells in each dimension
 	autoBalance();
+
+	// if powerTwo is true, make sure to have powers of two
+	if (powerTwo) {
+		double powX = log2(_bSizeX-2);
+		powX = round(powX);
+		_bSizeX = pow(2,powX)+2;
+		double powY = log2(_bSizeY-2);
+		powY = round(powY);
+		_bSizeY = pow(2,powY)+2;
+		
+	}
 
 	// assure that all values are initialized with zero
 	initZero();

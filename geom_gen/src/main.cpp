@@ -24,6 +24,7 @@ int main(int argc, char** argv){
 	double re(10000);
 	int id(0);
 	bool success(true);
+	bool powerTwo(false);
 	
 	for (int i=0; i<argc; i++){
 		switch (i){
@@ -42,6 +43,9 @@ int main(int argc, char** argv){
 					alpha = atof(argv[i]);
 				} else if (geom_type == 0) {
 					re = atof(argv[i]);
+				} else {
+					powerTwo = true;
+					std::cout << "Erzwinge zweierpotenz" << std::endl;
 				}
 				break;
 			case 4:
@@ -70,7 +74,7 @@ int main(int argc, char** argv){
 			geom_gen.drivenCavity();
 			break;
 		case 2:
-			geom_gen.pipeFlow();
+			geom_gen.pipeFlow(powerTwo);
 			break;
 		case 3:
 			geom_gen.flowOverAStep();
