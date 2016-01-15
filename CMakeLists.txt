@@ -30,6 +30,7 @@ set (CMAKE_CXX_COMPILER "/usr/bin/g++")
 #set (GOOD_FLAGS "-Wall -Wextra -pedantic -std=c++11")
 set (GOOD_FLAGS "-flto -O3 -Wall -Wextra -pedantic -std=c++11")
 #set (GOOD_FLAGS "-pg -Wall -Wextra -pedantic -std=c++11")
+#set (GOOD_FLAGS "-pg -flto -O3 -Wall -Wextra -pedantic -std=c++11")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GOOD_FLAGS}")
 
 # debug visu?

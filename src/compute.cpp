@@ -220,7 +220,11 @@ void Compute::TimeStep(bool verbose)
 	// solve Poisson equation
 #ifdef MULTIGRID
 	real_t residual = _solver->Solve(_p, _rhs);
-	_solver_converging = true; // TODO: remove! (do better)
+	if (residual <= _epslimit){
+		_solver_converging = true;
+	} else {
+		_solver_converging = false;
+	}
 #else
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
@@ -301,7 +305,7 @@ void Compute::TimeStep(bool verbose)
 #ifndef GO_FAST
 		std::cout << "\x1b[A\x1b[A";
 #endif
-		std::cout << "\x1b[A";
+		//std::cout << "\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
