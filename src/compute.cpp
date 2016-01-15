@@ -66,6 +66,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
 	_rhs = new Grid(_geom);
+	_T = new Grid(_geom, multi_real_t(-0.5,-0.5));
+	_dT = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_tmp_velocity = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_tmp_vorticity = new Grid(_geom);
 	_tmp_stream = new Grid(_geom);
@@ -82,6 +84,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_F->Initialize(0.0);
 	_G->Initialize(0.0);
 	_rhs->Initialize(0.0);
+	_T->Initialize(0.0);
+	_dT->Initialize(0.0);
 	_tmp_velocity->Initialize(0.0);
 	_tmp_vorticity->Initialize(0.0);
 	_tmp_stream->Initialize(0.0);
@@ -142,6 +146,8 @@ Compute::~Compute()
 	delete _F;
 	delete _G;
 	delete _rhs;
+	delete _T;
+	delete _dT;
 
 	delete _tmp_velocity;
 	delete _tmp_vorticity;
@@ -200,9 +206,17 @@ void Compute::TimeStep(bool verbose)
 	_F_old = _F->copy();
 	_G_old = _G->copy();*/
 
+	// compute the new temperature field
+	ComputeTemperature(dt);
+	update_boundary_values();
+
+#ifndef RUN_SERIAL
+	sync_T(); // BLOCKING
+#endif
+
 	// compute F, G...
 	MomentumEqu(dt);
-	update_boundary_values(); //update boundary values
+	update_boundary_values(); // update boundary values
 
 #ifndef RUN_SERIAL
 	// ...and sync them
@@ -304,7 +318,7 @@ void Compute::TimeStep(bool verbose)
 		_clock->nextPos();
 
 		// set curser back, such that the console output it being overwritten
-		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
+		std::cout << "\r\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A\x1b[A";
 		std::cout << "\x1b[A\x1b[A";
 #ifdef USE_PARTICLES
 		std::cout << "\x1b[A";
@@ -312,7 +326,6 @@ void Compute::TimeStep(bool verbose)
 #ifndef GO_FAST
 		std::cout << "\x1b[A\x1b[A";
 #endif
-		//std::cout << "\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";
@@ -362,6 +375,11 @@ void Compute::TimeStep(bool verbose)
 		std::cout << ", \tmax(p) = ";
 		printf("%7.4f", _p->TotalAbsMax());
 		std::cout << "   \n";
+		std::cout << "max(T) = ";
+		printf("%7.4f", _T->TotalAbsMax());
+		std::cout << ", \tmax(dT) = ";
+		printf("%7.4f", _dT->TotalAbsMax());
+		std::cout << "   \n";
 #endif
 		
 		//std::cout << "Average value of rhs: " << _rhs->average_value() << "\n";
@@ -397,6 +415,9 @@ void Compute::TimeStep(bool verbose)
 		_u->TotalAbsMax();
 		_v->TotalAbsMax();
 		_p->TotalAbsMax();
+
+		_T->TotalAbsMax();
+		_dT->TotalAbsMax();
 #endif
 	}
 #endif
@@ -443,13 +464,17 @@ const Grid* Compute::GetRHS() const
 	return _rhs;
 }
 
+const Grid* Compute::GetT() const
+{
+	return _T;
+}
+
 /**
 The absolute velocity in the euklidean norm is calculted at the middle point of the physical grid cells
 \return pointer on the Grid containing absolute velocity
 */
 const Grid* Compute::GetVelocity()
 {
-	//return _rhs; //TODO REMOVE!!!!
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
@@ -583,8 +608,13 @@ void Compute::MomentumEqu(const real_t& dt)
 #endif
 	it.First();
 	while (it.Valid()){
-		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
-		_G->Cell(it) = _v->Cell(it) + dt * ( 1.0/_param->Re() * (_v->dxx(it) + _v->dyy(it)) - _v->DC_dvv_y(it,_param->Alpha()) - _v->DC_duv_x(it,_param->Alpha(),_u) );
+		/*_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) );
+		_G->Cell(it) = _v->Cell(it) + dt * ( 1.0/_param->Re() * (_v->dxx(it) + _v->dyy(it)) - _v->DC_dvv_y(it,_param->Alpha()) - _v->DC_duv_x(it,_param->Alpha(),_u) );*/
+
+		_F->Cell(it) = _u->Cell(it) + dt * ( 1.0/_param->Re() * (_u->dxx(it) + _u->dyy(it)) - _u->DC_duu_x(it,_param->Alpha()) - _u->DC_duv_y(it,_param->Alpha(),_v) + _param->Gravity()[0] );
+		_G->Cell(it) = _v->Cell(it) + dt * ( 1.0/_param->Re() * (_v->dxx(it) + _v->dyy(it)) - _v->DC_dvv_y(it,_param->Alpha()) - _v->DC_duv_x(it,_param->Alpha(),_u) + _param->Gravity()[1] );
+		_F->Cell(it) -= dt * _param->Beta() * _param->Gravity()[0] * (_T->Cell(it) + _T->Cell(it.Right()))/2.0;
+		_G->Cell(it) -= dt * _param->Beta() * _param->Gravity()[1] * (_T->Cell(it) + _T->Cell(it.Top()))/2.0;
 
 		it.Next();
 	}
@@ -626,6 +656,10 @@ real_t Compute::compute_dt() const
 
 	real_t res = std::min(_geom->Mesh()[0]/u_absmax, _geom->Mesh()[1]/v_absmax);
 	res = std::min(res, _param->Re()/2.0 * pow(_geom->Mesh()[0],2.0) * pow(_geom->Mesh()[1],2.0) / (pow(_geom->Mesh()[0],2.0)+pow(_geom->Mesh()[1],2.0)));
+
+	// the temperature time step size restriction
+	res = std::min(res, 0.5 * _param->Re() * _param->Pr() / ( 1/pow(_geom->Mesh()[0],2.0) + 1/pow(_geom->Mesh()[1],2.0) ));
+
 	res *= _param->Tau(); // just to be sure (because it is a strict inequality)
 	return res;
 }
@@ -643,11 +677,15 @@ void Compute::update_boundary_values()
 	_geom->UpdateGG_V(_G);
 	//_geom->UpdateGG_F(_F,_u);
 	//_geom->UpdateGG_G(_G,_v);
+
+	_geom->UpdateGG_T(_T);
 #else
 	_geom->Update_U(_u);
 	_geom->Update_V(_v);
 	_geom->Update_U(_F);
 	_geom->Update_V(_G);
+
+	_geom->Update_T(_T);
 #endif
 }
 
@@ -674,11 +712,19 @@ void Compute::sync_p()
 	}
 }
 
+void Compute::sync_T()
+{
+	if (_comm->getSize() > 1) {
+		_comm->copyBoundary(_T);
+	}
+}
+
 void Compute::sync_all()
 {
 	sync_FG();
 	sync_uv();
 	sync_p();
+	sync_T();
 }
 
 void Compute::check_for_incontinuities()
@@ -823,4 +869,47 @@ void Compute::writeUQFile() const
 
 }
 #endif // UQ_RUN
+
+void Compute::ComputeTemperature(const real_t& dt)
+{
+	// TODO
+	real_t duTdx, dvTdy, Tip1j, Tij, Tim1j, Tijp1, Tijm1, uij, uim1j, vij, vijm1;
+
+#ifdef COMPLEX_GEOM
+	InteriorIteratorGG it1(_geom);
+#else
+	InteriorIterator it1(_geom);
+#endif
+	it1.First();
+	while (it1.Valid()){
+		Tij = _T->Cell(it1);
+		Tim1j = _T->Cell(it1.Left());
+		Tip1j = _T->Cell(it1.Right());
+		Tijp1 = _T->Cell(it1.Top());
+		Tijm1 = _T->Cell(it1.Down());
+		uij = _u->Cell(it1);
+		uim1j = _u->Cell(it1.Left());
+		vij = _v->Cell(it1);
+		vijm1 = _v->Cell(it1.Down());
+
+		duTdx = 1/_geom->Mesh()[0] * ( (uij * (Tip1j + Tij)/2.0 - uim1j * (Tij + Tim1j)/2.0) + _param->Gamma() * (std::abs(uij) * (Tij - Tip1j)/2.0 - std::abs(uim1j) * (Tim1j - Tij)/2.0) );
+
+		dvTdy = 1/_geom->Mesh()[1] * ( (vij * (Tijp1 + Tij)/2.0 - vijm1 * (Tij + Tijm1)/2.0) + _param->Gamma() * (std::abs(vij) * (Tij - Tijp1)/2.0 - std::abs(vijm1) * (Tijm1 - Tij)/2.0) );
+
+		_dT->Cell(it1) = 1/(_param->Re() * _param->Pr()) * (_T->dxx(it1) + _T->dyy(it1)) - duTdx - dvTdy + _param->Q();
+
+		it1.Next();
+	}
+
+#ifdef COMPLEX_GEOM
+	InteriorIteratorGG it2(_geom);
+#else
+	InteriorIterator it2(_geom);
+#endif
+	it2.First();
+	while (it2.Valid()){
+		_T->Cell(it2) += dt * _dT->Cell(it2);
+		it2.Next();
+	}
+}
 

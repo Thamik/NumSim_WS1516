@@ -13,7 +13,7 @@
 The constructor of the Parameter class. Constructs a default parameter set.
 */
 Parameter::Parameter(Communicator* comm)
-: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _itermin(0), _comm(comm) // standard parameter
+: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _itermin(0), _gravity(0.0,-9.81), _pr(3.0), _beta(0.5), _gamma(0.9), _q(1.0), _comm(comm) // standard parameter
 {
 	// First time parameter values (see exercise 1, page 7 below)
 	_dt = 0.2;
@@ -89,6 +89,11 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "Itermin\t\t=\t" << _itermin << "\n";
 		std::cout << "dt\t\t=\t" << _dt << "\n";
 		std::cout << "tend\t\t=\t" << _tend << "\n";
+		std::cout << "Gravity\t\t=\t(" << _gravity[0] << ", " << _gravity[1] << ")\n";
+		std::cout << "Pr\t\t=\t" << _pr << "\n";
+		std::cout << "Beta\t\t=\t" << _beta << "\n";
+		std::cout << "Gamma\t\t=\t" << _gamma << "\n";
+		std::cout << "Q\t\t=\t" << _q << "\n";
 		std::cout << "--------------------------------------------------\n";
 	}
 #endif
@@ -175,3 +180,29 @@ const real_t& Parameter::Tau() const
 {
 	return _tau;
 }
+
+const multi_real_t& Parameter::Gravity() const
+{
+	return _gravity;
+}
+
+const real_t& Parameter::Pr() const
+{
+	return _pr;
+}
+
+const real_t& Parameter::Beta() const
+{
+	return _beta;
+}
+
+const real_t& Parameter::Gamma() const
+{
+	return _gamma;
+}
+
+const real_t& Parameter::Q() const
+{
+	return _q;
+}
+

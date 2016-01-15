@@ -44,6 +44,12 @@ public:
   const real_t &Eps() const;
   const real_t &Tau() const;
 
+	const multi_real_t& Gravity() const;
+	const real_t& Pr() const;
+	const real_t& Beta() const;
+	const real_t& Gamma() const;
+	const real_t& Q() const;
+
 private:
   real_t _re; // Reynolds number
   real_t _omega; // relaxation factor
@@ -55,6 +61,12 @@ private:
   index_t _itermax; // maximum number of iterations
 
 	index_t _itermin; // minimum number of iterations
+
+	multi_real_t _gravity; // gravity
+	real_t _pr; // Prantl-number
+	real_t _beta;
+	real_t _gamma; // upwind factor for the temperature equation
+	real_t _q; // (spatially & temporally) constant heat source
 
 	Communicator* _comm;
 };

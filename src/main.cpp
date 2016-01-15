@@ -202,6 +202,12 @@ int main(int argc, char **argv) {
 			case 3:
 				visugrid = comp.GetP();
 				break;
+			case 4:
+				visugrid = comp.GetT();
+				break;
+			case 5:
+				visugrid = comp.GetVorticity();
+				break;
 			default:
 				break;
 		};
@@ -221,6 +227,7 @@ int main(int argc, char **argv) {
 		vtk.AddPointScalar("Pressure", comp.GetP());
 		vtk.AddPointScalar("Vorticity", comp.GetVorticity());
 		vtk.AddPointScalar("Stream Function", comp.GetStream());
+		vtk.AddPointScalar("Temperature", comp.GetT());
 		vtk.Finish();
 #endif
 

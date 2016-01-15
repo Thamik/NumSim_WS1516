@@ -61,6 +61,8 @@ public:
   /// Returns the pointer to RHS
   const Grid *GetRHS() const;
 
+	const Grid* GetT() const;
+
   /// Computes and returns the absolute velocity
   const Grid *GetVelocity();
   /// Computes and returns the vorticity
@@ -95,6 +97,10 @@ private:
 
   /// right-hand side
    Grid *_rhs;
+
+	/// temperature
+	Grid* _T;
+	Grid* _dT;
 
   // container for interpolating whichever values
   Grid *_tmp_velocity;
@@ -137,6 +143,9 @@ private:
   /// Compute the RHS of the poisson equation
   void RHS(const real_t &dt);
 
+	// compute the new temperature
+	void ComputeTemperature(const real_t& dt);
+
 	// own methods
 	/// computing dt for stability
 	real_t compute_dt() const;
@@ -148,6 +157,7 @@ private:
 	void sync_uv();
 	void sync_p();
 	void sync_all();
+	void sync_T();
 
 	/// the console clock
 	ConsoleClock* _clock;

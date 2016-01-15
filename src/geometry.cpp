@@ -577,6 +577,39 @@ void Geometry::Update_P(Grid *p) const
 	}
 }
 
+void Geometry::Update_T(Grid *T) const
+{
+	// see lecture, 3.2.3
+	for (index_t i=1; i<=4; i++){
+		// check if this is a domain boundary
+		if (!is_global_boundary(i)) continue;
+
+		BoundaryIterator it(this);
+		it.SetBoundary(i);
+		it.First();
+		while (it.Valid()){
+			//if (i==4){
+			if (i==BoundaryIterator::boundaryTop){
+				// upper boundary
+				T->Cell(it) = T->Cell(it.Down());
+			//} else if (i==1){
+			} else if (i==BoundaryIterator::boundaryLeft) {
+				// left boundary
+				T->Cell(it) = T->Cell(it.Right());
+			//} else if (i==2){
+			} else if (i==BoundaryIterator::boundaryRight) {
+				// right boundary
+				T->Cell(it) = T->Cell(it.Left());
+			//} else if (i==3){
+			} else if (i==BoundaryIterator::boundaryBottom) {
+				// lower boundary
+				T->Cell(it) = T->Cell(it.Top());
+			}
+			it.Next();
+		}
+	}
+}
+
 
 /*==================================================================
 New Update Methods for General Geometry (GG)
@@ -855,6 +888,102 @@ void Geometry::UpdateGG_P(Grid *p) const
 				} else if (!isObstacle(it.Right())) {
 					//std::cout << "P Dirichlet: right\n";
 					p->Cell(it) = 2.0*bvalP(it) - p->Cell(it.Right());
+				}
+			}
+		}
+		it.Next();
+	}
+}
+
+void Geometry::UpdateGG_T(Grid *T) const
+{
+	BoundaryIteratorGG it(this);
+	it.First();
+
+	while(it.Valid()) {
+ 		// check where the fluid is
+		bool topdown = !isObstacle(it.Top()) || !isObstacle(it.Down());
+		bool leftright = !isObstacle(it.Left()) || !isObstacle(it.Right());
+		if(isNeumannBoundaryT(it)) {
+#ifdef twocell_criterion_check
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning in TN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning in TN(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else 
+#endif
+			if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = 0.5*(T->Cell(it.Top()) - _h[1]*bvalT(it) + T->Cell(it.Left()) + _h[0]*bvalT(it));
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = 0.5*(T->Cell(it.Down()) + _h[1]*bvalT(it) + T->Cell(it.Left()) + _h[0]*bvalT(it));
+					} /*else {
+						while(true) std::cout << "Warning!\n";
+					}*/
+				} else if (!isObstacle(it.Right())) {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = 0.5*(T->Cell(it.Top()) - _h[1]*bvalT(it) + T->Cell(it.Right()) - _h[0]*bvalT(it));
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = 0.5*(T->Cell(it.Down()) + _h[1]*bvalT(it) + T->Cell(it.Right()) - _h[0]*bvalT(it));
+					} else {
+						std::cout << "Warning! Wrong boundary condition interpretation!\n";
+					}
+				} else {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = T->Cell(it.Top()) - _h[1]*bvalT(it);
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = T->Cell(it.Down()) + _h[1]*bvalT(it);
+					} else {
+						std::cout << "Warning! Wrong boundary condition interpretation!\n";
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					T->Cell(it) = T->Cell(it.Left()) + _h[0]*bvalT(it);
+				} else if (!isObstacle(it.Right())) {
+					T->Cell(it) = T->Cell(it.Right()) - _h[0]*bvalT(it);
+				}
+			}
+		} else {
+#ifdef twocell_criterion_check
+			if(!isObstacle(it.Left()) && !isObstacle(it.Right())) {
+				std::cout << "Warning in TD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in x-direction)!!!\n" << std::flush;
+				std::cout << it.Left().Pos()[0] << ", " << it.Left().Pos()[1] << "| " << it.Right().Pos()[0] << ", " << it.Right().Pos()[1] << std::endl;
+			} else if (!isObstacle(it.Top()) && !isObstacle(it.Down())) {
+				std::cout << "Warning in TD(" << it.Pos()[0] << ", " << it.Pos()[1] << "): The obstacle is too thin (in y-direction)!!!\n" << std::flush;
+			} else 
+#endif
+			if (topdown) {
+				//either at the top or the bottom cell is fluid
+				if (!isObstacle(it.Left())) {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = 2.0*bvalT(it) - 0.5*(T->Cell(it.Left()) + T->Cell(it.Top()));
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = 2.0*bvalT(it) - 0.5*(T->Cell(it.Left()) + T->Cell(it.Down()));
+					}
+				} else if (!isObstacle(it.Right())) {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = 2.0*bvalT(it) - 0.5*(T->Cell(it.Right()) + T->Cell(it.Top()));
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = 2.0*bvalT(it) - 0.5*(T->Cell(it.Right()) + T->Cell(it.Down()));
+					}
+				} else {
+					if (!isObstacle(it.Top())) {
+						T->Cell(it) = 2.0*bvalT(it) - T->Cell(it.Top());
+					} else if (!isObstacle(it.Down())) {
+						T->Cell(it) = 2.0*bvalT(it) - T->Cell(it.Down());
+					}
+				}
+			} else if (leftright) {
+				// the corner cases don't have to be considered as they were already consider above!
+				if (!isObstacle(it.Left())) {
+					T->Cell(it) = 2.0*bvalT(it) - T->Cell(it.Left());
+				} else if (!isObstacle(it.Right())) {
+					T->Cell(it) = 2.0*bvalT(it) - T->Cell(it.Right());
 				}
 			}
 		}
@@ -1208,6 +1337,12 @@ bool Geometry::isNeumannBoundaryP(const Iterator& it) const
 	return (_flags[it.Value()] >> 3) & 1;
 }
 
+bool Geometry::isNeumannBoundaryT(const Iterator& it) const
+{
+//	return (_flags[it.Value()] >> 4) & 1;
+	return true;
+}
+
 // Getter functions for the boundary data
 const real_t& Geometry::bvalU(const Iterator& it) const
 {
@@ -1225,6 +1360,11 @@ const real_t& Geometry::bvalP(const Iterator& it) const
 	return _bval_p[it.Value()];
 }
 
+real_t Geometry::bvalT(const Iterator& it) const
+{
+//	return _bval_T[it.Value()];
+	return 0.0;
+}
 
 void Geometry::output_flags() const
 {
