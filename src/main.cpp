@@ -18,9 +18,8 @@
 //------------------------------------------------------------------------------
 
 #define VERBOSE false
-#define VTK_OUTPUT
+//#define VTK_OUTPUT
 #define OUTPUT_MAIN
-#define UQ_RUN
 
 #include "typedef.hpp"
 #include "communicator.hpp"
@@ -116,7 +115,11 @@ int main(int argc, char **argv) {
 	}
 
 	// Create the fluid solver
+#ifdef UQ_RUN
 	Compute comp(&geom, &param, &comm, uq_filename.c_str(), sim_id);
+#else
+	Compute comp(&geom, &param, &comm);
+#endif
 
 	if (comm.getRank() == 0) { // TODO: do this on every process? what if the processes run on different nodes?
 		// check if folder "VTK" exists

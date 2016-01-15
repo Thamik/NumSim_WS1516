@@ -25,12 +25,18 @@
 \param[in]	param	pointer on parameter object providing the parameter data
 \param[in]	comm 	pointer on Communicator object
 */
+#ifdef UQ_RUN
 Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm, const char* uq_filename, int sim_id)
-: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm), 
-#ifdef USE_PARTICLES
-_particles(nullptr), 
+#else
+Compute::Compute(const Geometry *geom, const Parameter *param, const Communicator *comm)
 #endif
-_uq_filename(uq_filename), _sim_id(sim_id)
+: _t(0.0), _dtlimit(0.0), _epslimit(0.0), _solver_converging(false), _diff_p(0.0), _diff_rhs(0.0), _diff_F(0.0), _diff_G(0.0), _geom(geom), _param(param), _comm(comm)
+#ifdef USE_PARTICLES
+, _particles(nullptr)
+#endif
+#ifdef UQ_RUN
+, _uq_filename(uq_filename), _sim_id(sim_id)
+#endif
 {
 	// TODO: Werte fuer _dtlimit, _epslimit richtig?
 	_epslimit = param->Eps();
@@ -100,6 +106,7 @@ _uq_filename(uq_filename), _sim_id(sim_id)
 	// construct console clock
 	_clock = new ConsoleClock();
 
+#ifdef UQ_RUN
 	// open the uq file for the first time (overwrite an existing file)
 	std::ofstream outfile;
 	if (_uq_filename.compare("") != 0){
@@ -119,7 +126,7 @@ _uq_filename(uq_filename), _sim_id(sim_id)
 	outfile << _param->Re() << "\n";
 
 	outfile.close();
-
+#endif
 }
 
 /* Destructor */
@@ -778,6 +785,7 @@ real_t Compute::breakOffPoint()
 	return nan("");
 }
 
+#ifdef UQ_RUN
 void Compute::writeUQFile() const
 {
 	if (_uq_filename.compare("") == 0){
@@ -814,4 +822,5 @@ void Compute::writeUQFile() const
 	outfile.close();
 
 }
+#endif // UQ_RUN
 

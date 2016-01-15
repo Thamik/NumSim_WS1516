@@ -505,8 +505,6 @@ MGSolver::~MGSolver()
 
 real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 {
-	// TODO
-
 	real_t total_res(_eps * 2.0);
 	bool converged(false);
 
@@ -514,9 +512,9 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
 	geom_coarse.halfSize(pressure->getGeometry());
 
-	index_t minGridSize = 16;
+	index_t minGridSize = 2;
 
-	if (std::min(geom_coarse.TotalSize()[0], geom_coarse.TotalSize()[1]) < minGridSize){
+	if (std::min(geom_coarse.TotalSize()[0]-2, geom_coarse.TotalSize()[1]-2) <= minGridSize){
 		// do not use a coarser grid anymore, solve per SOR
 
 		real_t h = 0.5 * (pressure->getGeometry()->Mesh()[0] + pressure->getGeometry()->Mesh()[1]);
@@ -547,6 +545,12 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	} else {
 		// solve on coarser grid
 
+		// allocate memory for the grids
+		Grid res(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
+		Grid res_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
+		Grid err_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
+		Grid err(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
+
 		// do W-cycle
 		index_t iter(0);
 		index_t max_w_cycles = 10;
@@ -556,23 +560,19 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 			total_res = smooth(pressure, rhs);
 
 			// compute residual
-			Grid res(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
-			res.Initialize(0.0); // this should not be needed
+			//res.Initialize(0.0); // this should not be needed
 			compute_residual(pressure, rhs, &res);
 
 			// restrict to coarser grid
-			Grid res_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
-			res_coarse.Initialize(0.0); // this should not be needed
+			//res_coarse.Initialize(0.0); // this should not be needed
 			restrict_grid(&res, &res_coarse);
 
 			// MG iteration
-			Grid err_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
 			err_coarse.Initialize(0.0); // THIS IS NEEDED
 			Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
 
 			// prolongate to finer grid
-			Grid err(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
-			err.Initialize(0.0); // this should not be needed
+			err.Initialize(0.0); // this should not be needed, but seems to be
 			interpolate_grid(&err_coarse, &err);
 
 			// ... and finally add the error to this grid
@@ -613,8 +613,8 @@ real_t MGSolver::smooth(Grid* pressure, const Grid* rhs) const
 
 void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res) const
 {
-	// TODO: Test
-	InteriorIteratorGG it(pressure->getGeometry());
+	//InteriorIteratorGG it(pressure->getGeometry());
+	Iterator it(pressure->getGeometry());
 	it.First();
 	while(it.Valid()) {
 		res->Cell(it) = rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it);
