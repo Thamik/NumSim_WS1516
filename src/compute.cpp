@@ -301,6 +301,7 @@ void Compute::TimeStep(bool verbose)
 #ifndef GO_FAST
 		std::cout << "\x1b[A\x1b[A";
 #endif
+		std::cout << "\x1b[A";
 
 		// the actual console output
 		std::cout << "============================================================\n";

@@ -549,29 +549,29 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 		// do W-cycle
 		index_t iter(0);
-		index_t max_w_cycles = 50;
+		index_t max_w_cycles = 10;
 		while (total_res >= _eps && iter <= max_w_cycles){
 
 			// smooth
 			total_res = smooth(pressure, rhs);
 
 			// compute residual
-			Grid res(pressure->getGeometry());
+			Grid res(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
 			res.Initialize(0.0); // this should not be needed
 			compute_residual(pressure, rhs, &res);
 
 			// restrict to coarser grid
-			Grid res_coarse(&geom_coarse);
+			Grid res_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
 			res_coarse.Initialize(0.0); // this should not be needed
 			restrict_grid(&res, &res_coarse);
 
 			// MG iteration
-			Grid err_coarse(&geom_coarse);
+			Grid err_coarse(&geom_coarse,multi_real_t(-0.5,-0.5));
 			err_coarse.Initialize(0.0); // THIS IS NEEDED
 			Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
 
 			// prolongate to finer grid
-			Grid err(pressure->getGeometry());
+			Grid err(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
 			err.Initialize(0.0); // this should not be needed
 			interpolate_grid(&err_coarse, &err);
 
@@ -630,7 +630,8 @@ void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 	it_new.First();
 
 	while(it_new.Valid()) {
-		multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		// multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		multi_real_t physpos = it_new.PhysPos(multi_real_t(-0.5,-0.5));
 		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
 			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
 		}
@@ -649,7 +650,8 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 	it_new.First();
 
 	while(it_new.Valid()) {
-		multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		//multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
+		multi_real_t physpos = it_new.PhysPos(multi_real_t(-0.5,-0.5));
 		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
 			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
 		}
