@@ -13,7 +13,7 @@
 The constructor of the Parameter class. Constructs a default parameter set.
 */
 Parameter::Parameter(Communicator* comm)
-: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _itermin(0), _gravity(0.0,-9.81), _pr(3.0), _beta(0.5), _gamma(0.9), _q(1.0), _comm(comm) // standard parameter
+: _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.5), _itermax(100), _itermin(0), _gravity(0.0,0.0), _pr(3.0), _beta(0.5), _gamma(0.9), _q(0.0), _comm(comm) // standard parameter
 {
 	// First time parameter values (see exercise 1, page 7 below)
 	_dt = 0.2;
@@ -25,22 +25,22 @@ This method loads a parameter set from a file. In this file, the parameters shou
 \param[in]	file	Filename of the file, which contains the parameter set
 \param[in]	verbose	Determines, if further information shall be printed to the standard output channel (usually the command line)
 */
-void Parameter::Load(const char* file, bool verbose)
+void Parameter::Load(const char* file)
 {
 for (int i_rank=0; i_rank < _comm->getSize(); i_rank++){
 if(i_rank == _comm->getRank()){ // read the files sequentially
 
-	if (verbose && _comm->getRank()==0){
+	if (_comm->getRank() == 0){
 		std::cout << "Loading parameter file from path " << file << " ...\n";
 	}
 	std::string temp_string;
 	std::ifstream infile;
 	infile.open(file);
 	if (!infile.is_open()){
-		std::cout << "Warning: parameter file could not be read!\n";
+		std::cout << "Warning: parameter file could not be read (on process rank " << _comm->getRank() << ")!\n";
 		continue;
 	}
-	for(int i=1;i<=9;i++)
+	for(int i=1;i<=15;i++)
 	{
 		getline(infile,temp_string);
 		switch(i)
@@ -72,14 +72,32 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 			case 9:
 				_tend = atof(temp_string.c_str());
 				break;
+			case 10:
+				_gravity[0] = atof(temp_string.c_str());
+				break;
+			case 11:
+				_gravity[1] = atof(temp_string.c_str());
+				break;
+			case 12:
+				_pr = atof(temp_string.c_str());
+				break;
+			case 13:
+				_beta = atof(temp_string.c_str());
+				break;
+			case 14:
+				_gamma = atof(temp_string.c_str());
+				break;
+			case 15:
+				_q = atof(temp_string.c_str());
+				break;
 		}
 	}
 	infile.close();
-	//if (verbose){
+
 #ifdef OUTPUT_PARAMS
 	if (_comm->getRank() == 0){
 		std::cout << "--------------------------------------------------\n";
-		std::cout << "Parameter configuration read from file:\n";
+		std::cout << "Parameter configuration:\n";
 		std::cout << "Re\t\t=\t" << _re << "\n";
 		std::cout << "Omega\t\t=\t" << _omega << "\n";
 		std::cout << "Alpha\t\t=\t" << _alpha << "\n";

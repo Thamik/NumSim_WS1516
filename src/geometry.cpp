@@ -31,11 +31,10 @@ Geometry::Geometry()
 }
 
 Geometry::Geometry(Communicator *comm)
-: _comm(comm), _size(128,128), _bsize(128,128), _total_offset(0,0), _offsets(nullptr), _localSizes(nullptr), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr) //standard values
+: _comm(comm), _size(128,128), _bsize(128,128), _total_offset(0,0), _offsets(nullptr), _localSizes(nullptr), _length(1.0,1.0), _blength(1.0,1.0), _h(1.0,1.0), _flags(nullptr), _bval_u(nullptr), _bval_v(nullptr), _bval_p(nullptr), _bval_T(nullptr) //standard values
 {
 	// handle total/partial size/length values
 	set_meshwidth(); // set _h to the right values
-	// TODO: something else to do?
 }
 
 // copy constructor
@@ -57,6 +56,7 @@ Geometry::~Geometry()
 	if (_bval_u != nullptr) delete[] _bval_u;
 	if (_bval_v != nullptr) delete[] _bval_v;
 	if (_bval_p != nullptr) delete[] _bval_p;
+	if (_bval_T != nullptr) delete[] _bval_T;
 
 	if (_offsets != nullptr){
 		for (index_t i=0; i<_comm->ThreadDim()[0]; i++){
@@ -86,6 +86,7 @@ void Geometry::load_domain_partitioning(const char* file)
 	real_t* bvu(nullptr);
 	real_t* bvv(nullptr);
 	real_t* bvp(nullptr);
+	real_t* bvt(nullptr);
 	index_t totalOffsetX(0);
 	index_t totalOffsetY(0);
 
@@ -95,6 +96,7 @@ void Geometry::load_domain_partitioning(const char* file)
 		real_t* total_bvu;
 		real_t* total_bvv;
 		real_t* total_bvp;
+		real_t* total_bvt;
 
 		bool read = (file != nullptr);
 
@@ -130,6 +132,7 @@ void Geometry::load_domain_partitioning(const char* file)
 		total_bvu = new real_t[(bsizeX+2) * (bsizeY+2)];
 		total_bvv = new real_t[(bsizeX+2) * (bsizeY+2)];
 		total_bvp = new real_t[(bsizeX+2) * (bsizeY+2)];
+		total_bvt = new real_t[(bsizeX+2) * (bsizeY+2)];
 
 		// TODO: better!
 		infile.get(); // try to read one more character
@@ -145,21 +148,24 @@ void Geometry::load_domain_partitioning(const char* file)
 					ival = j * (bsizeX+2) + i;
 					if (j==bsizeY+1) {
 						// upper boundary
-						total_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+						total_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
 						total_bvu[ival] = 1.0;
 						total_bvv[ival] = 0.0;
 						total_bvp[ival] = 0.0;
+						total_bvt[ival] = 0.0;
 					} else if (j==0 || i==0 || i==bsizeX+1){
 						// lower, left or right boundary
-						total_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v
+						total_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
 						total_bvu[ival] = 0.0;
 						total_bvv[ival] = 0.0;
 						total_bvp[ival] = 0.0;
+						total_bvt[ival] = 0.0;
 					} else {
 						total_flags[ival] = 0; // fluid
 						total_bvu[ival] = 0.0;
 						total_bvv[ival] = 0.0;
 						total_bvp[ival] = 0.0;
+						total_bvt[ival] = 0.0;
 					}
 				}
 			}
@@ -178,6 +184,9 @@ void Geometry::load_domain_partitioning(const char* file)
 			}
 			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
 				infile >> total_bvp[i];
+			}
+			for (index_t i=0; i<(bsizeX+2)*(bsizeY+2); i++){
+				infile >> total_bvt[i];
 			}
 		}
 
@@ -239,6 +248,7 @@ void Geometry::load_domain_partitioning(const char* file)
 		real_t* sendBuf_u;
 		real_t* sendBuf_v;
 		real_t* sendBuf_p;
+		real_t* sendBuf_t;
 		for (index_t i=0; i<tdim[0]; i++){
 			for (index_t j=0; j<tdim[1]; j++){
 
@@ -252,6 +262,7 @@ void Geometry::load_domain_partitioning(const char* file)
 					bvu = new real_t[buflen];
 					bvv = new real_t[buflen];
 					bvp = new real_t[buflen];
+					bvt = new real_t[buflen];
 					// on master, write to own local storage
 					for (index_t n=0; n<localSizes[i][j][0]; n++){
 						for (index_t m=0; m<localSizes[i][j][1]; m++){
@@ -260,6 +271,7 @@ void Geometry::load_domain_partitioning(const char* file)
 							bvu[m*localSizes[i][j][0]+n] = total_bvu[totind];
 							bvv[m*localSizes[i][j][0]+n] = total_bvv[totind];
 							bvp[m*localSizes[i][j][0]+n] = total_bvp[totind];
+							bvt[m*localSizes[i][j][0]+n] = total_bvt[totind];
 						}
 					}
 				} else {
@@ -270,6 +282,7 @@ void Geometry::load_domain_partitioning(const char* file)
 					sendBuf_u = new real_t[buflen];
 					sendBuf_v = new real_t[buflen];
 					sendBuf_p = new real_t[buflen];
+					sendBuf_t = new real_t[buflen];
 					for (index_t n=0; n<localSizes[i][j][0]; n++){
 						for (index_t m=0; m<localSizes[i][j][1]; m++){
 							index_t totind = (m+cornerPoints[i][j][1])*_bsize[0] + (n+cornerPoints[i][j][0]);
@@ -277,6 +290,7 @@ void Geometry::load_domain_partitioning(const char* file)
 							sendBuf_u[m*localSizes[i][j][0]+n] = total_bvu[totind];
 							sendBuf_v[m*localSizes[i][j][0]+n] = total_bvv[totind];
 							sendBuf_p[m*localSizes[i][j][0]+n] = total_bvp[totind];
+							sendBuf_t[m*localSizes[i][j][0]+n] = total_bvt[totind];
 						}
 					}
 					
@@ -284,11 +298,13 @@ void Geometry::load_domain_partitioning(const char* file)
 					MPI_Send(sendBuf_u, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
 					MPI_Send(sendBuf_v, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
 					MPI_Send(sendBuf_p, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
+					MPI_Send(sendBuf_t, buflen, MPI_DOUBLE, rankDistri[i][j], 0, MPI_COMM_WORLD);
 
 					delete[] sendBuf_flags;
 					delete[] sendBuf_u;
 					delete[] sendBuf_v;
 					delete[] sendBuf_p;
+					delete[] sendBuf_t;
 				}
 
 			}
@@ -344,12 +360,14 @@ void Geometry::load_domain_partitioning(const char* file)
 		bvu = new real_t[buflen];
 		bvv = new real_t[buflen];
 		bvp = new real_t[buflen];
+		bvt = new real_t[buflen];
 
 		// receive complex geometry data
 		MPI_Recv(flags, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		MPI_Recv(bvu, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		MPI_Recv(bvv, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		MPI_Recv(bvp, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(bvt, buflen, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
 	}
 
@@ -358,8 +376,9 @@ void Geometry::load_domain_partitioning(const char* file)
 	if (_bval_u != nullptr) delete[] _bval_u;
 	if (_bval_v != nullptr) delete[] _bval_v;
 	if (_bval_p != nullptr) delete[] _bval_p;
+	if (_bval_T != nullptr) delete[] _bval_T;
 
-	if (flags == nullptr || bvu == nullptr || bvv == nullptr || bvp == nullptr){
+	if (flags == nullptr || bvu == nullptr || bvv == nullptr || bvp == nullptr || bvt == nullptr){
 		// safety check, if all fields are initialized
 		std::cout << "Warning: An error did occur while loading the geometry data. Uninitialized field!\n" << std::flush;
 	} else {
@@ -367,12 +386,13 @@ void Geometry::load_domain_partitioning(const char* file)
 		_bval_u = bvu;
 		_bval_v = bvv;
 		_bval_p = bvp;
+		_bval_T = bvt;
 	}
 
 	_total_offset[0] = totalOffsetX;
 	_total_offset[1] = totalOffsetY;
 
-	// dont delete local storage, because the member pointer points to this data
+	// dont delete local storage, because the member pointer point to this data
 	
 	// output for debugging purpurse	
 	//if(_comm->getRank() == 0) testIterator();
@@ -454,8 +474,6 @@ Communicator* Geometry::getCommunicator() const
 //==============================================================================
 // Methods for the update of boundary values (have to be done every timestep)
 //==============================================================================
-
-// TODO: something to edit here?
 
 /**
 Updates the boundary values for Grid u according to the pattern of u, i.e. Dirichlet boundary conditions
@@ -1332,21 +1350,19 @@ bool Geometry::isNeumannBoundaryV(const Iterator& it) const
 
 bool Geometry::isNeumannBoundaryP(const Iterator& it) const
 {
-	//bool boundary((_flags[it.Value()] >> 3) & 1);
-	//if (_comm->getRank() == 1) std::cout << "Boundary Value for P(" << _comm->getRank() << "): " << boundary << " Position: " << it.Pos()[0] << ", " << it.Pos()[1] << std::endl;
 	return (_flags[it.Value()] >> 3) & 1;
 }
 
 bool Geometry::isNeumannBoundaryT(const Iterator& it) const
 {
-//	return (_flags[it.Value()] >> 4) & 1;
-	return true;
+	return (_flags[it.Value()] >> 4) & 1;
+
+//	return true;
 }
 
 // Getter functions for the boundary data
 const real_t& Geometry::bvalU(const Iterator& it) const
 {
-	// std::cout << "Position: " << it.Pos()[0] << ", " << it.Pos()[1] << "| bval_u: " << _bval_u[it.Value()] << std::endl;
 	return _bval_u[it.Value()];
 }
 
@@ -1362,14 +1378,16 @@ const real_t& Geometry::bvalP(const Iterator& it) const
 
 real_t Geometry::bvalT(const Iterator& it) const
 {
-//	return _bval_T[it.Value()];
+	return _bval_T[it.Value()];
+
 //	return 0.0;
 	
-	if (it.Top().Value() == it.Value() && is_global_boundary(BoundaryIterator::boundaryTop)){
+/*	if (it.Top().Value() == it.Value() && is_global_boundary(BoundaryIterator::boundaryTop)){
 		return 1.0;
 	} else {
 		return 0.0;
 	}
+*/
 }
 
 void Geometry::output_flags() const

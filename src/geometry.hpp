@@ -152,7 +152,7 @@ private:
 	real_t* _bval_u;
 	real_t* _bval_v;
 	real_t* _bval_p;
-//	real_t* _bval_T;
+	real_t* _bval_T;
 
 	// own method
 	/// sets the meshwidth

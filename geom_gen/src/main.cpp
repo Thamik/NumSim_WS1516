@@ -21,9 +21,8 @@ int main(int argc, char** argv){
 	 */
 	int geom_type(-1);
 	double alpha(M_PI/4.0);
-	double re(10000);
+	double re(1500.0);
 	int id(0);
-	bool success(true);
 	bool powerTwo(false);
 	
 	for (int i=0; i<argc; i++){
@@ -45,7 +44,7 @@ int main(int argc, char** argv){
 					re = atof(argv[i]);
 				} else {
 					powerTwo = true;
-					std::cout << "Erzwinge zweierpotenz" << std::endl;
+					std::cout << "Forcing pows of 2 enabled!" << std::endl;
 				}
 				break;
 			case 4:
@@ -68,7 +67,8 @@ int main(int argc, char** argv){
 
 	switch (geom_type){
 		case 0:
-			geom_gen.simpleGeom(re);
+			geom_gen.drivenCavity();
+			geom_gen.setRe(re);
 			break;
 		case 1:
 			geom_gen.drivenCavity();
@@ -109,11 +109,10 @@ int main(int argc, char** argv){
 
 	if (geom_type == 0) {
 		std::string file1("../uq_data/uq_parameter_" + std::to_string(id) + ".params");
-		success = geom_gen.writeToFile_simple("../uq_data/uq_geometry.geom", file1.c_str());
+		geom_gen.setFilenames("../uq_data/uq_geometry.geom", file1.c_str());
+		geom_gen.writeToFile();
 	} else {
-		geom_gen.writeToFile("../data/complex_default.geom", "../data/assignment03.params");
+		geom_gen.writeToFile();
 	}
 
-	if (success) return 0;
-	else if (success) return 1;
 }

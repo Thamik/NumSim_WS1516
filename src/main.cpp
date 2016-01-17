@@ -17,7 +17,6 @@
 
 //------------------------------------------------------------------------------
 
-#define VERBOSE false
 //#define VTK_OUTPUT
 #define OUTPUT_MAIN
 
@@ -106,7 +105,7 @@ int main(int argc, char **argv) {
 	// load data from files, if filenames given in the command line arguments
 	if (param_file.compare("") != 0){
 		// the string is not empty, try to load the data
-		param.Load(param_file.c_str(), VERBOSE);
+		param.Load(param_file.c_str());
 	}
 	if (geom_file.compare("") != 0){
 		geom.load_domain_partitioning(geom_file.c_str());

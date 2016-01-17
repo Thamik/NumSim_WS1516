@@ -29,7 +29,7 @@ public:
   Parameter(Communicator* comm);
 
   /// Loads the parameter values from a file
-  void Load(const char *file, bool verbose = false);
+  void Load(const char *file);
 
   /// Getter functions for all parameters
   const real_t &Re() const;
