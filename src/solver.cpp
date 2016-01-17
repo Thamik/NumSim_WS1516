@@ -512,7 +512,8 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
 	geom_coarse.halfSize(pressure->getGeometry());
 
-	index_t minGridSize = 2;
+	//index_t minGridSize = 2;
+	index_t minGridSize = 16;
 
 	if (std::min(geom_coarse.TotalSize()[0]-2, geom_coarse.TotalSize()[1]-2) <= minGridSize){
 		// do not use a coarser grid anymore, solve per SOR
@@ -553,7 +554,8 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 		// do W-cycle
 		index_t iter(0);
-		index_t max_w_cycles = 10;
+		//index_t max_w_cycles = 10;
+		index_t max_w_cycles = 50;
 		while (total_res >= _eps && iter <= max_w_cycles){
 
 			// smooth

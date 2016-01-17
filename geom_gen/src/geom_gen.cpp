@@ -173,7 +173,7 @@ void GeometryGenerator::print() const
 	std::cout << "--------------------------------------------------\n";
 	std::cout << "Geometry configuration:\n";
 	std::cout << "Total size \t=\t" << "(" << _bSizeX-2 << ", " << _bSizeY-2 << ")" << " (without ghost cells)" << "\n";
-	std::cout << "Total cells \t=\t" << _totalCells << "\n";
+	std::cout << "Total cells \t=\t" << _totalCells << " (including ghost cells)\n";
 	std::cout << "Total length \t=\t(" << _bLengthX << ", " << _bLengthY << ")\n";
 	std::cout << "--------------------------------------------------\n";
 	std::cout << "Parameter configuration:\n";
