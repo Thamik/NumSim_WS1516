@@ -12,7 +12,7 @@
 The default constructor of the GeometryGenerator class.
 */
 GeometryGenerator::GeometryGenerator()
-: _bSizeX(1), _bSizeY(1), _totalCells(10000), _bLengthX(1.0), _bLengthY(1.0), _filenameGeom(), _filenameParam(), _flags(nullptr), _bvu(nullptr), _bvv(nullptr), _bvp(nullptr), _bvt(nullptr), _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.9), _itermax(1000), _itermin(0), _dt(0.5), _tend(30.0), _gravityX(0.0), _gravityY(0.0), _pr(3.0), _beta(0.5), _gamma(0.9), _q(0.0)
+: _bSizeX(1), _bSizeY(1), _totalCells(10000), _bLengthX(1.0), _bLengthY(1.0), _forcePowerOfTwo(false), _filenameGeom(), _filenameParam(), _flags(nullptr), _bvu(nullptr), _bvv(nullptr), _bvp(nullptr), _bvt(nullptr), _re(1000.0), _omega(1.7), _alpha(0.9), _eps(0.001), _tau(0.9), _itermax(1000), _itermin(0), _dt(0.5), _tend(30.0), _gravityX(0.0), _gravityY(0.0), _pr(3.0), _beta(0.5), _gamma(0.9), _q(0.0)
 {
 	setLength(_bLengthX, _bLengthY);
 	setTotalSize(_totalCells);
@@ -34,13 +34,12 @@ GeometryGenerator::~GeometryGenerator()
 /**
 Sets the total sizes of the goemetry.
 */
-void GeometryGenerator::setSize(int x, int y, bool forcePowerOfTwo)
+void GeometryGenerator::setSize(int x, int y)
 {
-	// if forcePowerOfTwo is true, make sure to have powers of two as the number of cells in each dimension
-	if (forcePowerOfTwo) {
+	// if _forcePowerOfTwo is true, make sure to have powers of two as the number of cells in each dimension
+	if (_forcePowerOfTwo){
 		_bSizeX = int(round(pow(2,round(log2(double(x))))));
 		_bSizeY = int(round(pow(2,round(log2(double(y))))));
-		std::cout << "Forcing power of 2: " << _bSizeX << ", " << _bSizeY << std::endl;
 	} else {
 		_bSizeX = x;
 		_bSizeY = y;
@@ -64,10 +63,20 @@ void GeometryGenerator::setSize(int x, int y, bool forcePowerOfTwo)
 	initZero();
 }
 
-void GeometryGenerator::setTotalSize(int n, bool forcePowerOfTwo)
+void GeometryGenerator::setTotalSize(int n)
 {
 	_totalCells = n;
-	autoBalance(forcePowerOfTwo);
+	//autoBalance();
+}
+
+void GeometryGenerator::forcePowerOfTwo()
+{
+	_forcePowerOfTwo = true;
+}
+
+void GeometryGenerator::doNotForcePowerOfTwo()
+{
+	_forcePowerOfTwo = false;
 }
 
 void GeometryGenerator::setLength(double x, double y)
@@ -237,7 +246,7 @@ void GeometryGenerator::set(int x, int y, char flag, double valu, double valv, d
 	_bvt[ival] = valt;
 }
 
-void GeometryGenerator::autoBalance(bool forcePowerOfTwo)
+void GeometryGenerator::autoBalance()
 {
 	// try to choose the size in x- and y-direction such that the problem
 	// is more balanced and the total number of cells is being conserved
@@ -246,7 +255,7 @@ void GeometryGenerator::autoBalance(bool forcePowerOfTwo)
 	_bSizeX = int(round( sqrt(_bLengthX/_bLengthY * _totalCells) ));
 	_bSizeY = int(round( sqrt(_bLengthY/_bLengthX * _totalCells) ));
 
-	setSize(_bSizeX, _bSizeY, forcePowerOfTwo);
+	setSize(_bSizeX, _bSizeY);
 }
 
 void GeometryGenerator::fixSingleCells()
@@ -280,7 +289,7 @@ void GeometryGenerator::fixSingleCells()
 void GeometryGenerator::drivenCavity()
 {
 	// auto balance the number of cells in each dimension
-	//autoBalance();
+	autoBalance();
 
 	// assure that all values are initialized with zero
 	initZero();
@@ -317,7 +326,7 @@ void GeometryGenerator::pipeFlow(double xlength, double ylength, double pressure
 	setLength(xlength, ylength);
 
 	// auto balance the number of cells in each dimension
-	//autoBalance();
+	autoBalance();
 
 	// assure that all values are initialized with zero
 	initZero();

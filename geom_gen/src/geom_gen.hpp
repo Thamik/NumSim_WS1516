@@ -10,8 +10,11 @@ public:
 	GeometryGenerator();
 	~GeometryGenerator();
 
-	void setTotalSize(int n, bool forcePowerOfTwo=false);
+	void setTotalSize(int n);
 	void setLength(double x, double y);
+
+	void forcePowerOfTwo();
+	void doNotForcePowerOfTwo();
 
 	void writeToFile() const;
 
@@ -46,6 +49,8 @@ private:
 	int _totalCells;
 	double _bLengthX, _bLengthY;
 
+	bool _forcePowerOfTwo;
+
 	std::string _filenameGeom;
 	std::string _filenameParam;
 
@@ -71,9 +76,9 @@ private:
 	double _gamma;
 	double _q;
 
-	void setSize(int x, int y, bool forcePowerOfTwo=false);
+	void setSize(int x, int y);
 
-	void autoBalance(bool forcePowerOfTwo=false);
+	void autoBalance();
 
 	void initZero();
 

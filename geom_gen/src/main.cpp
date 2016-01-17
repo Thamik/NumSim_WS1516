@@ -51,24 +51,23 @@ void frontend_interactive()
 		}
 	}
 
-	bool powerOfTwo(false);
 	std::string inp;
 	std::cout << "Would you like to force the number of cells in each dimension to be a power of 2? (y/n)\n";
 	while (true){
 		std::cout << ">> ";
 		std::cin >> inp;
 		if (inp.compare("y") == 0){
-			powerOfTwo = true;
+			geom_gen.forcePowerOfTwo();
 			break;
 		} else if (inp.compare("n") == 0){
-			powerOfTwo = false;
+			geom_gen.doNotForcePowerOfTwo();
 			break;
 		} else {
 			std::cout << "Please type \"y\" or \"n\"!\n";
 		}
 	}
 
-	geom_gen.setTotalSize(totalSize, powerOfTwo);
+	geom_gen.setTotalSize(totalSize);
 
 	if (geom_type == 0){
 		std::cout << "Please type the Reynolds number:\n";
@@ -167,12 +166,18 @@ void frontend_commandlineargs(int argc, char** argv){
 
 	GeometryGenerator geom_gen;
 
+	if (powerTwo){
+		geom_gen.forcePowerOfTwo();
+	} else {
+		geom_gen.doNotForcePowerOfTwo();
+	}
+
 	if (totalSize > 0){
 		// set the read size
-		geom_gen.setTotalSize(totalSize, powerTwo);
+		geom_gen.setTotalSize(totalSize);
 	} else {
 		// set the default size
-		geom_gen.setTotalSize(10000, powerTwo);
+		geom_gen.setTotalSize(10000);
 	}
 
 	switch (geom_type){
