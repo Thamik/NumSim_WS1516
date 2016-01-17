@@ -96,7 +96,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 
 #ifdef OUTPUT_PARAMS
 	if (_comm->getRank() == 0){
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 		std::cout << "Parameter configuration:\n";
 		std::cout << "Re\t\t=\t" << _re << "\n";
 		std::cout << "Omega\t\t=\t" << _omega << "\n";
@@ -112,7 +112,7 @@ if(i_rank == _comm->getRank()){ // read the files sequentially
 		std::cout << "Beta\t\t=\t" << _beta << "\n";
 		std::cout << "Gamma\t\t=\t" << _gamma << "\n";
 		std::cout << "Q\t\t=\t" << _q << "\n";
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 	}
 #endif
 

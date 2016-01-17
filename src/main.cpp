@@ -34,6 +34,7 @@
 #include <iostream>
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <fstream>
 
 #ifdef __linux__
 	#include <sys/time.h>
@@ -44,7 +45,20 @@
 int main(int argc, char **argv) {
 
 	// Create communicator
-	Communicator comm(&argc, &argv); // the argument are being handed over to the MPI_Init call
+	Communicator comm(&argc, &argv); // the arguments are being handed over to the MPI_Init call
+
+	// print welcome screen
+	if (!comm.getRank()){
+		std::ifstream input;
+		input.open("numsim_logo.txt");
+		if (input.is_open()){
+			std::string line;
+			while(std::getline(input,line)) {
+				std::cout << line << '\n';
+			}
+		}
+		input.close();
+	}
 
 	// read the command line arguments
 	std::string param_file("");
@@ -169,7 +183,7 @@ int main(int argc, char **argv) {
 	// prepare console output
 #ifdef OUTPUT_MAIN
 	if(!comm.getRank()){
-		std::cout << "\n\n\n\n\n" << "\n\n" << std::flush;
+		std::cout << "\n\n\n\n\n" << "\n\n\n" << std::flush;
 #ifdef USE_PARTICLES
 		std::cout << "\n";
 #endif

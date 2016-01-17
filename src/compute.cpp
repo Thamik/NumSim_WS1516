@@ -240,12 +240,9 @@ void Compute::TimeStep(bool verbose)
 	
 	// solve Poisson equation
 #ifdef MULTIGRID
-	real_t residual = _solver->Solve(_p, _rhs);
-	if (residual <= _epslimit){
-		_solver_converging = true;
-	} else {
-		_solver_converging = false;
-	}
+	const MGInfoHandle info = _solver->Solve(_p, _rhs);
+	real_t residual = info.getResidual();
+	_solver_converging = info.getConverged();
 #else
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);
@@ -349,8 +346,11 @@ void Compute::TimeStep(bool verbose)
 
 		std::cout << "Last residual: res = ";
 		printf("%10.7f", residual);
-#ifndef MULTIGRID
-		std::cout << ",    \tno. iterations: ";
+#ifdef MULTIGRID
+		std::cout << ",\tmax. recursion depth: ";
+		printf("%3i", info.getMaxRecursionDepth());
+#else
+		std::cout << ",\tno. iterations: ";
 		printf("%7i", int(iteration/2));
 #endif
 		std::cout << "     \n"; // residual

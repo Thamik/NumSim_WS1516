@@ -209,11 +209,11 @@ void Geometry::load_domain_partitioning(const char* file)
 
 		// console output
 #ifdef OUTPUT_GEOMETRY
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 		std::cout << "Geometry configuration:\n";
-		std::cout << "Total Size\t=\t(" << _bsize[0] << ", " << _bsize[1] << ")\n";
+		std::cout << "Total Size\t=\t(" << _bsize[0] << ", " << _bsize[1] << ") (without ghost cells)\n";
 		std::cout << "Total Length\t=\t(" << _blength[0] << ", " << _blength[1] << ")\n";
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 #endif
 
 		// domain partitioning
@@ -1170,7 +1170,7 @@ void Geometry::do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, m
 
 #ifdef OUTPUT_GEOMETRY
 	if(_comm->getRank()==0) {
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 		std::cout << "Process distribution (" << _comm->getSize() << " processes in total):\n" << std::flush;
 		for(int j=int(tdim[1])-1; j >= 0; j--) {
 			for(index_t i=0; i < tdim[0]; i++) {
@@ -1179,7 +1179,7 @@ void Geometry::do_domain_decomposition(multi_index_t& tdim, int**& rankDistri, m
 			}
 			std::cout << "\n" << std::flush;
 		}
-		std::cout << "--------------------------------------------------\n";
+		std::cout << "------------------------------------------------------------\n";
 	}
 #endif
 }

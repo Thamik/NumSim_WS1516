@@ -127,20 +127,29 @@ public:
 
 //------------------------------------------------------------------------------
 
-/*class MGInfoHandle {
+class MGInfoHandle {
 public:
 	MGInfoHandle();
 	~MGInfoHandle();
 
-	bool converged;
-	real_t last_res;
-};*/
+	bool getConverged() const;
+	void setConverged(bool converged);
+	real_t getResidual() const; 
+	void setResidual(real_t residual);
+	index_t getMaxRecursionDepth() const;
+	void setMaxRecursionDepth(index_t max_recursion_depth);
+
+private:
+	bool _converged;
+	real_t _residual;
+	index_t _max_recursion_depth;
+};
 
 class MGSolver {
 public:
 	MGSolver(real_t eps, index_t itermax);
 	~MGSolver();
-	real_t Solve(Grid* pressure, const Grid* rhs) const;
+	const MGInfoHandle Solve(Grid* pressure, const Grid* rhs) const;
 private:
 	real_t _eps;
 	index_t _itermax;

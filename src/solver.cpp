@@ -486,13 +486,44 @@ real_t HeatConductionSolver::Cycle(Grid* grid, const Grid* rhs) const
 
 //------------------------------------------------------------------------------
 
-/*MGInfoHandle::MGInfoHandle()
+MGInfoHandle::MGInfoHandle()
+: _converged(false), _residual(0.0), _max_recursion_depth(0)
 {
 }
 
 MGInfoHandle::~MGInfoHandle()
 {
-}*/
+}
+
+bool MGInfoHandle::getConverged() const
+{
+	return _converged;
+}
+
+void MGInfoHandle::setConverged(bool converged)
+{
+	_converged = converged;
+}
+
+real_t MGInfoHandle::getResidual() const
+{
+	return _residual;
+}
+
+void MGInfoHandle::setResidual(real_t residual)
+{
+	_residual = residual;
+}
+
+index_t MGInfoHandle::getMaxRecursionDepth() const
+{
+	return _max_recursion_depth;
+}
+
+void MGInfoHandle::setMaxRecursionDepth(index_t max_recursion_depth)
+{
+	_max_recursion_depth = max_recursion_depth;
+}
 
 MGSolver::MGSolver(real_t eps, index_t itermax)
 : _eps(eps), _itermax(itermax)
@@ -503,8 +534,10 @@ MGSolver::~MGSolver()
 {
 }
 
-real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
+const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 {
+	MGInfoHandle info;
+
 	real_t total_res(_eps * 2.0);
 	bool converged(false);
 
@@ -542,6 +575,9 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 				break;
 			}
 		}
+
+		info.setMaxRecursionDepth(1);
+
 	} else {
 		// solve on coarser grid
 
@@ -552,9 +588,9 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 		Grid err(pressure->getGeometry(),multi_real_t(-0.5,-0.5));
 
 		// do W-cycle
-		index_t iter(0);
+		index_t iter(1);
 		index_t max_w_cycles = 50;
-		while (total_res >= _eps && iter <= max_w_cycles){
+		while (true){
 
 			// smooth
 			total_res = smooth(pressure, rhs);
@@ -569,7 +605,10 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 			// MG iteration
 			err_coarse.Initialize(0.0); // THIS IS NEEDED
-			Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
+			const MGInfoHandle info_coarse = Solve(&err_coarse, &res_coarse); // solve recursively with homogeneous boundary
+
+			// update info handle
+			info.setMaxRecursionDepth(std::max(info.getMaxRecursionDepth(),info_coarse.getMaxRecursionDepth()+1));
 
 			// prolongate to finer grid
 			err.Initialize(0.0); // this should not be needed, but seems to be
@@ -583,10 +622,21 @@ real_t MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 			iter++;
 
+			if (total_res <= _eps){
+				converged = true;
+				break;
+			} else if (iter > max_w_cycles){
+				converged = false;
+				break;
+			}
+
 		}
 	}
+
+	info.setResidual(total_res);
+	info.setConverged(converged);
 	
-	return total_res;
+	return info;
 }
 
 real_t MGSolver::smooth(Grid* pressure, const Grid* rhs) const
