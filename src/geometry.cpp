@@ -1363,7 +1363,13 @@ const real_t& Geometry::bvalP(const Iterator& it) const
 real_t Geometry::bvalT(const Iterator& it) const
 {
 //	return _bval_T[it.Value()];
-	return 0.0;
+//	return 0.0;
+	
+	if (it.Top().Value() == it.Value() && is_global_boundary(BoundaryIterator::boundaryTop)){
+		return 1.0;
+	} else {
+		return 0.0;
+	}
 }
 
 void Geometry::output_flags() const
