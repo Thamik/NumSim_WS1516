@@ -1537,11 +1537,13 @@ void Geometry::halfSize(const Geometry* geom)
 	if (_bval_u != nullptr) delete[] _bval_u;
 	if (_bval_v != nullptr) delete[] _bval_v;
 	if (_bval_p != nullptr) delete[] _bval_p;
+	if (_bval_T != nullptr) delete[] _bval_T;
 	// allocate
 	_flags = new char[_size[0]*_size[1]];
 	_bval_u = new real_t[_size[0]*_size[1]];
 	_bval_v = new real_t[_size[0]*_size[1]];
 	_bval_p = new real_t[_size[0]*_size[1]];
+	_bval_T = new real_t[_size[0]*_size[1]];
 	// set values
 	char flag_up = geom->_flags[(geom->_size[1]-1)*geom->_size[0] + geom->_size[0]/2];
 	char flag_down = geom->_flags[(0)*geom->_size[0] + geom->_size[0]/2];
@@ -1554,23 +1556,24 @@ void Geometry::halfSize(const Geometry* geom)
 			_bval_u[ival] = 0.0;
 			_bval_v[ival] = 0.0;
 			_bval_p[ival] = 0.0;
+			_bval_T[ival] = 0.0;
+
+			// interior
+			_flags[ival] = 0;
 
 			// only care about the outer boundaries (equal at the whole side)
 			if (jj == 0){
 				// down
-				_flags[ival] = flag_down;
+				if (flag_down != 0) _flags[ival] = flag_down;
 			} else if (jj == _size[1]-1){
 				// up
-				_flags[ival] = flag_up;
+				if (flag_up != 0) _flags[ival] = flag_up;
 			} else if (ii == 0){
 				// left
-				_flags[ival] = flag_left;
+				if (flag_left != 0) _flags[ival] = flag_left;
 			} else if (ii == _size[0]-1){
 				// right
-				_flags[ival] = flag_right;
-			} else {
-				// interior
-				_flags[ival] = 0;
+				if (flag_right != 0) _flags[ival] = flag_right;
 			}
 		}
 	}

@@ -547,7 +547,8 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 	index_t minGridSize = 16;
 
-	if (std::min(geom_coarse.TotalSize()[0]-2, geom_coarse.TotalSize()[1]-2) <= minGridSize){
+	//if (true){
+	if (std::min(pressure->getGeometry()->TotalSize()[0]-2, pressure->getGeometry()->TotalSize()[1]-2) <= minGridSize){
 		// do not use a coarser grid anymore, solve per SOR
 
 		real_t h = 0.5 * (pressure->getGeometry()->Mesh()[0] + pressure->getGeometry()->Mesh()[1]);
@@ -691,7 +692,7 @@ void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 
 	newsizeX = 2*size[0]-2;
 
-	while(it_new.Valid()) {
+	while(it_new.Valid()){
 		posX = it_new.Pos()[0];
 		posY = it_new.Pos()[1];
 
@@ -723,9 +724,9 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 	while(it_new.Valid()) {
 		//multi_real_t physpos = it_new.PhysPos(new_grid->getOffset());
 		multi_real_t physpos = it_new.PhysPos(multi_real_t(-0.5,-0.5));
-		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
-			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
-		}
+//		if (physpos[0] < 0 || physpos[0] > 1 || physpos[1] < 0 || physpos[1] > 1){
+//			std::cout << "Warning! Physpos: " << physpos[0] << ", " << physpos[1] << std::endl;
+//		}
 		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
 		it_new.Next();
 	}*/
@@ -738,7 +739,7 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 
 	newsizeX = 2*size[0]-2;
 
-	while(it_old.Valid()) {
+	while(it_old.Valid()){
 		posX = it_old.Pos()[0];
 		posY = it_old.Pos()[1];
 
