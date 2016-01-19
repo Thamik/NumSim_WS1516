@@ -158,6 +158,7 @@ private:
 	void sync_p();
 	void sync_all();
 	void sync_T();
+	void sync_rhs();
 
 	/// the console clock
 	ConsoleClock* _clock;

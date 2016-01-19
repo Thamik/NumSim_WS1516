@@ -536,6 +536,11 @@ MGSolver::~MGSolver()
 
 const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 {
+	// safety check
+	if (((pressure->getGeometry()->Size()[0] % 2) != 0) || ((pressure->getGeometry()->Size()[0] % 2) != 0)){
+		throw std::runtime_error("MGSolver: size not even!");
+	}
+
 	MGInfoHandle info;
 
 	real_t total_res(_eps * 2.0);
@@ -547,7 +552,7 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	Geometry geom_coarse(comm);
 	geom_coarse.halfSize(pressure->getGeometry());
 
-	index_t minGridSize = 16;
+	index_t minGridSize = 8;
 
 	//if (true){
 	if (std::min(pressure->getGeometry()->TotalSize()[0]-2, pressure->getGeometry()->TotalSize()[1]-2) <= minGridSize){
@@ -596,7 +601,8 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 		// do W-cycle
 		index_t iter(1);
-		index_t max_w_cycles = 50;
+		//index_t max_w_cycles = 1; // V-cycle
+		index_t max_w_cycles = 10;
 		while (true){
 			/*res.Initialize(0.0);
 			res_coarse.Initialize(0.0);
@@ -609,18 +615,12 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 			// compute residual
 			//res.Initialize(0.0); // this should not be needed
 			compute_residual(pressure, rhs, &res);
-			/*std::cout << "Pressure:" << std::endl;
-			pressure->Out();
-			std::cout << "Residual:" << std::endl;
-			res.Out();*/
 
 			comm->copyBoundary(&res);
 
 			// restrict to coarser grid
 			//res_coarse.Initialize(0.0); // this should not be needed
 			restrict_grid(&res, &res_coarse);
-			/*std::cout << "Restricted Grid:" << std::endl;
-			res_coarse.Out();*/
 
 			// MG iteration
 			err_coarse.Initialize(0.0); // THIS IS NEEDED
@@ -638,10 +638,6 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 
 			// postsmooting
 			total_res = smooth(pressure, rhs);
-			/*std::cout << "Pressure:" << std::endl;
-			pressure->Out();
-			std::cout << "Residual:" << std::endl;
-			res.Out();*/
 
 			iter++;
 
@@ -671,20 +667,13 @@ real_t MGSolver::smooth(Grid* pressure, const Grid* rhs) const
 	for (index_t ii=0; ii<n_cycles*2+1; ii++){
 		if ((ii % 2) == (pressure->getGeometry()->getCommunicator()->EvenOdd() ? 1 : 0)){
 			res = solver.RedCycle(pressure, rhs);
-			//std::cout << "Red Cycle done!" << std::endl;
 		} else {
 			res = solver.BlackCycle(pressure, rhs);
-			//std::cout << "Black Cycle done!" << std::endl;
 		}
 
 		if (pressure->getGeometry()->getCommunicator()->getSize() > 1){
 			pressure->getGeometry()->getCommunicator()->copyBoundary(pressure);
 		}
-		/*std::cout << "Pressure in Smooth step:" << std::endl;
-		pressure->Out();
-		std::cout << "RHS in Smooth step:" << std::endl;
-		rhs->Out();*/
-		
 	}
 
 	return res;
@@ -696,8 +685,7 @@ void MGSolver::compute_residual(const Grid* pressure, const Grid* rhs, Grid* res
 	Iterator it(pressure->getGeometry());
 	it.First();
 	while(it.Valid()) {
-		//res->Cell(it) = rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it);
-		res->Cell(it) = -1.0 * (rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it));
+		res->Cell(it) = rhs->Cell(it) - pressure->dxx(it) - pressure->dyy(it);
 		it.Next();
 	}
 }

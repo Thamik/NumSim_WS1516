@@ -84,8 +84,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_F->Initialize(0.0);
 	_G->Initialize(0.0);
 	_rhs->Initialize(0.0);
-	//_T->Initialize(0.0);
-	_T->Initialize(0.3);
+	_T->Initialize(0.0);
 	_dT->Initialize(0.0);
 	_tmp_velocity->Initialize(0.0);
 	_tmp_vorticity->Initialize(0.0);
@@ -201,6 +200,8 @@ void Compute::TimeStep(bool verbose)
 		std::cout << "Warning! Compute::TimeStep(): very large timestep!" << std::endl;
 	}*/
 
+	sync_all(); // TODO: remove
+
 	// compute the new temperature field
 	ComputeTemperature(dt);
 	update_boundary_values();
@@ -208,6 +209,8 @@ void Compute::TimeStep(bool verbose)
 #ifndef RUN_SERIAL
 	sync_T(); // BLOCKING
 #endif
+
+	sync_all(); // TODO: remove
 
 	// compute F, G...
 	MomentumEqu(dt);
@@ -218,17 +221,13 @@ void Compute::TimeStep(bool verbose)
 	sync_FG(); // BLOCKING
 #endif
 
+	sync_all(); // TODO: remove
+
 	// compute rhs
 	RHS(dt);
 
-//	_geom->UpdateGG_P(_p);
+	sync_all(); // TODO: remove
 
-//	update_boundary_values(); // debug
-
-	// for debugging issues
-	/*delete _p_old;
-	_p_old = _p->copy();*/
-	
 	// solve Poisson equation
 #ifdef MULTIGRID
 	const MGInfoHandle info = _solver->Solve(_p, _rhs);
@@ -272,7 +271,7 @@ void Compute::TimeStep(bool verbose)
 	_geom->Update_P(_p);
 #endif
 
-//	update_boundary_values(); // debug
+	sync_all(); // TODO: remove
 
 //	check_for_incontinuities();
 	
@@ -285,7 +284,7 @@ void Compute::TimeStep(bool verbose)
 	sync_uv(); // BLOCKING
 #endif
 
-//	update_boundary_values(); // debug
+	sync_all(); // TODO: remove
 
 	//update total time
 	_t += dt;
@@ -710,12 +709,20 @@ void Compute::sync_T()
 	}
 }
 
+void Compute::sync_rhs()
+{
+	if (_comm->getSize() > 1) {
+		_comm->copyBoundary(_rhs);
+	}
+}
+
 void Compute::sync_all()
 {
 	sync_FG();
 	sync_uv();
 	sync_p();
 	sync_T();
+	sync_rhs();
 }
 
 void Compute::check_for_incontinuities()
@@ -863,7 +870,6 @@ void Compute::writeUQFile() const
 
 void Compute::ComputeTemperature(const real_t& dt)
 {
-	// TODO
 	real_t duTdx, dvTdy, Tip1j, Tij, Tim1j, Tijp1, Tijm1, uij, uim1j, vij, vijm1;
 
 #ifdef COMPLEX_GEOM
