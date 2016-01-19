@@ -35,6 +35,8 @@ public:
 
 	void testCase2();
 
+	void testCase3();
+
 	void karmanVortexStreet(double alpha, double width=0.2, double xlength=6.0, double ylength=1.0, double pressureLeft=1.1, double pressureRight=1.0);
 
 	void test_twoCellCriterion();

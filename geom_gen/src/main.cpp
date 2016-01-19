@@ -29,10 +29,11 @@ void frontend_interactive()
 	std::cout << "6 : test case 2\n";
 	std::cout << "7 : two cell criterion\n";
 	std::cout << "8 : two cell criterion 2\n";
+	std::cout << "9 : test case 3\n";
 	while (true){
 		std::cout << ">> ";
 		std::cin >> geom_type;
-		if (geom_type < 0 || geom_type > 8){
+		if (geom_type < 0 || geom_type > 9){
 			std::cout << "Unknown geometry type, please type another number!\n";
 		} else {
 			break;
@@ -101,6 +102,8 @@ void frontend_interactive()
 		geom_gen.test_twoCellCriterion();
 	} else if (geom_type == 8){
 		geom_gen.test_twoCellCriterion2();
+	} else if (geom_type == 9){
+		geom_gen.testCase3();
 	} else {
 		// this should not happen, invalid geom_type
 		throw std::runtime_error("Fatal error: geometry type invalid!");

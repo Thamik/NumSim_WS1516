@@ -682,7 +682,8 @@ void Grid::add(const Grid* a)
 	Iterator it(_geom);
 	it.First();
 	while (it.Valid()){
-		Cell(it) += a->Cell(it);
+		//Cell(it) += a->Cell(it);
+		Cell(it) -= a->Cell(it);
 		it.Next();
 	}
 }
