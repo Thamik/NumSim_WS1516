@@ -321,6 +321,43 @@ void GeometryGenerator::drivenCavity()
 	setFilenames("../data/driven_cavity.geom", "../data/driven_cavity.param");
 }
 
+void GeometryGenerator::test_temperature_heating()
+{
+	// auto balance the number of cells in each dimension
+	autoBalance();
+
+	// assure that all values are initialized with zero
+	initZero();
+
+	int ival(0);
+	for (int i=0; i<_bSizeX; i++){
+		for (int j=0; j<_bSizeY; j++){
+			ival = j * (_bSizeX) + i;
+			if (j==0) {
+				// lower boundary
+				_flags[ival] = 1 | 1<<3; // neumann condition for p, dirichlet for u and v and T
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+				_bvt[ival] = 1.0;
+			} else if (j==_bSizeY-1 || i==0 || i==_bSizeX-1){
+				// upper, left or right boundary
+				_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+				_bvt[ival] = 0.0;
+			}
+		}
+	}
+
+	setDefaultParameters();
+	_gravityX = 0.0;
+	_gravityY = -9.81;
+
+	setFilenames("../data/test_temperature_heating.geom", "../data/test_temperature_heating.param");
+}
+
 void GeometryGenerator::pipeFlow(double xlength, double ylength, double pressureLeft, double pressureRight)
 {
 	setLength(xlength, ylength);
@@ -588,7 +625,7 @@ void GeometryGenerator::testCase3()
 
 	setDefaultParameters();
 
-	setFilenames("../data/driven_cavity.geom", "../data/driven_cavity.param");
+	setFilenames("../data/test_case_3.geom", "../data/test_case_3.param");
 }
 
 void GeometryGenerator::test_twoCellCriterion()
@@ -625,7 +662,7 @@ void GeometryGenerator::setDefaultParameters()
 	_omega = 1.7;
 	_alpha = 0.9;
 	_eps = 0.001;
-	_tau = 0.9;
+	_tau = 0.5;
 	_itermax = 1000;
 	_itermin = 0;
 	_dt = 0.5;
@@ -633,7 +670,7 @@ void GeometryGenerator::setDefaultParameters()
 	_gravityX = 0.0;
 	_gravityY = 0.0;
 	_pr = 3.0;
-	_beta = 0.5;
+	_beta = 100.0;
 	_gamma = 0.9;
 	_q = 0.0;
 }

@@ -42,6 +42,8 @@ public:
 	void test_twoCellCriterion();
 	void test_twoCellCriterion2();
 
+	void test_temperature_heating();
+
 	void setDefaultParameters();
 
 	void setRe(double re);

@@ -541,13 +541,13 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	real_t total_res(_eps * 2.0);
 	bool converged(false);
 
-	const Communicator* comm = pressure->getGeometry()->getCommunicator();
+	Communicator* comm = pressure->getGeometry()->getCommunicator();
 
 	// compute coarser geometry
 	Geometry geom_coarse(comm);
 	geom_coarse.halfSize(pressure->getGeometry());
 
-	index_t minGridSize = 4;
+	index_t minGridSize = 16;
 
 	//if (true){
 	if (std::min(pressure->getGeometry()->TotalSize()[0]-2, pressure->getGeometry()->TotalSize()[1]-2) <= minGridSize){
@@ -598,11 +598,10 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 		index_t iter(1);
 		index_t max_w_cycles = 50;
 		while (true){
-
-			res.Initialize(0.0);
+			/*res.Initialize(0.0);
 			res_coarse.Initialize(0.0);
 			err_coarse.Initialize(0.0);
-			err.Initialize(0.0);
+			err.Initialize(0.0);*/
 
 			// smooth
 			total_res = smooth(pressure, rhs);

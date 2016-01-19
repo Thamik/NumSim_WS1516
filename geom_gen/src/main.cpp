@@ -20,20 +20,21 @@ void frontend_interactive()
 
 	int geom_type(-1);
 	std::cout << "Please choose the geometry type:\n";
-	std::cout << "0 : simple geometry with variable Reynold number (uq run)\n";
-	std::cout << "1 : driven cavity\n";
-	std::cout << "2 : pipe flow\n";
-	std::cout << "3 : flow over a step\n";
-	std::cout << "4 : karman vortex street\n";
-	std::cout << "5 : test case 1\n";
-	std::cout << "6 : test case 2\n";
-	std::cout << "7 : two cell criterion\n";
-	std::cout << "8 : two cell criterion 2\n";
-	std::cout << "9 : test case 3\n";
+	std::cout << "0  : simple geometry with variable Reynold number (uq run)\n";
+	std::cout << "1  : driven cavity\n";
+	std::cout << "2  : pipe flow\n";
+	std::cout << "3  : flow over a step\n";
+	std::cout << "4  : karman vortex street\n";
+	std::cout << "5  : test case 1\n";
+	std::cout << "6  : test case 2\n";
+	std::cout << "7  : two cell criterion\n";
+	std::cout << "8  : two cell criterion 2\n";
+	std::cout << "9  : test case 3\n";
+	std::cout << "10 : test: temperature/heating\n";
 	while (true){
 		std::cout << ">> ";
 		std::cin >> geom_type;
-		if (geom_type < 0 || geom_type > 9){
+		if (geom_type < 0 || geom_type > 10){
 			std::cout << "Unknown geometry type, please type another number!\n";
 		} else {
 			break;
@@ -104,6 +105,8 @@ void frontend_interactive()
 		geom_gen.test_twoCellCriterion2();
 	} else if (geom_type == 9){
 		geom_gen.testCase3();
+	} else if (geom_type == 10){
+		geom_gen.test_temperature_heating();
 	} else {
 		// this should not happen, invalid geom_type
 		throw std::runtime_error("Fatal error: geometry type invalid!");
