@@ -80,7 +80,8 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	// Initialize Grids
 	_u->Initialize(0.0);
 	_v->Initialize(0.0);
-	_p->Initialize(0.0);
+	//_p->Initialize(0.0);
+	_p->Initialize(1.0); //TODO REMOVE
 	_F->Initialize(0.0);
 	_G->Initialize(0.0);
 	_rhs->Initialize(0.0);
@@ -240,9 +241,12 @@ void Compute::TimeStep(bool verbose)
 	
 	// solve Poisson equation
 #ifdef MULTIGRID
+	//_rhs->Initialize(0.0);
 	const MGInfoHandle info = _solver->Solve(_p, _rhs);
 	real_t residual = info.getResidual();
 	_solver_converging = info.getConverged();
+	//_p->Out(); //TODO REMOVE
+	//std::cin.get(); //TODO REMOVE
 #else
 	real_t residual(_epslimit + 1.0);
 	index_t iteration(0);

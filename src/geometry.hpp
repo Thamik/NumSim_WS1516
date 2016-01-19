@@ -116,6 +116,7 @@ public:
 	//void homogeneousBoundary();
 
 	void halfSize(const Geometry* geom);
+	void homogeneousBoundary(const Geometry* geom);
 
 private:
 	/// Communicator

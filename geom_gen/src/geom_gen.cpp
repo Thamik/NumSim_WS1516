@@ -550,6 +550,47 @@ void GeometryGenerator::testCase2()
 	setFilenames("../data/test_case_2.geom", "../data/test_case_2.param");
 }
 
+void GeometryGenerator::testCase3()
+{
+	// auto balance the number of cells in each dimension
+	autoBalance();
+
+	// assure that all values are initialized with zero
+	initZero();
+
+	int ival(0);
+	for (int i=0; i<_bSizeX; i++){
+		for (int j=0; j<_bSizeY; j++){
+			ival = j * (_bSizeX) + i;
+			if (j==_bSizeY-1) {
+				// upper boundary
+				_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_bvu[ival] = 1.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+				_bvt[ival] = 0.0;
+			} else if (i==0 || i==_bSizeX-1){
+				// left or right boundary
+				_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 0.0;
+				_bvt[ival] = 0.0;
+			} else if (j==0) {
+				_flags[ival] = 1 | 1<<1 | 1<<2 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_bvu[ival] = 0.0;
+				_bvv[ival] = 0.0;
+				_bvp[ival] = 1.0;
+				_bvt[ival] = 0.0;
+			}
+		}
+	}
+
+	setDefaultParameters();
+
+	setFilenames("../data/driven_cavity.geom", "../data/driven_cavity.param");
+}
+
 void GeometryGenerator::test_twoCellCriterion()
 {
 	pipeFlow();
