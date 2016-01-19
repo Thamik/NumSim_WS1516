@@ -139,8 +139,7 @@ void Communicator::copyBoundary(Grid *grid, bool verbose) const
 	if (verbose) {	
 		if( success ) {
 			std::cout << "Process no. " << _rank << " copied successful!\n";
-		}
-		else {
+		} else {
 			std::cout << "Copy failed!!! (Process no. " << _rank << ")\n";
 		}
 	}

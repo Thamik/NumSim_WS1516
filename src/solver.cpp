@@ -541,8 +541,10 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 	real_t total_res(_eps * 2.0);
 	bool converged(false);
 
+	const Communicator* comm = pressure->getGeometry()->getCommunicator();
+
 	// compute coarser geometry
-	Geometry geom_coarse(pressure->getGeometry()->getCommunicator());
+	Geometry geom_coarse(comm);
 	geom_coarse.halfSize(pressure->getGeometry());
 
 	index_t minGridSize = 16;
@@ -563,7 +565,7 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 			}
 
 			if (pressure->getGeometry()->getCommunicator()->getSize() > 1){
-				pressure->getGeometry()->getCommunicator()->copyBoundary(pressure);
+				comm->copyBoundary(pressure);
 			}
 
 			iteration++;
@@ -599,6 +601,8 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 			// compute residual
 			//res.Initialize(0.0); // this should not be needed
 			compute_residual(pressure, rhs, &res);
+
+			comm->copyBoundary(&res);
 
 			// restrict to coarser grid
 			//res_coarse.Initialize(0.0); // this should not be needed
@@ -718,7 +722,7 @@ void MGSolver::restrict_grid(const Grid* old_grid, Grid* new_grid) const
 
 void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 {
-	/*InteriorIteratorGG it_new(new_grid->getGeometry());
+	InteriorIteratorGG it_new(new_grid->getGeometry());
 	it_new.First();
 
 	while(it_new.Valid()) {
@@ -729,9 +733,9 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 //		}
 		new_grid->Cell(it_new) = old_grid->Interpolate(physpos);
 		it_new.Next();
-	}*/
+	}
 
-	InteriorIteratorGG it_old(old_grid->getGeometry());
+	/*InteriorIteratorGG it_old(old_grid->getGeometry());
 	it_old.First();
 
 	multi_index_t size = old_grid->getGeometry()->Size();
@@ -760,7 +764,7 @@ void MGSolver::interpolate_grid(const Grid* old_grid, Grid* new_grid) const
 		new_grid->Data()[valro] = old_grid->Cell(it_old);
 
 		it_old.Next();
-	}
+	}*/
 
 	new_grid->getGeometry()->UpdateGG_P(new_grid);
 }
