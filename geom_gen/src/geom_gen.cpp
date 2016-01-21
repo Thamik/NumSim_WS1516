@@ -601,14 +601,14 @@ void GeometryGenerator::testCase3()
 			ival = j * (_bSizeX) + i;
 			if (j==_bSizeY-1) {
 				// upper boundary
-				_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_flags[ival] = 1 | 1<<4; // neumann condition for p and T, dirichlet for u and v
 				_bvu[ival] = 1.0;
 				_bvv[ival] = 0.0;
 				_bvp[ival] = 0.0;
 				_bvt[ival] = 0.0;
 			} else if (i==0 || i==_bSizeX-1){
 				// left or right boundary
-				_flags[ival] = 1 | 1<<3 | 1<<4; // neumann condition for p and T, dirichlet for u and v
+				_flags[ival] = 1 | 1<<4; // neumann condition for p and T, dirichlet for u and v
 				_bvu[ival] = 0.0;
 				_bvv[ival] = 0.0;
 				_bvp[ival] = 0.0;
@@ -617,7 +617,7 @@ void GeometryGenerator::testCase3()
 				_flags[ival] = 1 | 1<<1 | 1<<2 | 1<<4; // neumann condition for p and T, dirichlet for u and v
 				_bvu[ival] = 0.0;
 				_bvv[ival] = 0.0;
-				_bvp[ival] = 1.0;
+				_bvp[ival] = 0.0;
 				_bvt[ival] = 0.0;
 			}
 		}
