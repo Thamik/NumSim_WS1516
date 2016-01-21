@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <fstream>
 
+#include <math.h>
+#define _USE_MATH_DEFINES
+
 #ifdef __linux__
 	#include <sys/time.h>
 //#elif _WIN32 // windows 32- and 64-bit
@@ -80,9 +83,11 @@ int main(int argc, char **argv) {
 
 	Grid* _p = new Grid(&geom, multi_real_t(-0.5,-0.5));
 	Grid* _rhs = new Grid(&geom, multi_real_t(-0.5,-0.5));
-	_p->Initialize(1.0);
-	_rhs->Initialize(0.0);
-
+	//MGSolver* _solver = new MGSolver(pow(10,-4),1000);
+	real_t omega = 1.7;
+	RedOrBlackSOR* _solver = new RedOrBlackSOR(&geom, omega);
+	real_t residual;
+	index_t totalIteration(0);
 
 	// measure runtime
 	timeval tv;
@@ -99,9 +104,33 @@ int main(int argc, char **argv) {
 #endif
 	}
 	
-	MGSolver* _solver = new MGSolver(pow(10,-4), 1000);
-	const MGInfoHandle info = _solver->Solve(_p, _rhs);
-	real_t residual = info.getResidual();
+	for (int ii=0; ii<10; ii++) {
+		_p->Initialize(1.0);
+		_rhs->Initialize(0.0);
+		//MGSolver* _solver = new MGSolver(pow(10,-4), 1000);
+		/*const MGInfoHandle info = _solver->Solve(_p, _rhs);
+		residual = info.getResidual();*/
+		residual = (pow(10,-4) + 1.0);
+		index_t iteration(0);
+		while (true){
+			// one solver cycle is done here, alternating red or black
+			if ((iteration % 2) == (comm.EvenOdd() ? 1 : 0)){
+				residual = _solver->RedCycle(_p, _rhs);
+			} else {
+				residual = _solver->BlackCycle(_p, _rhs);
+			}
+
+			iteration++;
+
+			// check for edge condition
+			if (iteration > 1000000*2){
+				break;
+			} else if (residual < pow(10,-4)){
+				break;
+			}
+		}
+		totalIteration += iteration;
+	}
 	// _solver_converging = info.getConverged();
 
 	// runtime measurement
@@ -114,7 +143,7 @@ int main(int argc, char **argv) {
 		gettimeofday(&tv, NULL);
 		milliseconds_end = tv.tv_sec * 1000 + tv.tv_usec / 1000;
 		diff_sec = (milliseconds_end - milliseconds_begin) / 1000.0;
-		std::cout << "Total elapsed time: " << diff_sec << " seconds.\n";
+		std::cout << "Total elapsed time (for 10 Simulations): " << diff_sec << " seconds.\n";
 //#elif _WIN32 // windows 32- and 64-bit
 //	
 #endif
@@ -126,6 +155,7 @@ int main(int argc, char **argv) {
 		delete _rhs;
 		delete _solver;
 
+		std::cout << "Iteration number: " << totalIteration << std::endl;
 		std::cout << "Solver converged with residuum: " << residual << std::endl;
 	}
 
