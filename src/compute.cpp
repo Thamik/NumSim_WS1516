@@ -200,8 +200,6 @@ void Compute::TimeStep(bool verbose)
 		std::cout << "Warning! Compute::TimeStep(): very large timestep!" << std::endl;
 	}*/
 
-	sync_all(); // TODO: remove
-
 	// compute the new temperature field
 	ComputeTemperature(dt);
 	update_boundary_values();
@@ -209,8 +207,6 @@ void Compute::TimeStep(bool verbose)
 #ifndef RUN_SERIAL
 	sync_T(); // BLOCKING
 #endif
-
-	sync_all(); // TODO: remove
 
 	// compute F, G...
 	MomentumEqu(dt);
@@ -221,12 +217,8 @@ void Compute::TimeStep(bool verbose)
 	sync_FG(); // BLOCKING
 #endif
 
-	sync_all(); // TODO: remove
-
 	// compute rhs
 	RHS(dt);
-
-	sync_all(); // TODO: remove
 
 	// solve Poisson equation
 #ifdef MULTIGRID
@@ -271,8 +263,6 @@ void Compute::TimeStep(bool verbose)
 	_geom->Update_P(_p);
 #endif
 
-	sync_all(); // TODO: remove
-
 //	check_for_incontinuities();
 	
 	// compute new velocitys u, v...
@@ -283,8 +273,6 @@ void Compute::TimeStep(bool verbose)
 	// ...and sync them
 	sync_uv(); // BLOCKING
 #endif
-
-	sync_all(); // TODO: remove
 
 	//update total time
 	_t += dt;
@@ -352,23 +340,23 @@ void Compute::TimeStep(bool verbose)
 #ifndef GO_FAST
 		// magnitudes of the fields
 		std::cout << "max(F) = ";
-		printf("%7.4f", _F->TotalAbsMax());
+		printf("%7.2f", _F->TotalAbsMax());
 		std::cout << ", \tmax(G) = ";
-		printf("%7.4f", _G->TotalAbsMax());
+		printf("%7.2f", _G->TotalAbsMax());
 		std::cout << ", \tmax(rhs) = ";
-		printf("%7.4f", _rhs->TotalAbsMax());
+		printf("%7.2f", _rhs->TotalAbsMax());
 		std::cout << "   \n";
 		std::cout << "max(u) = ";
-		printf("%7.4f", _u->TotalAbsMax());
+		printf("%7.2f", _u->TotalAbsMax());
 		std::cout << ", \tmax(v) = ";
-		printf("%7.4f", _v->TotalAbsMax());
+		printf("%7.2f", _v->TotalAbsMax());
 		std::cout << ", \tmax(p) = ";
-		printf("%7.4f", _p->TotalAbsMax());
+		printf("%7.2f", _p->TotalAbsMax());
 		std::cout << "   \n";
 		std::cout << "max(T) = ";
-		printf("%7.4f", _T->TotalAbsMax());
+		printf("%7.2f", _T->TotalAbsMax());
 		std::cout << ", \tmax(dT) = ";
-		printf("%7.4f", _dT->TotalAbsMax());
+		printf("%7.2f", _dT->TotalAbsMax());
 		std::cout << "   \n";
 #endif
 		
