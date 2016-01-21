@@ -44,6 +44,8 @@ public:
 
 	void test_temperature_heating();
 
+	void temperature_pipe_heating();
+
 	void setDefaultParameters();
 
 	void setRe(double re);

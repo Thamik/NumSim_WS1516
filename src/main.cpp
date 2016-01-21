@@ -17,7 +17,7 @@
 
 //------------------------------------------------------------------------------
 
-//#define VTK_OUTPUT
+#define VTK_OUTPUT
 #define OUTPUT_MAIN
 
 #include "typedef.hpp"
