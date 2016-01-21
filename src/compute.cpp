@@ -65,7 +65,7 @@ Compute::Compute(const Geometry *geom, const Parameter *param, const Communicato
 	_p = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_F = new Grid(_geom);
 	_G = new Grid(_geom);
-	_rhs = new Grid(_geom);
+	_rhs = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_T = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_dT = new Grid(_geom, multi_real_t(-0.5,-0.5));
 	_tmp_velocity = new Grid(_geom, multi_real_t(-0.5,-0.5));
