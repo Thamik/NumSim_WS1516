@@ -603,6 +603,7 @@ const MGInfoHandle MGSolver::Solve(Grid* pressure, const Grid* rhs) const
 		index_t iter(1);
 		//index_t max_w_cycles = 1; // V-cycle
 		index_t max_w_cycles = 10;
+		//index_t max_w_cycles = 10;
 		while (true){
 			/*res.Initialize(0.0);
 			res_coarse.Initialize(0.0);
